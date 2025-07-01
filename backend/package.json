@@ -1,0 +1,49 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node scripts/class-transformer-0.5.1.patch.js",
+    "start": "tsc && node build/index.js",
+    "dev": "concurrently \"pnpm run watch:compile\" \"pnpm run watch:build\"",
+    "watch:compile": "tsc --watch",
+    "watch:build": "nodemon --watch build --ext js --exec \"node build/index.js\"",
+    "build": "tsc",
+    "generate": "plop",
+    "test": "vitest --ui",
+    "test:watch": "vitest run --watch",
+    "test:ci": "vitest run --coverage --reporter=html"
+  },
+  "imports": {
+    "#root/*.js": "./build/*.js",
+    "#shared/*.js": "./build/shared/*.js",
+    "#auth/*.js": "./build/modules/auth/*.js",
+    "#genai/*.js": "./build/modules/genai/*.js",
+    "#livequizzes/*.js": "./build/modules/livequizzes/*.js",
+    "#temp/*.js": "./build/modules/temp/*.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "axios": "1.10.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "class-validator-jsonschema": "^5.0.2",
+    "console-table-printer": "^2.14.6",
+    "dotenv": "^16.5.0",
+    "inversify": "^7.5.2",
+    "mongodb": "^6.17.0",
+    "routing-controllers": "^0.11.2",
+    "routing-controllers-openapi": "^5.0.0",
+    "socket.io": "4.8.1",
+    "socket.io-client": "4.8.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
