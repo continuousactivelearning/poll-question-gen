@@ -1,0 +1,1 @@
+The Poll Automation System is an interactive module designed to streamline the creation, distribution, and analysis of polls within an educational environment. This system empowers educators to engage students dynamically through live polls, feedback sessions, and quick assessments—all in real time.
