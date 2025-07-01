@@ -1,0 +1,23 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "copy": "cd ../backend && node scripts/generate-openapi.cjs --output ../../frontend/openapi.json",
+    "gen-schema": "pnpm copy && pnpx openapi-typescript openapi.json --output src/lib/api/schema.ts ",
+    "build": "tsc -b && vite build",
+    "lint": "gts lint",
+    "preview": "vite preview",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1"
+}
