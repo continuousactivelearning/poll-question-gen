@@ -1,3 +1,4 @@
+/* 
 import { ContainerModule } from 'inversify';
 import GenAIVideoController from './GenAIVideoController.js';
 import { VideoService } from './services/VideoService.js';
@@ -17,3 +18,4 @@ export const genaiContainerModule = new ContainerModule(options => {
   options.bind(AIContentService).toSelf().inSingletonScope();
   options.bind(CleanupService).toSelf().inSingletonScope();
 });
+*/

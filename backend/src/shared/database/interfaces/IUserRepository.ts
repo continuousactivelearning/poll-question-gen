@@ -1,4 +1,4 @@
-import {IUser } from '#shared/interfaces/models.js';
+import {IUser ,IUserAnomaly} from '#shared/interfaces/models.js';
 import {MongoClient, ClientSession, ObjectId} from 'mongodb';
 
 /**

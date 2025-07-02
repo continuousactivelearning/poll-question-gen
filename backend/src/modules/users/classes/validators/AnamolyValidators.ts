@@ -1,4 +1,4 @@
-import {IUserAnomaly, ProctoringComponent} from '#root/shared/index.js';
+import {IUserAnomaly} from '#root/shared/index.js';
 import {
   IsMongoId,
   IsString,
@@ -49,8 +49,7 @@ export class CreateAnamolyBody implements Partial<IUserAnomaly> {
   })
   @IsString()
   @IsNotEmpty()
-  @IsEnum(ProctoringComponent)
-  anomalyType: ProctoringComponent;
+  anomalyType: string;
 
   @IsString()
   @IsMongoId()

@@ -23,7 +23,7 @@
             "#quizzes/*": ["./modules/quizzes/*"],
             "#settings/*": ["./modules/settings/*"],
         },
-        "types": ["node", "express"],
+        "types": ["node", "express", "routing-controllers", "routing-controllers-openapi"],        
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "noEmitOnError": true,

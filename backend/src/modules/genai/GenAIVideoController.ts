@@ -1,3 +1,4 @@
+/* //GenAIVideoController.ts
 import {
   JsonController,
   Post,
@@ -495,3 +496,4 @@ export default class GenAIVideoController {
     }
   }
 }
+*/ 

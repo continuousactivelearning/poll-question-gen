@@ -1,3 +1,4 @@
+/*
 import 'reflect-metadata';
 import {sharedContainerModule} from '#root/container.js';
 import {InversifyAdapter} from '#root/inversify-adapter.js';
@@ -35,3 +36,4 @@ export const genaiModuleOptions: RoutingControllersOptions = {
 };
 
 export * from './GenAIVideoController.js';
+*/

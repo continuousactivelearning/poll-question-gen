@@ -1,6 +1,5 @@
 import {SignUpBody, ChangePasswordBody} from '#auth/classes/index.js';
 import {IUser} from '#shared/interfaces/models.js';
-
 /**
  * Interface representing the authentication service.
  * Defines the contract that any authentication service implementation
@@ -19,7 +18,7 @@ export interface IAuthService {
    * @returns A promise that resolves to the newly created user object
    * @throws Error - If user creation fails for any reason
    */
-  signup(body: SignUpBody): Promise<InviteResult[] | string | null>;
+  signup(body: SignUpBody): Promise<string | null>;
 
   /**
    * Verifies the validity of an authentication token.
