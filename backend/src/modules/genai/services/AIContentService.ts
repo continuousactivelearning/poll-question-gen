@@ -35,6 +35,9 @@ export interface QuestionSchema {
   properties: Record<string, any>; // Specific properties for each question type
 }
 
+type QuestionType = 'SOL' | 'SML' | 'OTL' | 'NAT' | 'DES';
+type QuestionSpec = Partial<Record<QuestionType, number>>;
+
 @injectable()
 export class AIContentService {
   private readonly ollimaApiBaseUrl = 'http://localhost:11434/api';
@@ -333,7 +336,7 @@ Each question should:
 
   public async generateQuestions(args: {
     segments: Record<string | number, string>; // Dictionary with segmentId as key and transcript as value
-    globalQuestionSpecification: Array<Record<string, number>>; // Global question specification
+    globalQuestionSpecification: QuestionSpec[];
     model?: string;
   }): Promise<GeneratedQuestion[]> {
     const {segments, globalQuestionSpecification, model = 'gemma3'} = args;

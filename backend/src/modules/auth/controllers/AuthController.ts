@@ -9,7 +9,6 @@ import {
 } from '#auth/interfaces/IAuthService.js';
 import { ChangePasswordError } from '#auth/services/FirebaseAuthService.js';
 import { AuthRateLimiter } from '#shared/middleware/rateLimiter.js';
-import { instanceToPlain } from 'class-transformer';
 import { injectable, inject } from 'inversify';
 import {
   JsonController,

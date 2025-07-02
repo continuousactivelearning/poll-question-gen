@@ -3,9 +3,6 @@ import {
   ObjectIdToString,
   StringToObjectId,
   ID,
-  EnrollmentRole,
-  EnrollmentStatus,
-  IUser,
 } from '#shared/index.js';
 import {Expose, Transform, Type} from 'class-transformer';
 import {ObjectId} from 'mongodb';

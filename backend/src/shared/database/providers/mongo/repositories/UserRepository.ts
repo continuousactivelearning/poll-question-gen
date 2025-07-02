@@ -1,6 +1,6 @@
 import {IUserRepository} from '#shared/database/interfaces/IUserRepository.js';
 import {IUser} from '#shared/interfaces/models.js';
-import {instanceToPlain, plainToInstance} from 'class-transformer';
+import {classToPlain, plainToClass} from 'class-transformer';
 import {injectable, inject} from 'inversify';
 import {Collection, MongoClient, ClientSession, ObjectId} from 'mongodb';
 import {MongoDatabase} from '../MongoDatabase.js';
@@ -69,7 +69,7 @@ export class UserRepository implements IUserRepository {
     if (!user) {
       throw new NotFoundError('User not found');
     }
-    return instanceToPlain(new User(user)) as IUser;
+    return classToPlain(new User(user)) as IUser;
   }
 
   /**
@@ -84,7 +84,7 @@ export class UserRepository implements IUserRepository {
     if (!user) {
       throw new NotFoundError('User not found');
     }
-    return instanceToPlain(new User(user)) as IUser;
+    return classToPlain(new User(user)) as IUser;
   }
 
   /**
@@ -97,7 +97,7 @@ export class UserRepository implements IUserRepository {
       {$addToSet: {roles: role}},
       {returnDocument: 'after'},
     );
-    return instanceToPlain(new User(result)) as IUser;
+    return classToPlain(new User(result)) as IUser;
   }
 
   /**
@@ -110,7 +110,7 @@ export class UserRepository implements IUserRepository {
       {$pull: {roles: role}},
       {returnDocument: 'after'},
     );
-    return instanceToPlain(new User(result)) as IUser;
+    return classToPlain(new User(result)) as IUser;
   }
 
   /**
@@ -126,6 +126,6 @@ export class UserRepository implements IUserRepository {
       {$set: {password}},
       {returnDocument: 'after'},
     );
-    return instanceToPlain(new User(result)) as IUser;
+    return classToPlain(new User(result)) as IUser;
   }
 }

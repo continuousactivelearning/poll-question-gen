@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
-import {useExpressServer, RoutingControllersOptions} from 'routing-controllers';
+import {createExpressServer, RoutingControllersOptions} from 'routing-controllers';
 import {appConfig} from './config/app.js';
 import {loggingHandler} from './shared/middleware/loggingHandler.js';
 import {HttpErrorHandler} from './shared/index.js';
@@ -11,10 +11,6 @@ import {printStartupSummary} from './utils/logDetails.js';
 import type { CorsOptions } from 'cors';
 import { currentUserChecker } from './shared/functions/currentUserChecker.js';
 import { pollSocket } from './modules/livequizzes/utils/PollSocket.js';
-
-const app = express();
-
-app.use(loggingHandler);
 
 const {controllers, validators} = await loadAppModules(appConfig.module.toLowerCase());
 
@@ -38,6 +34,15 @@ const moduleOptions: RoutingControllersOptions = {
   cors: corsOptions,
 };
 
+//const app = express();
+const app = createExpressServer({
+  ...moduleOptions,
+  middlewares: [loggingHandler, HttpErrorHandler], // Add your middleware here
+});
+//app.use(loggingHandler);
+const routingControllersApp = createExpressServer(moduleOptions);
+app.use(routingControllersApp);
+
 const openApiSpec = await generateOpenAPISpec(moduleOptions, validators);
 app.use(
   '/reference',
@@ -48,7 +53,8 @@ app.use(
 );
 
 // Start server
-useExpressServer(app, moduleOptions);
+//useExpressServer(app, moduleOptions);
+createExpressServer(moduleOptions);
 const server = app.listen(appConfig.port, () => {
   printStartupSummary();
 });
