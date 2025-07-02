@@ -51,7 +51,7 @@ export class PollRoomController {
     const room = this.roomService.createRoom(body.name, body.teacherId);
     return {
       ...room,
-      inviteLink: `http://localhost:5137/join/${room.code}`
+      inviteLink: `http://localhost:5173/student/pollroom/${room.code}`
     };
   }
 
