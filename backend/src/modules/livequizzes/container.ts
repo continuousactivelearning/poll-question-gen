@@ -24,5 +24,5 @@ export const livequizzesContainerModule = new ContainerModule((options) => {
   options.bind(LIVE_QUIZ_TYPES.CleanupService).to(CleanupService).inSingletonScope();
 
   // Controllers
-  options.bind(LIVE_QUIZ_TYPES.PollRoomController).to(PollRoomController).inSingletonScope();
+  options.bind(PollRoomController).toSelf().inSingletonScope();
 });
