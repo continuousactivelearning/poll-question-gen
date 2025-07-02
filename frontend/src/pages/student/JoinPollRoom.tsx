@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { FaPoll, FaTachometerAlt, FaUsers, FaChartBar, FaCog, FaQuestionCircle, FaCheck } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useNavigate } from "@tanstack/react-router";
 import axios from "axios";
 import { toast } from "sonner";
+import { LineChart } from "lucide-react";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -40,112 +42,62 @@ export default function JoinPollRoom() {
     <div
       className="min-h-screen"
       style={{
-        background: "repeating-linear-gradient(0deg, #f5f8fd, #f5f8fd 24px, #e9eef6 25px, #e9eef6 26px), repeating-linear-gradient(90deg, #f5f8fd, #f5f8fd 24px, #e9eef6 25px, #e9eef6 26px)",
         fontFamily: "'Poppins', sans-serif",
-        color: "#22223b",
+        color: "",
       }}
     >
-      <div className="container mx-auto mt-2 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
-          {/* Sidebar */}
-          <aside
-            className="rounded-xl p-6 shadow"
-            style={{
-              background: "#fff",
-              color: "#7b61ff",
-              minHeight: "350px",
-              border: "1px solid #e9eef6"
-            }}
-          >
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 rounded-lg font-semibold"
-                  style={{
-                    background: "#e9eef6",
-                    color: "#7b61ff",
-                  }}
-                >
-                  <FaTachometerAlt className="mr-3" /> <span>Dashboard</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition"
-                >
-                  <FaPoll className="mr-3" /> <span>My Polls</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition"
-                >
-                  <FaUsers className="mr-3" /> <span>Classes</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition"
-                >
-                  <FaChartBar className="mr-3" /> <span>Analytics</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition"
-                >
-                  <FaCog className="mr-3" /> <span>Settings</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition"
-                >
-                  <FaQuestionCircle className="mr-3" /> <span>Help</span>
-                </a>
-              </li>
-            </ul>
-          </aside>
+      <div className="container mx-auto mt-4 px-4 grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
+        {/* Sidebar */}
+        <Card className="p-6 rounded-xl shadow" style={{ color: "#7b61ff", minHeight: "350px", border: "1px solid #e9eef6" }}>
+          <ul className="space-y-2">
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 rounded-lg font-semibold" style={{ background: "#e9eef6" }}>
+                <FaTachometerAlt className="mr-3" /> Dashboard
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition">
+                <FaPoll className="mr-3" /> My Polls
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition">
+                <FaUsers className="mr-3" /> Classes
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition">
+                <FaChartBar className="mr-3" /> Analytics
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition">
+                <FaCog className="mr-3" /> Settings
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 rounded-lg hover:bg-[#7b61ff] hover:text-white transition">
+                <FaQuestionCircle className="mr-3" /> Help
+              </a>
+            </li>
+          </ul>
+        </Card>
 
-          {/* Main Panel */}
-          <main
-            className="rounded-xl p-8 shadow"
-            style={{
-              background: "#fff",
-              color: "#22223b",
-              border: "1px solid #e9eef6"
-            }}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">
-                <span style={{ color: '#7b61ff' }}>Join Poll Room</span>
-              </h2>
-            </div>
-            <div
-              className="rounded-lg p-6 mb-6"
-              style={{
-                background: "#f5f8fd",
-                border: "1px solid #e9eef6",
-              }}
-            >
-              <h3 className="text-lg font-semibold mb-4">
-                <span style={{ color: '#7b61ff' }}>Join a Poll Room</span>
-              </h3>
+        {/* Main Panel */}
+        <Card className="p-6 rounded-xl shadow border" style={{ borderColor: "#e9eef6" }}>
+          <CardHeader className="mb-4">
+            <CardTitle className="text-2xl font-semibold" style={{ color: '#7b61ff' }}>
+              Join Poll Room
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
               <form onSubmit={joinRoom} className="space-y-5">
                 <div>
-                  <label htmlFor="roomCode" className="block font-medium mb-2" style={{ color: '#22223b' }}>
-                    Room Code <span className="text-red-500">*</span>
-                  </label>
+                  <label htmlFor="roomCode" className="block font-medium mb-2">Room Code <span className="text-red-500">*</span></label>
                   <input
                     id="roomCode"
                     type="text"
-                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7b61ff] transition text-black placeholder-gray-400"
+                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:ring-2 focus:ring-[#7b61ff] transition text-black placeholder-gray-400"
                     placeholder="Enter room code"
                     value={roomCode}
                     onChange={(e) => {
@@ -156,13 +108,11 @@ export default function JoinPollRoom() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="name" className="block font-medium mb-2" style={{ color: '#22223b' }}>
-                    Your Name <span className="text-red-500">*</span>
-                  </label>
+                  <label htmlFor="name" className="block font-medium mb-2">Your Name <span className="text-red-500">*</span></label>
                   <input
                     id="name"
                     type="text"
-                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7b61ff] transition text-black placeholder-gray-400"
+                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:ring-2 focus:ring-[#7b61ff] transition text-black placeholder-gray-400"
                     placeholder="Enter your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -170,12 +120,10 @@ export default function JoinPollRoom() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="description" className="block font-medium mb-2" style={{ color: '#22223b' }}>
-                    Description (Optional)
-                  </label>
+                  <label htmlFor="description" className="block font-medium mb-2">Description (Optional)</label>
                   <textarea
                     id="description"
-                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7b61ff] transition text-black placeholder-gray-400"
+                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:ring-2 focus:ring-[#7b61ff] transition text-black placeholder-gray-400"
                     placeholder="Brief description (optional)"
                     rows={3}
                     value={description}
@@ -183,12 +131,10 @@ export default function JoinPollRoom() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="access" className="block font-medium mb-2" style={{ color: '#22223b' }}>
-                    Access Type
-                  </label>
+                  <label htmlFor="access" className="block font-medium mb-2">Access Type</label>
                   <select
                     id="access"
-                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7b61ff] transition text-black"
+                    className="w-full px-4 py-3 border border-[#7b61ff] rounded-lg focus:ring-2 focus:ring-[#7b61ff] transition text-black"
                     value={access}
                     onChange={(e) => setAccess(e.target.value)}
                   >
@@ -202,18 +148,14 @@ export default function JoinPollRoom() {
                 )}
                 <Button
                   type="submit"
-                  className="w-full py-3 font-semibold rounded-lg shadow transition flex items-center justify-center"
-                  style={{
-                    background: "#ffa726",
-                    color: "#fff",
-                  }}
+                  className="w-full py-3 font-semibold rounded-lg shadow flex items-center justify-center"
+                  style={{ background: "#ffa726", color: "#fff" }}
                 >
                   <FaCheck className="mr-2" /> Join Poll Room
                 </Button>
               </form>
-            </div>
-          </main>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
