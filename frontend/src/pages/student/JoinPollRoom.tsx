@@ -11,37 +11,40 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: { "Content-Type": "application/json" },
+});
 
 export default function JoinPollRoom() {
   const [roomCode, setRoomCode] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [access, setAccess] = useState("public");
   const [roomError, setRoomError] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const joinRoom = async () => {
     setRoomError(null);
-    
-    if (roomCode.trim() === "") {
-      setRoomError("Please enter a room code");
+    if (!name.trim()) {
+      setRoomError("Name is required.");
       return;
     }
-    
-    if (name.trim() === "") {
-      setRoomError("Please enter your name");
-      return;
+    try {
+      const res = await api.get(`/livequizzes/rooms/${roomCode}`);
+      if (res.data?.code) {
+        localStorage.setItem("activeRoomCode", roomCode);
+        localStorage.setItem("joinedRoom", "true");
+        toast.success("Joined room!");
+        navigate({ to: `/student/pollroom/${roomCode}` });
+      } else {
+        setRoomError("Invalid room code.");
+      }
+    } catch (error: any) {
+      setRoomError(error.response?.status === 404 ? "Room not found." : "Unexpected error.");
     }
-    
-    // Mock validation - in real app this would be an API call
-    if (roomCode.length < 4) {
-      setRoomError("Room not found.");
-      return;
-    }
-    
-    navigate({to: `/student/pollroom/${roomCode}`});
-    // Simulate successful join
-    console.log(`Successfully joined room: ${roomCode}`);
   };
 
   return (

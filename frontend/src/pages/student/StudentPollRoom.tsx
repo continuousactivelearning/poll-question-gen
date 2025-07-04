@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import io from "socket.io-client";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -7,52 +10,77 @@ import {
   DropdownMenuContent,
   DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
-import { Clock, Users, Trophy, Zap, CheckCircle, Circle, Menu, Info, History, LogOut } from "lucide-react";
+import { toast } from "sonner";
+import { Zap, Users, Menu, Info, History, LogOut, Clock, CheckCircle, Circle, Trophy } from "lucide-react";
 
-// Mock data for demonstration
-const mockPolls = [
-  {
-    id: "1",
-    question: "What's your favorite programming language?",
-    options: ["JavaScript", "Python", "Java", "C++"],
-    roomCode: "ABC123",
-    creatorId: "teacher-123",
-    createdAt: new Date(),
-    timer: 30
-  },
-  {
-    id: "2",
-    question: "Which framework do you prefer for web development?",
-    options: ["React", "Vue", "Angular", "Svelte"],
-    roomCode: "ABC123",
-    creatorId: "teacher-123",
-    createdAt: new Date(),
-    timer: 45
-  }
-];
+// Socket URL and API URL from environment variables
+const Socket_URL = import.meta.env.VITE_SOCKET_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
-const mockRoomDetails = {
-  code: "ABC123",
-  creatorId: "Dr. Smith",
-  createdAt: new Date().toISOString()
+const socket = io(Socket_URL);
+const api = axios.create({
+  baseURL: API_URL,
+  headers: { "Content-Type": "application/json" },
+});
+
+type Poll = {
+  id: string;
+  question: string;
+  options: string[];
+  roomCode: string;
+  creatorId: string;
+  createdAt: Date;
+  timer: number;
 };
 
-export default function VibrantPollRoom() {
-  const roomCode = "ABC123";
-  const [joinedRoom, setJoinedRoom] = useState(true);
-  const [polls, setPolls] = useState(mockPolls);
-  const [roomDetails, setRoomDetails] = useState(mockRoomDetails);
-  const [answeredPolls, setAnsweredPolls] = useState({});
-  const [activeMenu, setActiveMenu] = useState(null);
-  const [pollTimers, setPollTimers] = useState({ "1": 30, "2": 45 });
-  const [selectedOptions, setSelectedOptions] = useState({});
+type RoomDetails = {
+  code: string;
+  creatorId: string;
+  createdAt: string;
+};
+
+export default function StudentPollRoom() {
+  const params = useParams({ from: '/student/pollroom/$code' });
+  const roomCode = params.code;
+  if (!roomCode) return <div>Loading...</div>;
+  
+  const navigate = useNavigate();
+  const [joinedRoom, setJoinedRoom] = useState(false);
+  const [polls, setPolls] = useState<Poll[]>([]);
+  const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);
+  const [answeredPolls, setAnsweredPolls] = useState<Record<string, number>>({});
+  const [activeMenu, setActiveMenu] = useState<"room" | "previous" | null>(null);
+  const [pollTimers, setPollTimers] = useState<Record<string, number>>({}); 
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, number | null>>({});
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Timer animation
+  // Auto-join on mount
+  useEffect(() => {
+    if (!roomCode) return;
+    socket.emit("join-room", roomCode);
+    setJoinedRoom(true);
+    loadRoomDetails(roomCode);
+    const savedAnswers = localStorage.getItem(`answeredPolls_${roomCode}`);
+    if (savedAnswers) setAnsweredPolls(JSON.parse(savedAnswers));
+    localStorage.setItem("activeRoomCode", roomCode);
+    localStorage.setItem("joinedRoom", "true");
+    toast.success("Joined room!");
+  }, [roomCode]);
+
+  // Listen for new polls
+  useEffect(() => {
+    socket.on("new-poll", (poll: Poll) => {
+      setPolls(prev => [...prev, poll]);
+      toast("New poll received!");
+    });
+    return () => { socket.off("new-poll"); };
+  }, []);
+
+  // Timer countdown
   useEffect(() => {
     const interval = setInterval(() => {
       setPollTimers(prev => {
-        const updated = {};
+        const updated: Record<string, number> = {};
         polls.forEach(p => {
           const current = prev[p.id] ?? p.timer;
           updated[p.id] = current > 0 ? current - 1 : 0;
@@ -63,29 +91,68 @@ export default function VibrantPollRoom() {
     return () => clearInterval(interval);
   }, [polls]);
 
-  const submitAnswer = (pollId, answerIndex) => {
+  // Remove poll when timer hits 0
+  useEffect(() => {
+    Object.entries(pollTimers).forEach(([pollId, time]) => {
+      if (time === 0) {
+        setPolls(prev => prev.filter(p => p.id !== pollId));
+      }
+    });
+  }, [pollTimers]);
+
+  // Save answered polls to localStorage
+  useEffect(() => {
+    if (roomCode) {
+      localStorage.setItem(`answeredPolls_${roomCode}`, JSON.stringify(answeredPolls));
+    }
+  }, [answeredPolls, roomCode]);
+
+  const loadRoomDetails = async (code: string) => {
+    try {
+      const res = await api.get(`/livequizzes/rooms/${code}`);
+      if (res.data) setRoomDetails(res.data);
+    } catch (e) {
+      console.error("Failed to load room details:", e);
+    }
+  };
+
+  const submitAnswer = async (pollId: string, answerIndex: number) => {
     setIsAnimating(true);
-    setTimeout(() => {
-      setAnsweredPolls(prev => ({ ...prev, [pollId]: answerIndex }));
+    try {
+      await api.post(`/livequizzes/rooms/${roomCode}/polls/answer`, {
+        pollId, userId: "student-456", answerIndex
+      });
+      setTimeout(() => {
+        setAnsweredPolls(prev => ({ ...prev, [pollId]: answerIndex }));
+        setIsAnimating(false);
+        toast.success("Vote submitted!");
+      }, 300);
+    } catch {
       setIsAnimating(false);
-    }, 300);
+      toast.error("Failed to submit vote");
+    }
   };
 
   const exitRoom = () => {
+    socket.emit("leave-room", roomCode);
     setJoinedRoom(false);
     setPolls([]);
     setAnsweredPolls({});
     setRoomDetails(null);
+    localStorage.removeItem("activeRoomCode");
+    localStorage.removeItem("joinedRoom");
     setActiveMenu(null);
+    toast.info("Left the room.");
+    navigate({ to: `/student/pollroom` });
   };
 
-  const getTimerColor = (timeLeft) => {
+  const getTimerColor = (timeLeft: number) => {
     if (timeLeft > 20) return "text-emerald-500";
     if (timeLeft > 10) return "text-amber-500";
     return "text-red-500";
   };
 
-  const getTimerBg = (timeLeft) => {
+  const getTimerBg = (timeLeft: number) => {
     if (timeLeft > 20) return "bg-emerald-500/20";
     if (timeLeft > 10) return "bg-amber-500/20";
     return "bg-red-500/20";
@@ -263,7 +330,9 @@ export default function VibrantPollRoom() {
                             `}
                             onClick={() => {
                               if (selectedOptions[poll.id] !== null && selectedOptions[poll.id] !== undefined) {
-                                submitAnswer(poll.id, selectedOptions[poll.id]);
+                                submitAnswer(poll.id, selectedOptions[poll.id]!);
+                              } else {
+                                toast.warning("Please select an option first");
                               }
                             }}
                             disabled={(pollTimers[poll.id] ?? poll.timer) === 0 || answeredPolls[poll.id] !== undefined}
