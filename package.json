@@ -23,6 +23,7 @@
     "inversify": "^7.5.4",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.1",
+    "multer": "^2.0.1",
     "next-themes": "^0.4.6",
     "openapi-fetch": "^0.14.0",
     "openapi-react-query": "^0.5.0",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/inversify": "^2.0.33",
+    "@types/multer": "^2.0.0",
     "unplugin-swc": "^1.5.5",
     "vite": "^7.0.0",
     "vite-tsconfig-paths": "^5.1.4",
