@@ -1,14 +1,7 @@
-import * as dotenv from 'dotenv';
-dotenv.config(); // { path: `.env.${process.env.NODE_ENV}` }
-
-export function env(key: string, defaultValue: null | string = null): string {
-  return process.env[key] ?? (defaultValue as string);
-}
-
-export function envOrFail(key: string): string {
-  if (typeof process.env[key] === 'undefined') {
-    throw new Error(`Environment variable ${key} is not set.`);
+export function env(key: string): string {
+  const value = process.env[key];
+  if (typeof value === 'undefined') {
+    throw new Error(`❌ Missing required environment variable: ${key}`);
   }
-
-  return process.env[key] as string;
+  return value;
 }
