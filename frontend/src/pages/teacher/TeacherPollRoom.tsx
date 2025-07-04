@@ -54,77 +54,121 @@ export default function TeacherPollRoom() {
   };
 
   return (
-    <Card className="max-w-xl mx-auto mt-10 p-6">
-      <CardHeader>
-        <CardTitle className="text-lg">Room Code: <span className="font-mono">{roomCode}</span></CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Input
-          placeholder="Poll question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-
-        <fieldset className="space-y-2">
-          <legend className="text-sm text-gray-600 mb-1">Select correct option</legend>
-          {options.map((opt, i) => (
-            <div key={i} className="flex items-center gap-2">
+    <main className="relative flex-1 p-6 lg:p-8">
+      <div className="relative z-10 max-w-2xl mx-auto">
+        <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
+                {roomCode}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
               <Input
-                type="radio"
-                name="correctOption"
-                checked={correctOptionIndex === i}
-                onChange={() => setCorrectOptionIndex(i)}
-                className="accent-purple-600"
-              />
-              <Input
-                placeholder={`Option ${i + 1}`}
-                value={opt}
-                onChange={(e) => {
-                  const copy = [...options];
-                  copy[i] = e.target.value;
-                  setOptions(copy);
-                }}
+                placeholder="Poll question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                className="dark:bg-gray-800/50"
               />
             </div>
-          ))}
-        </fieldset>
 
-        <Input
-          type="number"
-          placeholder="Timer (seconds)"
-          value={timer}
-          min={5}
-          onChange={(e) => setTimer(Number(e.target.value))}
-        />
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium text-gray-600 mb-2 dark:text-gray-400">
+                Select correct option
+              </legend>
+              {options.map((opt, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Input
+                    type="radio"
+                    name="correctOption"
+                    checked={correctOptionIndex === i}
+                    onChange={() => setCorrectOptionIndex(i)}
+                    className="h-5 w-5 accent-purple-600 dark:accent-purple-400"
+                  />
+                  <Input
+                    placeholder={`Option ${i + 1}`}
+                    value={opt}
+                    onChange={(e) => {
+                      const copy = [...options];
+                      copy[i] = e.target.value;
+                      setOptions(copy);
+                    }}
+                    className="dark:bg-gray-800/50"
+                  />
+                </div>
+              ))}
+            </fieldset>
 
-        <Button className="w-full" onClick={createPoll}>
-          Create Poll
-        </Button>
+            <div>
+              <Input
+                type="number"
+                placeholder="Timer (seconds)"
+                value={timer}
+                min={5}
+                onChange={(e) => setTimer(Number(e.target.value))}
+                className="dark:bg-gray-800/50"
+              />
+            </div>
 
-        <Button variant="secondary" className="w-full" onClick={fetchResults}>
-          Fetch Poll Results
-        </Button>
+            <div className="flex gap-4">
+              <Button 
+                onClick={createPoll}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1"
+              >
+                Create Poll
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={fetchResults}
+                className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30"
+              >
+                Fetch Results
+              </Button>
+            </div>
 
-        {Object.keys(pollResults).length > 0 && (
-          <div className="space-y-4">
-            {Object.entries(pollResults).map(([pollQuestion, options]) => (
-              <div key={pollQuestion} className="p-3 border rounded-md">
-                <div className="font-medium">{pollQuestion}</div>
-                <ul className="ml-4 list-disc">
-                  {Object.entries(options).map(([opt, data]) => (
-                    <li key={opt}>
-                      <span className="font-semibold">{opt}</span>: {data.count} votes
-                      {data.users.length > 0 && (
-                        <span className="text-xs ml-2 text-gray-500">({data.users.join(", ")})</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+            {Object.keys(pollResults).length > 0 && (
+              <div className="space-y-4 mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  Poll Results
+                </h3>
+                {Object.entries(pollResults).map(([pollQuestion, options]) => (
+                  <Card 
+                    key={pollQuestion} 
+                    className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70"
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-lg text-gray-800 dark:text-gray-200">
+                        {pollQuestion}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {Object.entries(options).map(([opt, data]) => (
+                          <li key={opt} className="flex items-baseline">
+                            <span className="font-medium text-purple-600 dark:text-purple-400 mr-2">
+                              {opt}:
+                            </span>
+                            <span className="text-gray-700 dark:text-gray-300 mr-2">
+                              {data.count} votes
+                            </span>
+                            {data.users.length > 0 && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                ({data.users.join(", ")})
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   );
 }

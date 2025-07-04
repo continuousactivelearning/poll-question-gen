@@ -5,10 +5,7 @@ import {
   useGenerateTranscript,
   useSegmentTranscript
 } from "@/lib/api/genAihooks";
-
-import {
-  Card, CardContent, CardHeader, CardTitle, CardDescription
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,17 +17,12 @@ export default function GenAIHomePage() {
   const [segments, setSegments] = useState<Record<string, string>>({});
   const [questions, setQuestions] = useState<string[]>([]);
   const [editedTranscript, setEditedTranscript] = useState("");
-
-  // Upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-
-  // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-
   const [questionsPerSegment, setQuestionsPerSegment] = useState(2);
 
   const { mutate: generateTranscript, isPending: isTranscriptPending } =
@@ -59,7 +51,6 @@ export default function GenAIHomePage() {
       setQuestions(data);
     });
 
-  // --- Handlers ---
   const handleYouTubeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!youtubeUrl.trim()) {
@@ -80,7 +71,6 @@ export default function GenAIHomePage() {
     generateTranscript(formData as any);
   };
 
-  // --- Voice Recording Logic ---
   const startRecording = async () => {
     setAudioBlob(null);
     setIsPaused(false);
@@ -92,7 +82,6 @@ export default function GenAIHomePage() {
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
-          // Update audioBlob so "Generate Transcript" is enabled as soon as there's data
           setAudioBlob(new Blob(audioChunksRef.current, { type: "audio/webm" }));
         }
       };
@@ -127,7 +116,6 @@ export default function GenAIHomePage() {
     setIsPaused(false);
   };
 
-  // Allow transcript generation at any time during recording
   const handleSendAudio = () => {
     const currentChunks = audioChunksRef.current;
     if (!currentChunks.length) {
@@ -142,226 +130,245 @@ export default function GenAIHomePage() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl py-10 px-4 space-y-10">
-      <header className="text-center mb-6">
-        <h1 className="text-4xl font-bold">AI Content Generator</h1>
-        <p className="text-muted-foreground mt-2">
-          Convert a video or voice to a full set of learning materials.
-        </p>
-      </header>
+    <main className="relative flex-1 p-6 lg:p-8">
+      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
+        <header className="text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent dark:from-purple-400 dark:via-blue-400 dark:to-cyan-400">
+            AI Content Generator
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Convert a video or voice to a full set of learning materials
+          </p>
+        </header>
 
-      <div className="flex space-x-4 justify-center">
-        <Button
-          variant={inputMode === "youtube" ? "default" : "outline"}
-          onClick={() => setInputMode("youtube")}
-        >
-          Use YouTube URL
-        </Button>
-        <Button
-          variant={inputMode === "upload" ? "default" : "outline"}
-          onClick={() => setInputMode("upload")}
-        >
-          Upload Video/Audio
-        </Button>
-        <Button
-          variant={inputMode === "record" ? "default" : "outline"}
-          onClick={() => setInputMode("record")}
-        >
-          Record Voice
-        </Button>
-      </div>
+        <div className="flex gap-4 justify-center">
+          <Button
+            variant={inputMode === "youtube" ? "default" : "outline"}
+            onClick={() => setInputMode("youtube")}
+            className="transition-all duration-300 hover:shadow-md"
+          >
+            Use YouTube URL
+          </Button>
+          <Button
+            variant={inputMode === "upload" ? "default" : "outline"}
+            onClick={() => setInputMode("upload")}
+            className="transition-all duration-300 hover:shadow-md"
+          >
+            Upload Video/Audio
+          </Button>
+          <Button
+            variant={inputMode === "record" ? "default" : "outline"}
+            onClick={() => setInputMode("record")}
+            className="transition-all duration-300 hover:shadow-md"
+          >
+            Record Voice
+          </Button>
+        </div>
 
-      {inputMode === "youtube" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 1: Enter YouTube URL</CardTitle>
-            <CardDescription>We'll transcribe the video.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleYouTubeSubmit} className="space-y-4">
-              <label htmlFor="youtube-link" className="block text-sm font-medium">
-                YouTube Link
-              </label>
-              <Input
-                id="youtube-link"
-                placeholder="https://youtube.com/..."
-                title="Paste YouTube link"
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                disabled={isTranscriptPending}
-              />
-              <Button type="submit" disabled={isTranscriptPending || !youtubeUrl}>
-                {isTranscriptPending ? "Generating..." : "Generate Transcript"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {inputMode === "upload" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 1: Upload Video or Audio File</CardTitle>
-            <CardDescription>
-              Upload a video or audio file to generate a transcript.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUploadSubmit} className="space-y-4">
-              <Input
-                type="file"
-                accept="video/*,audio/*"
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                disabled={isTranscriptPending}
-                required
-              />
-              <Button type="submit" disabled={isTranscriptPending || !uploadFile}>
-                {isTranscriptPending ? "Generating..." : "Generate Transcript"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {inputMode === "record" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 1: Record Your Voice</CardTitle>
-            <CardDescription>
-              Record your voice and generate a transcript. You can pause and resume as needed, or generate a transcript at any time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-4">
-              {!isRecording && (
-                <Button
-                  onClick={startRecording}
+        {inputMode === "youtube" && (
+          <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+            <CardHeader>
+              <CardTitle className="text-xl">Step 1: Enter YouTube URL</CardTitle>
+              <CardDescription>We'll transcribe the video.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleYouTubeSubmit} className="space-y-4">
+                <Input
+                  placeholder="https://youtube.com/..."
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
                   disabled={isTranscriptPending}
+                  className="dark:bg-gray-800/50"
+                />
+                <Button 
+                  type="submit" 
+                  disabled={isTranscriptPending || !youtubeUrl}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
                 >
-                  Start Recording
+                  {isTranscriptPending ? "Generating..." : "Generate Transcript"}
                 </Button>
-              )}
-              {isRecording && !isPaused && (
-                <>
-                  <Button
-                    onClick={pauseRecording}
-                    variant="secondary"
-                    disabled={isTranscriptPending}
-                  >
-                    Pause
-                  </Button>
-                  <Button
-                    onClick={stopRecording}
-                    variant="destructive"
-                    disabled={isTranscriptPending}
-                  >
-                    Stop
-                  </Button>
-                </>
-              )}
-              {isRecording && isPaused && (
-                <>
-                  <Button
-                    onClick={resumeRecording}
-                    variant="default"
-                    disabled={isTranscriptPending}
-                  >
-                    Resume
-                  </Button>
-                  <Button
-                    onClick={stopRecording}
-                    variant="destructive"
-                    disabled={isTranscriptPending}
-                  >
-                    Stop
-                  </Button>
-                </>
-              )}
-              {/* Show audio preview if any audio has been recorded */}
-              {audioChunksRef.current.length > 0 && (
-                <audio controls src={URL.createObjectURL(new Blob(audioChunksRef.current, { type: "audio/webm" }))} />
-              )}
-            </div>
-            <Button
-              onClick={handleSendAudio}
-              disabled={isTranscriptPending || audioChunksRef.current.length === 0}
-            >
-              {isTranscriptPending ? "Generating..." : "Generate Transcript"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-      {transcript && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 2: Edit & Segment Transcript</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              value={editedTranscript}
-              onChange={(e) => setEditedTranscript(e.target.value)}
-              rows={10}
-            />
-            <Button
-              onClick={() => segmentTranscript({ transcript: editedTranscript })}
-              disabled={isSegmentPending}
-            >
-              {isSegmentPending ? "Segmenting..." : "Segment"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {inputMode === "upload" && (
+          <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+            <CardHeader>
+              <CardTitle className="text-xl">Step 1: Upload Video or Audio File</CardTitle>
+              <CardDescription>
+                Upload a video or audio file to generate a transcript.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUploadSubmit} className="space-y-4">
+                <Input
+                  type="file"
+                  accept="video/*,audio/*"
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  disabled={isTranscriptPending}
+                  required
+                  className="dark:bg-gray-800/50"
+                />
+                <Button 
+                  type="submit" 
+                  disabled={isTranscriptPending || !uploadFile}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+                >
+                  {isTranscriptPending ? "Generating..." : "Generate Transcript"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-      {Object.keys(segments).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 3: Generate Questions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ol className="list-decimal pl-4 text-sm space-y-1">
-              {Object.entries(segments).map(([endTime, seg], i) => (
-                <li key={i}>
-                  <strong>{endTime}</strong>: {seg}
-                </li>
-              ))}
-            </ol>
-            <label htmlFor="qps" className="text-sm font-medium">Questions per Segment</label>
-            <Input
-              id="qps"
-              type="number"
-              min={1}
-              value={questionsPerSegment}
-              onChange={(e) => setQuestionsPerSegment(parseInt(e.target.value) || 1)}
-              className="border rounded p-2 text-sm w-24"
-              placeholder="e.g. 2"
-            />
-            <Button
-              onClick={() =>
-                generateQuestions({
-                  segments,
-                  questionsPerSegment,
-                })}
-              disabled={isQuestionsPending}
-            >
-              {isQuestionsPending ? "Generating..." : "Generate Questions"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {inputMode === "record" && (
+          <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+            <CardHeader>
+              <CardTitle className="text-xl">Step 1: Record Your Voice</CardTitle>
+              <CardDescription>
+                Record your voice and generate a transcript.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                {!isRecording && (
+                  <Button
+                    onClick={startRecording}
+                    disabled={isTranscriptPending}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+                  >
+                    Start Recording
+                  </Button>
+                )}
+                {isRecording && !isPaused && (
+                  <>
+                    <Button
+                      onClick={pauseRecording}
+                      variant="secondary"
+                      disabled={isTranscriptPending}
+                    >
+                      Pause
+                    </Button>
+                    <Button
+                      onClick={stopRecording}
+                      variant="destructive"
+                      disabled={isTranscriptPending}
+                    >
+                      Stop
+                    </Button>
+                  </>
+                )}
+                {isRecording && isPaused && (
+                  <>
+                    <Button
+                      onClick={resumeRecording}
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+                      disabled={isTranscriptPending}
+                    >
+                      Resume
+                    </Button>
+                    <Button
+                      onClick={stopRecording}
+                      variant="destructive"
+                      disabled={isTranscriptPending}
+                    >
+                      Stop
+                    </Button>
+                  </>
+                )}
+                {audioChunksRef.current.length > 0 && (
+                  <audio controls src={URL.createObjectURL(new Blob(audioChunksRef.current, { type: "audio/webm" }))} />
+                )}
+              </div>
+              <Button
+                onClick={handleSendAudio}
+                disabled={isTranscriptPending || audioChunksRef.current.length === 0}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+              >
+                {isTranscriptPending ? "Generating..." : "Generate Transcript"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-      {questions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 4: Generated Questions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal pl-4 space-y-2 text-sm">
-              {questions.map((q, i) => <li key={i}>{q}</li>)}
-            </ol>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {transcript && (
+          <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+            <CardHeader>
+              <CardTitle className="text-xl">Step 2: Edit & Segment Transcript</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={editedTranscript}
+                onChange={(e) => setEditedTranscript(e.target.value)}
+                rows={10}
+                className="dark:bg-gray-800/50"
+              />
+              <Button
+                onClick={() => segmentTranscript({ transcript: editedTranscript })}
+                disabled={isSegmentPending}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+              >
+                {isSegmentPending ? "Segmenting..." : "Segment"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {Object.keys(segments).length > 0 && (
+          <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+            <CardHeader>
+              <CardTitle className="text-xl">Step 3: Generate Questions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ol className="list-decimal pl-4 space-y-2 text-sm">
+                {Object.entries(segments).map(([endTime, seg], i) => (
+                  <li key={i} className="dark:text-gray-300">
+                    <strong className="text-purple-600 dark:text-purple-400">{endTime}</strong>: {seg}
+                  </li>
+                ))}
+              </ol>
+              <div className="flex items-center gap-4">
+                <div>
+                  <label htmlFor="qps" className="block text-sm font-medium mb-1 dark:text-gray-300">Questions per Segment</label>
+                  <Input
+                    id="qps"
+                    type="number"
+                    min={1}
+                    value={questionsPerSegment}
+                    onChange={(e) => setQuestionsPerSegment(parseInt(e.target.value) || 1)}
+                    className="w-24 dark:bg-gray-800/50"
+                  />
+                </div>
+                <Button
+                  onClick={() =>
+                    generateQuestions({
+                      segments,
+                      questionsPerSegment,
+                    })}
+                  disabled={isQuestionsPending}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 mt-6"
+                >
+                  {isQuestionsPending ? "Generating..." : "Generate Questions"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {questions.length > 0 && (
+          <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
+            <CardHeader>
+              <CardTitle className="text-xl">Step 4: Generated Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="list-decimal pl-4 space-y-2 dark:text-gray-300">
+                {questions.map((q, i) => <li key={i}>{q}</li>)}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </main>
   );
 }
