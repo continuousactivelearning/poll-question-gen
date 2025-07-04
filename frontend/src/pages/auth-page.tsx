@@ -241,7 +241,7 @@ export default function AuthPage() {
         avatar: result.user.photoURL || ""
       });
       
-      // Navigate to student dashboard
+      // Navigate to student pollroom
       navigate({ to: "/student/pollroom" });
     } catch (error: unknown) {
       console.error("Email Signup Failed", error);

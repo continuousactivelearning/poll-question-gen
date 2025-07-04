@@ -15,13 +15,11 @@ import { inject, injectable } from 'inversify';
 import { RoomService } from '../services/RoomService.js';
 import { PollService } from '../services/PollService.js';
 import { LIVE_QUIZ_TYPES } from '../types.js';
-// Importing necessary services for GenAI functionality
 import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
 import { AIContentService } from '#root/modules/genai/services/AIContentService.js';
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
-// Extend express Request to include multer fields
 import type { File as MulterFile } from 'multer';
 
 declare module 'express-serve-static-core' {
@@ -43,38 +41,74 @@ export class PollRoomController {
     @inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
     @inject(LIVE_QUIZ_TYPES.RoomService) private roomService: RoomService,
     @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService
-  ) { }
+  ) {}
 
   @Authorized()
   @Post('/')
-  createRoom(@Body() body: { name: string; teacherId: string }) {
-    const room = this.roomService.createRoom(body.name, body.teacherId);
+  async createRoom(@Body() body: { name: string; teacherId: string }) {
+    const room = await this.roomService.createRoom(body.name, body.teacherId);
     return {
       ...room,
-      inviteLink: `http://localhost:5173/student/pollroom/${room.code}`
+      inviteLink: `http://localhost:5173/student/pollroom/${room.roomCode}`,
     };
   }
 
-  // @Authorized()
+  @Authorized()
   @Get('/:code')
-  getRoom(@Param('code') code: string) {
-    const room = this.roomService.getRoomByCode(code);
+  async getRoom(@Param('code') code: string) {
+    const room = await this.roomService.getRoomByCode(code);
     if (!room) throw new Error('Room not found');
     return room;
   }
 
   // 🔹 Create Poll in Room
-  // @Authorized()
+  @Authorized()
   @Post('/:code/polls')
-  createPollInRoom(
+  async createPollInRoom(
     @Param('code') roomCode: string,
-    @Body() body: { question: string; options: string[]; creatorId: string }
+    @Body() body: { question: string; options: string[]; correctOptionIndex: number; creatorId: string; timer?: number }
   ) {
-    const room = this.roomService.getRoomByCode(roomCode);
+    const room = await this.roomService.getRoomByCode(roomCode);
     if (!room) throw new Error('Invalid room');
-    return this.pollService.createPoll({ ...body, roomCode });
+    return await this.pollService.createPoll(
+      roomCode,
+      {
+        question: body.question,
+        options: body.options,
+        correctOptionIndex: body.correctOptionIndex,
+        timer: body.timer
+      }
+    );
+
   }
 
+  @Authorized()
+  @Post('/:code/polls/answer')
+  async submitPollAnswer(
+    @Param('code') roomCode: string,
+    @Body() body: { pollId: string; userId: string; answerIndex: number }
+  ) {
+    await this.pollService.submitAnswer(roomCode, body.pollId, body.userId, body.answerIndex);
+    return { success: true };
+  }
+
+  // Fetch Results for All Polls in Room
+  @Authorized()
+  @Get('/:code/polls/results')
+  async getResultsForRoom(@Param('code') code: string) {
+    return await this.pollService.getPollResults(code);
+  }
+
+  @Authorized()
+  @Post('/:code/end')
+  async endRoom(@Param('code') code: string) {
+    const success = await this.roomService.endRoom(code);
+    if (!success) throw new Error('Room not found');
+    return { success: true, message: 'Room ended successfully' };
+  }
+
+  // 🔹 AI Question Generation from transcript or YouTube
+  @Authorized()
   @Post('/:code/generate-questions')
   @HttpCode(200)
   async generateQuestionsFromTranscript(
@@ -83,20 +117,14 @@ export class PollRoomController {
   ) {
     const tempPaths: string[] = [];
 
-    // Handle file upload (using multer)
     await new Promise<void>((resolve, reject) => {
-      upload.single('file')(req, res, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
+      upload.single('file')(req, res, (err) => (err ? reject(err) : resolve()));
     });
 
     try {
-      let { youtubeUrl, questionSpec, model } = req.body;
-
+      const { youtubeUrl, questionSpec, model } = req.body;
       let transcript = '';
 
-      // 📌 If file uploaded
       if (req.file) {
         const filePath = req.file.path;
         tempPaths.push(filePath);
@@ -108,10 +136,7 @@ export class PollRoomController {
         }
 
         transcript = await this.transcriptionService.transcribe(audioPath);
-      }
-
-      // 📌 Or if YouTube URL provided
-      else if (youtubeUrl) {
+      } else if (youtubeUrl) {
         const videoPath = await this.videoService.downloadVideo(youtubeUrl);
         tempPaths.push(videoPath);
 
@@ -120,26 +145,15 @@ export class PollRoomController {
 
         transcript = await this.transcriptionService.transcribe(audioPath);
       } else {
-        return res.status(400).json({
-          message: 'Please upload a file or provide a youtubeUrl.',
-        });
+        return res.status(400).json({ message: 'Please upload a file or provide a youtubeUrl.' });
       }
-      console.log('Transcription completed successfully:', transcript);
 
-      // 📌 Segment transcript (using AI)
-      const segments = await this.aiContentService.segmentTranscript(
-        transcript,
-        model
-      );
-      console.log('Transcript segmented successfully:', segments);
-
-      // 📌 Generate questions from segments
+      const segments = await this.aiContentService.segmentTranscript(transcript, model);
       const generatedQuestions = await this.aiContentService.generateQuestions({
         segments,
         globalQuestionSpecification: questionSpec ? [questionSpec] : [{}],
         model,
       });
-      console.log('Questions generated successfully:', generatedQuestions);
 
       return res.json({
         message: 'Questions generated successfully from transcript.',
@@ -149,40 +163,10 @@ export class PollRoomController {
         questions: generatedQuestions,
       });
     } catch (err: any) {
-      console.error('Error generating questions from transcript:', err);
-      return res
-        .status(err.status || 500)
-        .json({ message: err.message || 'Internal Server Error' });
+      console.error('Error generating questions:', err);
+      return res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
     } finally {
-      // cleanup temp files
       await this.cleanupService.cleanup(tempPaths);
     }
-  }
-
-
-  // 🔹 Submit Poll Answer
-  // @Authorized()
-  @Post('/:code/polls/answer')
-  submitPollAnswer(
-    @Param('code') roomCode: string,
-    @Body() body: { pollId: string; userId: string; answerIndex: number }
-  ) {
-    this.pollService.submitAnswer(body.pollId, body.userId, body.answerIndex);
-    return { success: true };
-  }
-
-  // Fetch Results for All Polls in Room
-  // @Authorized()
-  @Get('/:code/polls/results')
-  getResultsForRoom(@Param('code') code: string) {
-    return this.pollService.getPollResults(code);
-  }
-
-  //@Authorized()
-  @Post('/:code/end')
-  endRoom(@Param('code') code: string) {
-    const success = this.roomService.endRoom(code);
-    if (!success) throw new Error('Room not found');
-    return { success: true, message: 'Room ended successfully' };
   }
 }
