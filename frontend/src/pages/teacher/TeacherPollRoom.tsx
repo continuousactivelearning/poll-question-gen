@@ -6,38 +6,39 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
-// Create a pre-configured axios instance
 const API_URL = import.meta.env.VITE_API_URL;
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
 type PollResults = Record<string, Record<string, { count: number; users: string[] }>>;
 
 export default function TeacherPollRoom() {
-const params = useParams({ from: '/teacher/pollroom/$code' });
-const roomCode = params.code;
+  const params = useParams({ from: '/teacher/pollroom/$code' });
+  const roomCode = params.code;
 
-  if (!roomCode) return <div>Loading...</div>;
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
+  const [correctOptionIndex, setCorrectOptionIndex] = useState<number>(0);
+  const [timer, setTimer] = useState<number>(30);
   const [pollResults, setPollResults] = useState<PollResults>({});
-  const [timer, setTimer] = useState<number>(30); // default timer value
+
+  if (!roomCode) return <div>Loading...</div>;
 
   const createPoll = async () => {
     try {
       await api.post(`/livequizzes/rooms/${roomCode}/polls`, {
         question,
-        options: options.filter(o => o.trim()),
+        options: options.filter(opt => opt.trim()),
         creatorId: "teacher-123", // replace with real ID
-        timer: Number(timer) // send timer to backend
+        timer: Number(timer),
+        correctOptionIndex
       });
       toast.success("Poll created!");
       setQuestion("");
       setOptions(["", "", "", ""]);
+      setCorrectOptionIndex(0);
     } catch {
       toast.error("Failed to create poll");
     }
@@ -55,41 +56,52 @@ const roomCode = params.code;
   return (
     <Card className="max-w-xl mx-auto mt-10 p-6">
       <CardHeader>
-        <CardTitle>Room Code: {roomCode}</CardTitle>
+        <CardTitle className="text-lg">Room Code: <span className="font-mono">{roomCode}</span></CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <Input
           placeholder="Poll question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="mb-3"
         />
-        {options.map((opt, i) => (
-          <Input
-            key={i}
-            placeholder={`Option ${i + 1}`}
-            value={opt}
-            onChange={(e) => {
-              const copy = [...options];
-              copy[i] = e.target.value;
-              setOptions(copy);
-            }}
-            className="mb-2"
-          />
-        ))}
+
+        <fieldset className="space-y-2">
+          <legend className="text-sm text-gray-600 mb-1">Select correct option</legend>
+          {options.map((opt, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input
+                type="radio"
+                name="correctOption"
+                checked={correctOptionIndex === i}
+                onChange={() => setCorrectOptionIndex(i)}
+                className="accent-purple-600"
+              />
+              <Input
+                placeholder={`Option ${i + 1}`}
+                value={opt}
+                onChange={(e) => {
+                  const copy = [...options];
+                  copy[i] = e.target.value;
+                  setOptions(copy);
+                }}
+              />
+            </div>
+          ))}
+        </fieldset>
+
         <Input
           type="number"
           placeholder="Timer (seconds)"
           value={timer}
           min={5}
           onChange={(e) => setTimer(Number(e.target.value))}
-          className="mb-3"
         />
-        <Button className="w-full mt-2 mb-4" onClick={createPoll}>
+
+        <Button className="w-full" onClick={createPoll}>
           Create Poll
         </Button>
 
-        <Button variant="secondary" className="w-full mb-4" onClick={fetchResults}>
+        <Button variant="secondary" className="w-full" onClick={fetchResults}>
           Fetch Poll Results
         </Button>
 

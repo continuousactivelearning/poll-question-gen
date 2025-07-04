@@ -1,53 +1,85 @@
 import { injectable } from 'inversify';
-import { Room } from '../interfaces/Room.js';
-
-const rooms: Room[] = [];
+import { Room } from '../DBSchemas/Room.js';
+import type { Room as RoomType, Poll, PollAnswer } from '../interfaces/PollRoom.js';
 
 @injectable()
 export class RoomService {
-  createRoom(name: string, teacherId: string): Room {
+  async createRoom(name: string, teacherId: string): Promise<RoomType> {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const room: Room = {
-      code,
+
+    const newRoom = await new Room({
+      roomCode: code,
       name,
       teacherId,
       createdAt: new Date(),
       status: 'active',
-    };
-    rooms.push(room);
-    return room;
+      polls: []
+    }).save();
+
+    return this.mapRoom(newRoom);
   }
 
-  getRoomByCode(code: string): Room | undefined {
-    return rooms.find((r) => r.code === code);
+  async getRoomByCode(code: string): Promise<RoomType | null> {
+    const room = await Room.findOne({ roomCode: code });
+    return room ? this.mapRoom(room) : null;
   }
 
-  isRoomValid(code: string): boolean {
-    const room = this.getRoomByCode(code);
+  async isRoomValid(code: string): Promise<boolean> {
+    const room = await Room.findOne({ roomCode: code });
     return !!room && room.status === 'active';
   }
 
-  isRoomEnded(roomCode: string): boolean {
-    const room = this.getRoomByCode(roomCode);
+  async isRoomEnded(code: string): Promise<boolean> {
+    const room = await Room.findOne({ roomCode: code });
     return room ? room.status === 'ended' : false;
   }
 
-  endRoom(code: string): boolean {
-    const room = this.getRoomByCode(code);
+  async endRoom(code: string): Promise<boolean> {
+    const room = await Room.findOne({ roomCode: code });
     if (!room) return false;
     room.status = 'ended';
+    await room.save();
     return true;
   }
 
-  getAllRooms(): Room[] {
-    return rooms;
+  async getAllRooms(): Promise<RoomType[]> {
+    const rooms = await Room.find();
+    return rooms.map(this.mapRoom);
   }
 
-  getActiveRooms(): Room[] {
-    return rooms.filter((r) => r.status === 'active');
+  async getActiveRooms(): Promise<RoomType[]> {
+    const rooms = await Room.find({ status: 'active' });
+    return rooms.map(this.mapRoom);
   }
 
-  getEndedRooms(): Room[] {
-    return rooms.filter((r) => r.status === 'ended');
-    }
+  async getEndedRooms(): Promise<RoomType[]> {
+    const rooms = await Room.find({ status: 'ended' });
+    return rooms.map(this.mapRoom);
   }
+
+  /**
+   * Map Mongoose Room Document to plain RoomType matching interface
+   */
+  private mapRoom(roomDoc: any): RoomType {
+    return {
+      roomCode: roomDoc.roomCode,
+      name: roomDoc.name,
+      teacherId: roomDoc.teacherId,
+      createdAt: roomDoc.createdAt,
+      status: roomDoc.status,
+      polls: (roomDoc.polls || []).map((p: any): Poll => ({
+        _id: p._id.toString(),  // convert ObjectId to string if needed
+        question: p.question,
+        options: p.options,
+        correctOptionIndex: p.correctOptionIndex,
+        timer: p.timer,
+        createdAt: p.createdAt,
+        answers: (p.answers || []).map((a: any): PollAnswer => ({
+          userId: a.userId,
+          answerIndex: a.answerIndex,
+          answeredAt: a.answeredAt
+        }))
+      }))
+    };
+  }
+}
