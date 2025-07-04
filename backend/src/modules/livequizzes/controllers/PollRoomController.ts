@@ -20,12 +20,12 @@ import { AIContentService } from '#root/modules/genai/services/AIContentService.
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
-import type { File as MulterFile } from 'multer';
+// import type { File as MulterFile } from 'multer';
 
 declare module 'express-serve-static-core' {
   interface Request {
-    file?: MulterFile;
-    files?: MulterFile[];
+    file?: Express.Multer.File;
+    files?: Express.Multer.File[];
   }
 }
 const upload = multer({ dest: 'uploads/' });

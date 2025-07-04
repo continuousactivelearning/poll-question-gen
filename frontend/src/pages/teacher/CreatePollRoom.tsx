@@ -40,7 +40,7 @@ export default function CreatePollRoom() {
         teacherId: "teacher-123"
       });
       toast.success("Room created successfully!");
-      navigate({ to: `/teacher/pollroom/${res.data.code}` });
+      navigate({ to: `/teacher/pollroom/${res.data.roomCode}` });
     } catch (error) {
       toast.error("Failed to create room. Please try again.");
     } finally {
