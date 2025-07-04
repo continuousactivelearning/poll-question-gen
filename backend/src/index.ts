@@ -1,18 +1,19 @@
 import express, { Express } from 'express';
 import cors from 'cors';
-import {createExpressServer, RoutingControllersOptions} from 'routing-controllers';
-import {appConfig} from './config/app.js';
-import {loggingHandler} from './shared/middleware/loggingHandler.js';
-import {HttpErrorHandler} from './shared/index.js';
-import {generateOpenAPISpec} from './shared/functions/generateOpenApiSpec.js';
-import {apiReference} from '@scalar/express-api-reference';
-import {loadAppModules} from './bootstrap/loadModules.js';
-import {printStartupSummary} from './utils/logDetails.js';
+import { createExpressServer, RoutingControllersOptions } from 'routing-controllers';
+import { appConfig } from './config/app.js';
+import { loggingHandler } from './shared/middleware/loggingHandler.js';
+import { HttpErrorHandler } from './shared/index.js';
+import { generateOpenAPISpec } from './shared/functions/generateOpenApiSpec.js';
+import { apiReference } from '@scalar/express-api-reference';
+import { loadAppModules } from './bootstrap/loadModules.js';
+import { printStartupSummary } from './utils/logDetails.js';
 import type { CorsOptions } from 'cors';
 import { currentUserChecker } from './shared/functions/currentUserChecker.js';
 import { pollSocket } from './modules/livequizzes/utils/PollSocket.js';
+import { connectToDatabase } from './config/db.js';
 
-const {controllers, validators} = await loadAppModules(appConfig.module.toLowerCase());
+const { controllers, validators } = await loadAppModules(appConfig.module.toLowerCase());
 
 const corsOptions: CorsOptions = {
   origin: appConfig.origins,
@@ -52,11 +53,22 @@ app.use(
   }),
 );
 
-// Start server
-//useExpressServer(app, moduleOptions);
 createExpressServer(moduleOptions);
-const server = app.listen(appConfig.port, () => {
-  printStartupSummary();
-});
 
-pollSocket.init(server); // For live poll socket functionality
+async function startServer() {
+  try {
+    await connectToDatabase(); // Connect to MongoDB first
+    // Start server
+    //useExpressServer(app, moduleOptions);
+    const server = app.listen(appConfig.port, () => {
+      printStartupSummary();
+    });
+
+    pollSocket.init(server); // For live poll socket functionality
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
