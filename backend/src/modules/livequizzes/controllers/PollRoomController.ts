@@ -20,7 +20,14 @@ import { AIContentService } from '#root/modules/genai/services/AIContentService.
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
+import type { File as MulterFile } from 'multer';
 
+declare module 'express-serve-static-core' {
+  interface Request {
+    file?: MulterFile;
+    files?: MulterFile[];
+  }
+}
 const upload = multer({ dest: 'uploads/' });
 
 @injectable()
@@ -54,6 +61,7 @@ export class PollRoomController {
     return room;
   }
 
+  // 🔹 Create Poll in Room
   @Authorized()
   @Post('/:code/polls')
   async createPollInRoom(
@@ -62,12 +70,16 @@ export class PollRoomController {
   ) {
     const room = await this.roomService.getRoomByCode(roomCode);
     if (!room) throw new Error('Invalid room');
-    return await this.pollService.createPoll(roomCode, {
-      question: body.question,
-      options: body.options,
-      correctOptionIndex: body.correctOptionIndex,
-      timer: body.timer,
-    });
+    return await this.pollService.createPoll(
+      roomCode,
+      {
+        question: body.question,
+        options: body.options,
+        correctOptionIndex: body.correctOptionIndex,
+        timer: body.timer
+      }
+    );
+
   }
 
   @Authorized()
@@ -80,6 +92,7 @@ export class PollRoomController {
     return { success: true };
   }
 
+  // Fetch Results for All Polls in Room
   @Authorized()
   @Get('/:code/polls/results')
   async getResultsForRoom(@Param('code') code: string) {
@@ -94,10 +107,14 @@ export class PollRoomController {
     return { success: true, message: 'Room ended successfully' };
   }
 
+  // 🔹 AI Question Generation from transcript or YouTube
   @Authorized()
   @Post('/:code/generate-questions')
   @HttpCode(200)
-  async generateQuestionsFromTranscript(@Req() req: Request, @Res() res: Response) {
+  async generateQuestionsFromTranscript(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
     const tempPaths: string[] = [];
 
     await new Promise<void>((resolve, reject) => {
