@@ -2,10 +2,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useState } from "react";
-import { Sun, Moon, BarChart3, Users, TrendingUp, Clock, Calendar, HelpCircle } from "lucide-react";
+import { BarChart3, Users, TrendingUp, Clock, Calendar, HelpCircle } from "lucide-react";
 
 export default function TeacherDashboard() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark] = useState(false);
 
   // Top stats (total)
   const overview = {

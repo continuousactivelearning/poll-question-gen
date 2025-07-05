@@ -4,7 +4,14 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { logout } from "@/lib/api/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Home, Users, PlusCircle, BarChart3, Settings } from "lucide-react";
+import { LogOut, Home, Users, PlusCircle, BarChart3, Settings, User, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import React from "react";
 
@@ -29,6 +36,10 @@ export default function TeacherLayout() {
     logout();
     console.log("Logging out...");
     navigate({ to: "/auth" });
+  };
+
+  const handleProfileClick = () => {
+    navigate({ to: "/teacher/profile" });
   };
 
   const isActiveRoute = (path: string) => {
@@ -153,7 +164,7 @@ export default function TeacherLayout() {
                 }`}
               asChild
             >
-              <Link to="/teacher/settings">
+              <Link to="/teacher/profile">
                 <Settings className="h-4 w-4 mr-2" />
                 <span className="relative z-10">Settings</span>
                 {isActiveRoute('/teacher/settings') && (
@@ -167,28 +178,95 @@ export default function TeacherLayout() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
 
-            {/* Enhanced User Avatar */}
-            <div className="relative group">
-              <div className="absolute -inset-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300 dark:from-purple-400 dark:to-blue-400 dark:opacity-25 dark:group-hover:opacity-40"></div>
-              <Avatar className="relative h-12 w-12 cursor-pointer border-2 border-white/90 transition-all duration-300 group-hover:scale-110 shadow-lg dark:border-gray-700/90">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white font-bold text-lg shadow-inner dark:from-purple-400 dark:to-blue-400">
-                  {user?.name?.charAt(0).toUpperCase() || 'T'}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+            {/* Enhanced User Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-auto p-2 rounded-full hover:bg-transparent focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300"
+                >
+                  <div className="relative group">
+                    <div className="absolute -inset-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300 dark:from-purple-400 dark:to-blue-400 dark:opacity-25 dark:group-hover:opacity-40"></div>
+                    <div className="relative flex items-center gap-2">
+                      <Avatar className="h-12 w-12 border-2 border-white/90 transition-all duration-300 group-hover:scale-110 shadow-lg dark:border-gray-700/90">
+                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white font-bold text-lg shadow-inner dark:from-purple-400 dark:to-blue-400">
+                          {user?.name?.charAt(0).toUpperCase() || 'T'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="hidden lg:block text-left">
+                        <div className="text-sm font-medium text-slate-900 dark:text-gray-100">
+                          {user?.name || 'Teacher'}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">
+                          {user?.email || 'teacher@example.com'}
+                        </div>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-slate-500 transition-transform duration-200 group-hover:text-slate-700 dark:text-gray-400 dark:group-hover:text-gray-200" />
+                    </div>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-64 p-2 bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-xl shadow-slate-500/10 dark:bg-gray-900/95 dark:border-gray-700/80 dark:shadow-gray-900/20"
+              >
+                {/* User Info Header */}
+                <div className="flex items-center gap-3 p-3 mb-2 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg dark:from-purple-900/30 dark:to-blue-900/30">
+                  <Avatar className="h-10 w-10 border-2 border-white/90 shadow-md dark:border-gray-700/90">
+                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white font-bold dark:from-purple-400 dark:to-blue-400">
+                      {user?.name?.charAt(0).toUpperCase() || 'T'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-slate-900 dark:text-gray-100 truncate">
+                      {user?.name || 'Teacher'}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-gray-400 truncate">
+                      {user?.email || 'teacher@example.com'}
+                    </div>
+                  </div>
+                </div>
 
-            {/* Enhanced Logout Button */}
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={handleLogout}
-              className="relative overflow-hidden group bg-gradient-to-r from-red-50 to-orange-50 border border-red-200/60 hover:from-red-500 hover:to-orange-500 hover:text-white transition-all duration-300 hover:scale-105 shadow-sm text-red-700 dark:from-red-900/30 dark:to-orange-900/30 dark:border-red-800/60 dark:text-red-400 dark:hover:from-red-500 dark:hover:to-orange-500 dark:hover:text-white"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <LogOut className="h-5 w-5 mr-2 relative z-10" />
-              <span className="hidden sm:block relative z-10">Logout</span>
-            </Button>
+                <DropdownMenuSeparator className="bg-slate-200/80 dark:bg-gray-700/80" />
+
+                {/* Profile Link */}
+                <DropdownMenuItem
+                  onClick={handleProfileClick}
+                  className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30"
+                >
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 flex items-center justify-center dark:from-purple-900/50 dark:to-blue-900/50">
+                    <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-900 dark:text-gray-100">
+                      View Profile
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-gray-400">
+                      Manage your account
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-slate-200/80 dark:bg-gray-700/80" />
+
+                {/* Logout */}
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all duration-200 dark:hover:from-red-900/30 dark:hover:to-orange-900/30"
+                >
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-red-100 to-orange-100 flex items-center justify-center dark:from-red-900/50 dark:to-orange-900/50">
+                    <LogOut className="h-4 w-4 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-900 dark:text-gray-100">
+                      Log Out
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
