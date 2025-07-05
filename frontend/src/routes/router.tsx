@@ -22,6 +22,9 @@ import CreatePollRoom from '@/pages/teacher/CreatePollRoom'
 import JoinPollRoom from '@/pages/student/JoinPollRoom'
 import StudentPollRoom from '@/pages/student/StudentPollRoom'
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard'
+import StudentDashboard from '@/pages/student/StudentDashboard'
+import StudentProfile from '@/pages/student/StudentProfile'
+import TeacherProfile from '@/pages/teacher/TeacherProfile'
 
 // Root route with error and notFound handling
 const rootRoute = new RootRoute({
@@ -139,6 +142,13 @@ const teacherDashboardRoute = new Route({
   component: TeacherDashboard,
 });
 
+// Teacher profile route
+const teacherProfileRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/profile',
+  component: TeacherProfile,
+});
+
 // Teacher genAI home route
 const teacherGenAIHomeRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
@@ -158,6 +168,20 @@ const teacherCreateRoomRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
   path: '/pollroom',
   component: CreatePollRoom,
+});
+
+// Student dashboard route
+const studentDashboardRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/home',
+  component: StudentDashboard,
+});
+
+// Student profile route
+const studentProfileRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/profile',
+  component: StudentProfile,
 });
 
 // Student poll room route
@@ -188,11 +212,14 @@ const routeTree = rootRoute.addChildren([
     teacherGenAIHomeRoute,
     teacherPollRoomRoute,
     teacherCreateRoomRoute,
-    teacherDashboardRoute
+    teacherDashboardRoute,
+    teacherProfileRoute,
   ]),
   studentLayoutRoute.addChildren([
     studentPollRoomRoute,
     studentJoinRoomRoute,
+    studentDashboardRoute,
+    studentProfileRoute,
   ]),
 ]);
 
