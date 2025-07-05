@@ -1,8 +1,8 @@
-import { 
-  Router, 
-  Route, 
-  RootRoute, 
-  redirect, 
+import {
+  Router,
+  Route,
+  RootRoute,
+  redirect,
   createMemoryHistory,
   Outlet,
   NotFoundRoute,
@@ -21,6 +21,7 @@ import TeacherPollRoom from '@/pages/teacher/TeacherPollRoom'
 import CreatePollRoom from '@/pages/teacher/CreatePollRoom'
 import JoinPollRoom from '@/pages/student/JoinPollRoom'
 import StudentPollRoom from '@/pages/student/StudentPollRoom'
+import TeacherDashboard from '@/pages/teacher/TeacherDashboard'
 
 // Root route with error and notFound handling
 const rootRoute = new RootRoute({
@@ -33,7 +34,7 @@ const rootRoute = new RootRoute({
         <div className="text-center p-8 bg-red-50 rounded-lg shadow-lg max-w-md">
           <h1 className="text-2xl font-bold text-red-800 mb-4">Something went wrong</h1>
           <p className="text-red-600 mb-6">{error instanceof Error ? error.message : 'An unexpected error occurred'}</p>
-          <button 
+          <button
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             onClick={() => window.location.href = '/auth'}
           >
@@ -94,7 +95,7 @@ const teacherLayoutRoute = new Route({
     if (!isAuthenticated) {
       throw redirect({ to: '/auth' });
     }
-    
+
     // Role check - must be a teacher
     if (user?.role !== 'teacher') {
       if (user?.role === 'student') {
@@ -118,7 +119,7 @@ const studentLayoutRoute = new Route({
     if (!isAuthenticated) {
       throw redirect({ to: '/auth' });
     }
-    
+
     // Role check - must be a student
     if (user?.role !== 'student') {
       if (user?.role === 'teacher') {
@@ -129,6 +130,13 @@ const studentLayoutRoute = new Route({
     }
   },
   component: StudentLayout,
+});
+
+// Teacher dashboard route
+const teacherDashboardRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/home',
+  component: TeacherDashboard,
 });
 
 // Teacher genAI home route
@@ -142,14 +150,14 @@ const teacherGenAIHomeRoute = new Route({
 const teacherPollRoomRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
   path: '/pollroom/$code',
-  component: TeacherPollRoom ,
+  component: TeacherPollRoom,
 });
 
 // Teacher Create live Poll Room route
 const teacherCreateRoomRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
   path: '/pollroom',
-  component: CreatePollRoom ,
+  component: CreatePollRoom,
 });
 
 // Student poll room route
@@ -180,6 +188,7 @@ const routeTree = rootRoute.addChildren([
     teacherGenAIHomeRoute,
     teacherPollRoomRoute,
     teacherCreateRoomRoute,
+    teacherDashboardRoute
   ]),
   studentLayoutRoute.addChildren([
     studentPollRoomRoute,
@@ -205,16 +214,16 @@ export const router = new Router({
 export const useRedirectBasedOnRole = () => {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     if (isAuthenticated && user?.role) {
       const path = window.location.pathname;
-      
+
       // If the user is at root or auth page and already authenticated, redirect to their role's dashboard
       if (path === '/' || path === '/auth') {
         navigate({ to: `/${user.role.toLowerCase()}` });
       }
-      
+
       // If user is trying to access a different role's route, redirect to their proper route
       else if (
         (path.startsWith('/teacher') && user.role !== 'teacher') ||

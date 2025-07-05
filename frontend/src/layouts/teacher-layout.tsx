@@ -74,11 +74,10 @@ export default function TeacherLayout() {
             <Button
               variant="ghost"
               size="sm"
-              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${
-                isActiveRoute('/teacher/home')
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
-              }`}
+              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/teacher/home')
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                }`}
               asChild
             >
               <Link to="/teacher/home">
@@ -89,21 +88,20 @@ export default function TeacherLayout() {
                 )}
               </Link>
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
-              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${
-                isActiveRoute('/teacher/create-poll')
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
-              }`}
+              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/teacher/create-poll')
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                }`}
               asChild
             >
-              <Link to="/teacher/create-poll">
+              <Link to="/teacher/pollroom">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                <span className="relative z-10">Create Poll</span>
-                {isActiveRoute('/teacher/create-poll') && (
+                <span className="relative z-10">Create Room</span>
+                {isActiveRoute('/teacher/pollroom') && (
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-md dark:from-purple-400/20 dark:to-blue-400/20" />
                 )}
               </Link>
@@ -112,11 +110,10 @@ export default function TeacherLayout() {
             <Button
               variant="ghost"
               size="sm"
-              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${
-                isActiveRoute('/teacher/manage-rooms')
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
-              }`}
+              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/teacher/manage-rooms')
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                }`}
               asChild
             >
               <Link to="/teacher/manage-rooms">
@@ -127,7 +124,7 @@ export default function TeacherLayout() {
                 )}
               </Link>
             </Button>
-
+            {/*  
             <Button
               variant="ghost"
               size="sm"
@@ -146,15 +143,14 @@ export default function TeacherLayout() {
                 )}
               </Link>
             </Button>
-
+            */}
             <Button
               variant="ghost"
               size="sm"
-              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${
-                isActiveRoute('/teacher/settings')
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
-              }`}
+              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/teacher/settings')
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                }`}
               asChild
             >
               <Link to="/teacher/settings">

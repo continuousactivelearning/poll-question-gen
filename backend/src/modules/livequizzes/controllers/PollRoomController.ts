@@ -43,7 +43,7 @@ export class PollRoomController {
     @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService
   ) {}
 
-  @Authorized()
+  //@Authorized()
   @Post('/')
   async createRoom(@Body() body: { name: string; teacherId: string }) {
     const room = await this.roomService.createRoom(body.name, body.teacherId);
@@ -53,7 +53,7 @@ export class PollRoomController {
     };
   }
 
-  @Authorized()
+  //@Authorized()
   @Get('/:code')
   async getRoom(@Param('code') code: string) {
     const room = await this.roomService.getRoomByCode(code);
@@ -62,7 +62,7 @@ export class PollRoomController {
   }
 
   // 🔹 Create Poll in Room
-  @Authorized()
+  //@Authorized()
   @Post('/:code/polls')
   async createPollInRoom(
     @Param('code') roomCode: string,
@@ -82,7 +82,7 @@ export class PollRoomController {
 
   }
 
-  @Authorized()
+  //@Authorized()
   @Post('/:code/polls/answer')
   async submitPollAnswer(
     @Param('code') roomCode: string,
@@ -93,13 +93,13 @@ export class PollRoomController {
   }
 
   // Fetch Results for All Polls in Room
-  @Authorized()
+  //@Authorized()
   @Get('/:code/polls/results')
   async getResultsForRoom(@Param('code') code: string) {
     return await this.pollService.getPollResults(code);
   }
 
-  @Authorized()
+  //@Authorized()
   @Post('/:code/end')
   async endRoom(@Param('code') code: string) {
     const success = await this.roomService.endRoom(code);
@@ -108,7 +108,7 @@ export class PollRoomController {
   }
 
   // 🔹 AI Question Generation from transcript or YouTube
-  @Authorized()
+  //@Authorized()
   @Post('/:code/generate-questions')
   @HttpCode(200)
   async generateQuestionsFromTranscript(
