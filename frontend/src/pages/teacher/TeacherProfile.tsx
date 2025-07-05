@@ -2,12 +2,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ChartContainer } from "@/components/ui/chart";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { useAuthStore } from "@/lib/store/auth-store";
-import { User as UserIcon, AtSign, BadgeCheck, Bell, Settings, BarChart2, History, Activity, LogOut, Edit2, Save } from "lucide-react";
+import { User, AtSign, BadgeCheck, BarChart2, History, Activity, Edit2, Save } from "lucide-react";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
@@ -22,11 +20,6 @@ const activeRooms = [
   { id: 2, name: "English Room", code: "ENG789", status: "Active", students: 12 },
 ];
 
-const notifications = [
-  { id: 1, message: "Room PHY456 closed.", time: "2h ago" },
-  { id: 2, message: "18 students joined Algebra Room.", time: "1d ago" },
-];
-
 const analyticsData = [
   { month: "Jan", polls: 6 },
   { month: "Feb", polls: 8 },
@@ -36,8 +29,6 @@ const analyticsData = [
 
 export default function TeacherProfile() {
   const { user } = useAuthStore();
-  const [openNotif, setOpenNotif] = useState(false);
-  const [openSettings, setOpenSettings] = useState(false);
   const [editName, setEditName] = useState(false);
   const [nameValue, setNameValue] = useState(user?.name || "");
   const [savingName, setSavingName] = useState(false);
@@ -62,58 +53,6 @@ export default function TeacherProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950 flex flex-col">
-      {/* Header Section */}
-      <header className="flex items-center justify-between px-8 py-6 border-b border-slate-200/80 dark:border-gray-700/80 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-extrabold text-primary tracking-tight">EduPoll</span>
-          <Badge variant="secondary" className="ml-2">Teacher</Badge>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">{user.name || "Unnamed Teacher"}</span>
-          {/* Notification Center */}
-          <Sheet open={openNotif} onOpenChange={setOpenNotif}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1 animate-pulse-gentle">{notifications.length}</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <h2 className="text-lg font-bold mb-4">Notifications</h2>
-              <ul className="space-y-3">
-                {notifications.map(n => (
-                  <li key={n.id} className="bg-muted/60 rounded-lg px-3 py-2 flex flex-col">
-                    <span className="text-sm text-foreground">{n.message}</span>
-                    <span className="text-xs text-muted-foreground">{n.time}</span>
-                  </li>
-                ))}
-              </ul>
-            </SheetContent>
-          </Sheet>
-          {/* Settings Panel */}
-          <Sheet open={openSettings} onOpenChange={setOpenSettings}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Settings">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <h2 className="text-lg font-bold mb-4">Settings</h2>
-              <div className="space-y-4">
-                <div>
-                  <span className="block text-sm font-medium mb-1">Account</span>
-                  <Button variant="outline" className="w-full flex gap-2"><LogOut className="h-4 w-4" /> Logout</Button>
-                </div>
-                <div>
-                  <span className="block text-sm font-medium mb-1">Theme</span>
-                  <Button variant="outline" className="w-full">Toggle Dark/Light</Button>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </header>
-
       {/* Main Content Grid - Centered and Enlarged Profile Card */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 w-full">
         <Card className="w-full max-w-2xl bg-white/90 dark:bg-gray-900/90 rounded-2xl shadow-xl border border-slate-200/80 dark:border-gray-700/80 mb-8 student-card-hover animate-fade-in p-8 flex flex-col items-center">
@@ -121,7 +60,7 @@ export default function TeacherProfile() {
             <Avatar className="h-28 w-28 mb-2 ring-4 ring-primary/30">
               <AvatarImage src={user.avatar} alt={user.name || user.email} />
               <AvatarFallback className="rounded-full bg-purple-100 dark:bg-purple-900">
-                <UserIcon className="h-14 w-14 text-purple-500 dark:text-purple-300" />
+                <User className="h-14 w-14 text-purple-500 dark:text-purple-300" />
               </AvatarFallback>
             </Avatar>
             <CardTitle className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -251,4 +190,4 @@ export default function TeacherProfile() {
       </section>
     </div>
   );
-} 
+}

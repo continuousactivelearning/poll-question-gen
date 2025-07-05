@@ -1,12 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
-import { Sun, Moon, BookOpen, TrendingUp, Users, Calendar, Trophy, Clock, Activity, CheckCircle } from "lucide-react";
+import { BookOpen, TrendingUp, Calendar, Trophy, Clock, Activity, CheckCircle } from "lucide-react";
 
 export default function StudentDashboard() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark] = useState(false);
 
   // Dummy data
   const pollStats = { total: 20, taken: 15, absent: 5 };
@@ -14,21 +13,7 @@ export default function StudentDashboard() {
     { name: "Math Poll", subject: "Algebra", score: 15, date: "12 Aug 2024" },
     { name: "Science Poll", subject: "Physics", score: 12, date: "15 Sep 2024" },
   ];
-  const inbox = [
-    { name: "Michael Wong", message: "Don't forget to work on assignment page 36...", time: "09:32", tag: "Exam-Science" },
-    { name: "Cindy Chen", message: "Have you made history assignments?", time: "11:32", tag: "Algebra.pdf" },
-  ];
-  const examSchedule = [
-    { subject: "Physics", type: "Class 3", day: "Tuesday", date: "03 Dec 2024", time: "08:30 AM" },
-    { subject: "Biology", type: "Lab 1", day: "Monday", date: "04 Dec 2024", time: "08:30 AM", highlight: true },
-    { subject: "Math", type: "Practice 3", day: "Thursday", date: "05 Dec 2024", time: "08:30 AM" },
-  ];
-  const friends = [
-    { name: "Francis Tran", status: "Health is not good.", time: "6 Minutes Ago" },
-    { name: "Elliana Palacios", status: "Health is good.", time: "25 Minutes Ago" },
-    { name: "Katherine Webster", status: "Going on my own way.", time: "32 Minutes Ago" },
-    { name: "Avalon Corey", status: "Online", time: "Just Now" },
-  ];
+
   const tasks = [
     { name: "Discussion Algorithm", time: "08:00 - 12:00 PM", color: "red" },
     { name: "Fundamental Math", time: "12:00 - 15:00 PM", color: "yellow" },

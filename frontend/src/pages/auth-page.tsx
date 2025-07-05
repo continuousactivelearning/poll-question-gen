@@ -9,8 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
-import { AnimatedGridPattern } from "@/components/magicui/animated-grid-pattern";
-import { AuroraText } from "@/components/magicui/aurora-text";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -688,14 +686,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
-/* Add this to the bottom of the file or in a global CSS file */
-<style jsx global>{`
-@keyframes zoom-in {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.12); }
-}
-.animate-zoom-in {
-  animation: zoom-in 2s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-`}</style>
