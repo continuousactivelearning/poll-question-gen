@@ -286,7 +286,7 @@ export default function AuthPage() {
         {/* Left: Heading, subheading, features */}
         <div className="flex-1 flex flex-col items-start gap-6 z-10">
           <h1 className="text-4xl md:text-5xl font-bold text-black leading-tight">
-            Poll Automation
+            Poll Automation System
           </h1>
           <p className="text-gray-500 text-lg max-w-md">
                 Transform classroom engagement with real-time polling and instant feedback
