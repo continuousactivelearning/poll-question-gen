@@ -41,7 +41,7 @@ export class PollRoomController {
     @inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
     @inject(LIVE_QUIZ_TYPES.RoomService) private roomService: RoomService,
     @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService
-  ) {}
+  ) { }
 
   //@Authorized()
   @Post('/')
