@@ -148,11 +148,13 @@ export class PollRoomController {
         return res.status(400).json({ message: 'Please upload a file or provide a youtubeUrl.' });
       }
 
-      const segments = await this.aiContentService.segmentTranscript(transcript, model);
+      const defaultModel = 'gemma3';
+      const selectedModel = model?.trim() || defaultModel;
+      const segments = await this.aiContentService.segmentTranscript(transcript, selectedModel);
       const generatedQuestions = await this.aiContentService.generateQuestions({
         segments,
         globalQuestionSpecification: questionSpec ? [questionSpec] : [{}],
-        model,
+        model: selectedModel,
       });
 
       return res.json({
