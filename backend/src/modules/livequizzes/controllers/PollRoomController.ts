@@ -151,16 +151,20 @@ export class PollRoomController {
       const defaultModel = 'gemma3';
       const selectedModel = model?.trim() || defaultModel;
       const segments = await this.aiContentService.segmentTranscript(transcript, selectedModel);
+      // ✅ Safe default questionSpec
+      const safeSpec = questionSpec && Object.keys(questionSpec).length
+        ? [questionSpec]
+        : [{ SOL: 2 }]; // default: generate 2 single-choice MCQs
       const generatedQuestions = await this.aiContentService.generateQuestions({
         segments,
-        globalQuestionSpecification: questionSpec ? [questionSpec] : [{}],
+        globalQuestionSpecification: safeSpec,
         model: selectedModel,
       });
 
       return res.json({
         message: 'Questions generated successfully from transcript.',
         transcriptPreview: transcript.substring(0, 200) + '...',
-        segmentsCount: segments.length,
+        segmentsCount: Object.keys(segments).length,
         totalQuestions: generatedQuestions.length,
         questions: generatedQuestions,
       });
