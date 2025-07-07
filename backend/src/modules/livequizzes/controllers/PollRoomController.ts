@@ -20,6 +20,7 @@ import { AIContentService } from '#root/modules/genai/services/AIContentService.
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
+import type { QuestionSpec } from '#root/modules/genai/services/AIContentService.js';
 // import type { File as MulterFile } from 'multer';
 
 declare module 'express-serve-static-core' {
@@ -148,13 +149,29 @@ export class PollRoomController {
         return res.status(400).json({ message: 'Please upload a file or provide a youtubeUrl.' });
       }
 
+      const SEGMENTATION_THRESHOLD = parseInt(process.env.TRANSCRIPT_SEGMENTATION_THRESHOLD || '6000', 10);
       const defaultModel = 'gemma3';
       const selectedModel = model?.trim() || defaultModel;
-      const segments = await this.aiContentService.segmentTranscript(transcript, selectedModel);
+      let segments: Record<string, string>;
+      if (transcript.length <= SEGMENTATION_THRESHOLD) {
+        console.log('[generateQuestions] Small transcript detected. Using full transcript without segmentation.');
+        segments = { full: transcript };
+      } else {
+        console.log('[generateQuestions] Transcript is long; running segmentation...');
+        segments = await this.aiContentService.segmentTranscript(transcript, selectedModel);
+      }
       // ✅ Safe default questionSpec
-      const safeSpec = questionSpec && Object.keys(questionSpec).length
-        ? [questionSpec]
-        : [{ SOL: 2 }]; // default: generate 2 single-choice MCQs
+      let safeSpec: QuestionSpec[] = [{ SOL: 2 }]; // default
+      if (questionSpec && typeof questionSpec === 'object' && !Array.isArray(questionSpec)) {
+        safeSpec = [questionSpec];
+      } else if (Array.isArray(questionSpec) && typeof questionSpec[0] === 'object') {
+        safeSpec = questionSpec;
+      } else {
+        console.warn('Invalid questionSpec provided; using default [{ SOL: 2 }]');
+      }
+      console.log('Using questionSpec:', safeSpec);
+      console.log('[generateQuestions] Transcript length:', transcript.length);
+      console.log('[generateQuestions] Transcript preview:', transcript.substring(0, 200));
       const generatedQuestions = await this.aiContentService.generateQuestions({
         segments,
         globalQuestionSpecification: safeSpec,

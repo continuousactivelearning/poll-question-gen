@@ -84,20 +84,20 @@ export default function TeacherPollRoom() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-      
+
       mediaRecorder.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
       };
-      
+
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         setRecordedAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
-      
+
       mediaRecorder.start();
       setIsRecording(true);
       toast.success("Recording started");
@@ -131,36 +131,32 @@ export default function TeacherPollRoom() {
     setIsGenerating(true);
     try {
       const formData = new FormData();
-      
-      // Add YouTube URL if provided
-      if (youtubeUrl) {
-        formData.append('youtubeUrl', youtubeUrl);
+      if (youtubeUrl) formData.append('youtubeUrl', youtubeUrl);
+      if (audioFile) formData.append('file', audioFile);
+      else if (recordedAudio) {
+        const file = new File([recordedAudio], 'recording.wav', { type: 'audio/wav' });
+        formData.append('file', file);
       }
-      
-      // Add file - either uploaded file or recorded audio
-      if (audioFile) {
-        formData.append('file', audioFile);
-      } else if (recordedAudio) {
-        // Convert recorded audio blob to file
-        const audioFile = new File([recordedAudio], 'recording.wav', { type: 'audio/wav' });
-        formData.append('file', audioFile);
-      }
-
-      // Add optional parameters
-      if (questionSpec) {
-        formData.append('questionSpec', questionSpec);
-      }
+      if (questionSpec) formData.append('questionSpec', questionSpec);
       formData.append('model', selectedModel);
 
       const response = await api.post(`/livequizzes/rooms/${roomCode}/generate-questions`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      setGeneratedQuestions(response.data.questions || []);
+      const rawQuestions = response.data.questions || [];
+
+      // ✅ Transform backend shape → frontend shape
+      const cleanQuestions = rawQuestions.map((q: any): GeneratedQuestion => ({
+        question: q.questionText ?? '', // backend field is questionText
+        options: Array.isArray(q.options) ? q.options.map((opt: any) => opt.text ?? '') : [],
+        correctOptionIndex: Array.isArray(q.options) ? q.options.findIndex((opt: any) => opt.correct) : 0,
+      }));
+
+      console.log("Generated questions:", cleanQuestions);
+      setGeneratedQuestions(cleanQuestions);
       setShowPreview(true);
-      toast.success(`Generated ${response.data.totalQuestions} questions successfully!`);
+      toast.success(`Generated ${cleanQuestions.length} questions successfully!`);
     } catch (error: any) {
       console.error('Error generating questions:', error);
       toast.error(error.response?.data?.message || "Failed to generate questions");
@@ -169,12 +165,27 @@ export default function TeacherPollRoom() {
     }
   };
 
+
+  // Add this function to your component
+  const deleteGeneratedQuestion = (index: number) => {
+    const updated = generatedQuestions.filter((_, i) => i !== index);
+    setGeneratedQuestions(updated);
+    if (editingQuestionIndex === index) {
+      setEditingQuestionIndex(null);
+    } else if (editingQuestionIndex !== null && editingQuestionIndex > index) {
+      setEditingQuestionIndex(editingQuestionIndex - 1);
+    }
+    if (updated.length === 0) {
+      setShowPreview(false);
+    }
+    toast.success("Question deleted");
+  };
+
   const selectGeneratedQuestion = (questionData: GeneratedQuestion) => {
     setQuestion(questionData.question);
     setOptions([...questionData.options, ...Array(4 - questionData.options.length).fill("")]);
     setCorrectOptionIndex(questionData.correctOptionIndex);
     setActiveTab('manual');
-    setShowPreview(false);
   };
 
   const editGeneratedQuestion = (index: number, field: string, value: string | number) => {
@@ -218,21 +229,19 @@ export default function TeacherPollRoom() {
             <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
               <button
                 onClick={() => setActiveTab('manual')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'manual'
-                    ? 'bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
+                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'manual'
+                  ? 'bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
               >
                 Manual Entry
               </button>
               <button
                 onClick={() => setActiveTab('genai')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === 'genai'
-                    ? 'bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
+                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'genai'
+                  ? 'bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
               >
                 <Wand2 size={16} />
                 AI Generate
@@ -290,14 +299,14 @@ export default function TeacherPollRoom() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button 
+                  <Button
                     onClick={createPoll}
                     disabled={!question || options.filter(opt => opt.trim()).length < 2}
                     className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1"
                   >
                     Create Poll
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={fetchResults}
                     className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30"
@@ -379,7 +388,7 @@ export default function TeacherPollRoom() {
                     {/* Optional Configuration */}
                     <div className="border-t pt-4 space-y-4">
                       <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Optional Settings</h4>
-                      
+
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                           Question Specification (optional)
@@ -452,7 +461,7 @@ export default function TeacherPollRoom() {
                         <X size={16} />
                       </Button>
                     </div>
-                    
+
                     <div className="space-y-4 max-h-96 overflow-y-auto">
                       {generatedQuestions.map((questionData, index) => (
                         <Card key={index} className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70">
@@ -467,6 +476,15 @@ export default function TeacherPollRoom() {
                                 >
                                   <Edit3 size={14} />
                                 </Button>
+                                <Button
+                                  onClick={() => deleteGeneratedQuestion(index)}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                  title="Delete question"
+                                >
+                                  <X size={14} />
+                                </Button>
                                 {editingQuestionIndex === index ? (
                                   <Input
                                     value={questionData.question}
@@ -479,9 +497,9 @@ export default function TeacherPollRoom() {
                                   </p>
                                 )}
                               </div>
-                              
+
                               <div className="space-y-2">
-                                {questionData.options.map((option, optionIndex) => (
+                                {(questionData.options ?? []).map((option, optionIndex) => (
                                   <div key={optionIndex} className="flex items-center gap-2">
                                     <Input
                                       type="radio"
@@ -495,20 +513,20 @@ export default function TeacherPollRoom() {
                                         value={option}
                                         onChange={(e) => editGeneratedQuestion(index, `option-${optionIndex}`, e.target.value)}
                                         className="flex-1 dark:bg-gray-700/50"
+                                        placeholder={`Option ${optionIndex + 1}`}
                                       />
                                     ) : (
-                                      <span className={`flex-1 ${
-                                        questionData.correctOptionIndex === optionIndex
-                                          ? 'text-green-600 dark:text-green-400 font-medium'
-                                          : 'text-gray-700 dark:text-gray-300'
-                                      }`}>
-                                        {option}
+                                      <span className={`flex-1 ${questionData.correctOptionIndex === optionIndex
+                                        ? 'text-green-600 dark:text-green-400 font-medium'
+                                        : 'text-gray-700 dark:text-gray-300'
+                                        } ${!option.trim() ? 'italic text-gray-400 dark:text-gray-500' : ''}`}>
+                                        {option.trim() || `Option ${optionIndex + 1} (empty)`}
                                       </span>
                                     )}
                                   </div>
                                 ))}
                               </div>
-                              
+
                               <Button
                                 onClick={() => selectGeneratedQuestion(questionData)}
                                 variant="outline"
@@ -533,9 +551,9 @@ export default function TeacherPollRoom() {
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                   Poll Results
                 </h3>
-                {Object.entries(pollResults).map(([pollQuestion, options]) => (
-                  <Card 
-                    key={pollQuestion} 
+                {Object.entries(pollResults ?? {}).map(([pollQuestion, options]) => (
+                  <Card
+                    key={pollQuestion}
                     className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70"
                   >
                     <CardHeader>
@@ -545,7 +563,7 @@ export default function TeacherPollRoom() {
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
-                        {Object.entries(options).map(([opt, data]) => (
+                        {Object.entries(options ?? {}).map(([opt, data]) => (
                           <li key={opt} className="flex items-baseline">
                             <span className="font-medium text-purple-600 dark:text-purple-400 mr-2">
                               {opt}:

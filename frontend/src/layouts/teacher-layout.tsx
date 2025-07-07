@@ -4,7 +4,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { logout } from "@/lib/api/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Home, Users, PlusCircle, BarChart3, Settings, User, ChevronDown } from "lucide-react";
+import { LogOut, Home, Users, PlusCircle, Settings, User, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -164,7 +164,7 @@ export default function TeacherLayout() {
                 }`}
               asChild
             >
-              <Link to="/teacher/profile">
+              <Link to="/teacher/settings">
                 <Settings className="h-4 w-4 mr-2" />
                 <span className="relative z-10">Settings</span>
                 {isActiveRoute('/teacher/settings') && (

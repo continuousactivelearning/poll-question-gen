@@ -22,8 +22,8 @@ export interface GeneratedQuestion {
   points?: number;
 }
 
-type QuestionType = 'SOL' | 'SML' | 'OTL' | 'NAT' | 'DES';
-type QuestionSpec = Partial<Record<QuestionType, number>>;
+export type QuestionType = 'SOL' | 'SML' | 'OTL' | 'NAT' | 'DES';
+export type QuestionSpec = Partial<Record<QuestionType, number>>;
 
 @injectable()
 export class AIContentService {
@@ -171,25 +171,49 @@ JSON:`;
     count: number,
     transcriptContent: string
   ): string {
-    const base = `Based on the transcript below, generate ${count} question(s) of type ${questionType}.
+    const base = `You are an AI question generator.
+Based on the transcript below, generate ${count} question(s) of type ${questionType}.
+
+You must output JSON **exactly** in this shape, no nesting, no markdown:
+[
+  {
+    "questionText": "...",
+    "options": [
+      { "text": "...", "correct": true, "explanation": "..." },
+      { "text": "...", "correct": false, "explanation": "..." }
+    ],
+    "solution": "...",
+    "isParameterized": false,
+    "timeLimitSeconds": 60,
+    "points": 5
+  }
+]
+Do not wrap questionText inside another 'question' object. Output must be raw JSON.
+
+Important:
+- Output only JSON, no markdown, no extra text.
+- Each question must have at least 4 options.
+- Only one option can have "correct": true for SOL.
+- Fill all fields.
+- questionText must be clear and relevant to transcript.
+- explanation field must explain why the option is correct/incorrect.
+
 Transcript:
 ${transcriptContent}
 
-Each question:
-- Should match transcript content
-- isParameterized: false unless needed
 `;
 
     const instructions: Record<string, string> = {
-      SOL: 'Single correct answer MCQ, 3-4 incorrect options + explanations, 1 correct + explanation, timeLimitSeconds:60, points:5',
-      SML: 'Multiple correct answers MCQ, ~2-3 incorrect + ~2-3 correct with explanations, timeLimitSeconds:90, points:8',
-      OTL: 'Ordering question, 3-5 items with explanations, timeLimitSeconds:120, points:10',
-      NAT: 'Numeric answer with value/range, timeLimitSeconds:90, points:6',
+      SOL: 'Generate single-correct MCQ as above. timeLimitSeconds:60, points:5',
+      SML: 'Multiple-correct MCQ, 2-3 correct:true, timeLimitSeconds:90, points:8',
+      OTL: 'Ordering question, with options in correct order, timeLimitSeconds:120, points:10',
+      NAT: 'Numeric answer with value, timeLimitSeconds:90, points:6',
       DES: 'Descriptive answer, detailed solution, timeLimitSeconds:300, points:15'
     };
 
     return base + (instructions[questionType] || '');
   }
+
 
   public async generateQuestions(args: {
     segments: Record<string | number, string>;
@@ -228,7 +252,7 @@ Each question:
               prompt,
               stream: false,
               format: schema ? format : undefined,
-              options: { temperature: 0 }
+              options: { temperature: 0.2 }
             });
 
             const text = response.data?.response;
@@ -242,12 +266,37 @@ Each question:
             const questions = Array.isArray(parsed) ? parsed : [parsed];
 
             questions.forEach(q => {
-              q.segmentId = segmentId;
-              q.questionType = type;
+              let questionText = q.question?.text || q.questionText || '';
+              let options = [];
+              // Extract options
+              if (q.solution?.incorrectLotItems) {
+                options = q.solution.incorrectLotItems.map((item: any) => ({
+                  text: item.text,
+                  correct: false,
+                  explanation: item.explaination || item.explanation || ''
+                }));
+              }
+              if (q.solution?.correctLotItem) {
+                options.push({
+                  text: q.solution.correctLotItem.text,
+                  correct: true,
+                  explanation: q.solution.correctLotItem.explaination || q.solution.correctLotItem.explanation || ''
+                });
+              }
+              allQuestions.push({
+                questionText,
+                options,
+                solution: '', // Optional: create from q.solution or leave empty
+                isParameterized: q.question?.isParameterized ?? false,
+                timeLimitSeconds: q.question?.timeLimitSeconds ?? 60,
+                points: q.question?.points ?? 5,
+                segmentId,
+                questionType: type
+              });
             });
-
             allQuestions.push(...questions);
             console.log(`[generateQuestions] Generated ${questions.length} ${type} questions for segment ${segmentId}`);
+            console.log(`[generateQuestions] Raw LLM text for type ${type}, segment ${segmentId}:`, text.slice(0, 500));
           } catch (e: any) {
             console.error(`[generateQuestions] Failed for type ${type}, segment ${segmentId}:`, e.message);
             if (axios.isAxiosError(e)) console.error('Ollima API error:', e.response?.data);
