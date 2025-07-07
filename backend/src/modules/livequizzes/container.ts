@@ -3,6 +3,7 @@ import { LIVE_QUIZ_TYPES } from './types.js';
 import { PollRoomController } from './controllers/PollRoomController.js';
 import { PollService } from './services/PollService.js';
 import { RoomService } from './services/RoomService.js';
+import { pollSocket } from './utils/PollSocket.js';
 
 // GenAI services
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
@@ -25,4 +26,7 @@ export const livequizzesContainerModule = new ContainerModule((options) => {
 
   // Controllers
   options.bind(PollRoomController).toSelf().inSingletonScope();
+
+  // Socket
+  options.bind(LIVE_QUIZ_TYPES.PollSocket).toConstantValue(pollSocket);
 });

@@ -1,10 +1,11 @@
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import crypto from 'crypto';
 import { Room } from '../DBSchemas/Room.js';
 import { pollSocket } from '../utils/PollSocket.js';
 
 @injectable()
 export class PollService {
+  private pollSocket = pollSocket;
   async createPoll(roomCode: string, data: {
     question: string;
     options: string[];

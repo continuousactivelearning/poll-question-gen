@@ -11,6 +11,7 @@ import {
 } from 'routing-controllers';
 import { Request, Response } from 'express';
 import multer from 'multer';
+import { pollSocket } from '../utils/PollSocket.js';
 import { inject, injectable } from 'inversify';
 import { RoomService } from '../services/RoomService.js';
 import { PollService } from '../services/PollService.js';
@@ -41,7 +42,7 @@ export class PollRoomController {
     @inject(LIVE_QUIZ_TYPES.AIContentService) private aiContentService: AIContentService,
     @inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
     @inject(LIVE_QUIZ_TYPES.RoomService) private roomService: RoomService,
-    @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService
+    @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService,
   ) { }
 
   //@Authorized()
@@ -58,9 +59,14 @@ export class PollRoomController {
   @Get('/:code')
   async getRoom(@Param('code') code: string) {
     const room = await this.roomService.getRoomByCode(code);
-    if (!room) throw new Error('Room not found');
-    return room;
-  }
+    if (!room) {
+      return { success: false, message: 'Room not found' };
+    }
+    if (room.status !== 'active') {
+      return { success: false, message: 'Room is ended' };
+    }
+    return { success: true, room };  // return room data
+  }  
 
   // 🔹 Create Poll in Room
   //@Authorized()
@@ -105,6 +111,8 @@ export class PollRoomController {
   async endRoom(@Param('code') code: string) {
     const success = await this.roomService.endRoom(code);
     if (!success) throw new Error('Room not found');
+    // Emit to all clients in the room
+    pollSocket.emitToRoom(code, 'room-ended', {});
     return { success: true, message: 'Room ended successfully' };
   }
 
@@ -171,7 +179,7 @@ export class PollRoomController {
       }
       console.log('Using questionSpec:', safeSpec);
       console.log('[generateQuestions] Transcript length:', transcript.length);
-      console.log('[generateQuestions] Transcript preview:', transcript.substring(0, 200));
+      console.log('[generateQuestions] Transcript preview:', segments);
       const generatedQuestions = await this.aiContentService.generateQuestions({
         segments,
         globalQuestionSpecification: safeSpec,

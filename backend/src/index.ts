@@ -53,7 +53,6 @@ app.use(
   }),
 );
 
-createExpressServer(moduleOptions);
 
 async function startServer() {
   try {
