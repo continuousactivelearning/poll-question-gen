@@ -195,6 +195,28 @@ export default function StudentLayout() {
 
                 <DropdownMenuSeparator className="bg-slate-200/80 dark:bg-gray-700/80" />
 
+                {/* Settings Link */}
+                <DropdownMenuItem
+                  onClick={() => navigate({ to: "/student/settings" })}
+                  className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 transition-all duration-200 dark:hover:from-blue-900/30 dark:hover:to-cyan-900/30"
+                >
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center dark:from-blue-900/50 dark:to-cyan-900/50">
+                    <svg className="h-4 w-4 text-blue-600 dark:text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-900 dark:text-gray-100">
+                      Settings
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-gray-400">
+                      App preferences
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-slate-200/80 dark:bg-gray-700/80" />
+
                 {/* Logout */}
                 <DropdownMenuItem
                   onClick={handleLogout}

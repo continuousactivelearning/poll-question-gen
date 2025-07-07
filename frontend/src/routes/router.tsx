@@ -25,6 +25,8 @@ import TeacherDashboard from '@/pages/teacher/TeacherDashboard'
 import StudentDashboard from '@/pages/student/StudentDashboard'
 import StudentProfile from '@/pages/student/StudentProfile'
 import TeacherProfile from '@/pages/teacher/TeacherProfile'
+import TeacherSettings from '@/pages/teacher/TeacherSettings'
+import StudentSettings from '@/pages/student/StudentSettings'
 
 // Root route with error and notFound handling
 const rootRoute = new RootRoute({
@@ -170,6 +172,13 @@ const teacherCreateRoomRoute = new Route({
   component: CreatePollRoom,
 });
 
+// Teacher settings route
+const teacherSettingsRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/settings',
+  component: TeacherSettings,
+});
+
 // Student dashboard route
 const studentDashboardRoute = new Route({
   getParentRoute: () => studentLayoutRoute,
@@ -198,6 +207,13 @@ const studentJoinRoomRoute = new Route({
   component: JoinPollRoom,
 });
 
+// Student settings route
+const studentSettingsRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/settings',
+  component: StudentSettings,
+});
+
 // Create a catch-all not found route
 const notFoundRoute = new NotFoundRoute({
   getParentRoute: () => rootRoute,
@@ -214,12 +230,14 @@ const routeTree = rootRoute.addChildren([
     teacherCreateRoomRoute,
     teacherDashboardRoute,
     teacherProfileRoute,
+    teacherSettingsRoute,
   ]),
   studentLayoutRoute.addChildren([
     studentPollRoomRoute,
     studentJoinRoomRoute,
     studentDashboardRoute,
     studentProfileRoute,
+    studentSettingsRoute,
   ]),
 ]);
 
