@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload, Mic, MicOff, Youtube, Wand2, Edit3, X, Loader2 } from "lucide-react";
+import { Upload, Mic, MicOff, Youtube, Wand2, Edit3, X, Loader2, LogOut, AlertTriangle } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const api = axios.create({
@@ -23,6 +23,7 @@ type GeneratedQuestion = {
 
 export default function TeacherPollRoom() {
   const params = useParams({ from: '/teacher/pollroom/$code' });
+  const navigate = useNavigate();
   const roomCode = params.code;
 
   // Existing state
@@ -31,6 +32,10 @@ export default function TeacherPollRoom() {
   const [correctOptionIndex, setCorrectOptionIndex] = useState<number>(0);
   const [timer, setTimer] = useState<number>(30);
   const [pollResults, setPollResults] = useState<PollResults>({});
+
+  // End room state
+  const [isEndingRoom, setIsEndingRoom] = useState(false);
+  const [showEndRoomConfirm, setShowEndRoomConfirm] = useState(false);
 
   // GenAI feature state
   const [activeTab, setActiveTab] = useState<'manual' | 'genai'>('manual');
@@ -50,6 +55,32 @@ export default function TeacherPollRoom() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!roomCode) return <div>Loading...</div>;
+
+  const endRoom = async () => {
+    setIsEndingRoom(true);
+    try {
+      await api.post(`/livequizzes/rooms/${roomCode}/end`, {
+        teacherId: "teacher-123", // replace with real teacher ID
+      });
+
+      toast.success("Room ended successfully");
+
+      // Clean up any ongoing recordings
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+
+      // Navigate back to teacher dashboard or rooms list
+      navigate({ to: '/teacher/pollroom' });
+    } catch (error: any) {
+      console.error('Error ending room:', error);
+      toast.error(error.response?.data?.message || "Failed to end room");
+    } finally {
+      setIsEndingRoom(false);
+      setShowEndRoomConfirm(false);
+    }
+  };
 
   const createPoll = async () => {
     try {
@@ -165,7 +196,6 @@ export default function TeacherPollRoom() {
     }
   };
 
-
   // Add this function to your component
   const deleteGeneratedQuestion = (index: number) => {
     const updated = generatedQuestions.filter((_, i) => i !== index);
@@ -218,13 +248,75 @@ export default function TeacherPollRoom() {
       <div className="relative z-10 max-w-4xl mx-auto">
         <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
           <CardHeader>
-            <CardTitle className="text-2xl">
-              Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
-                {roomCode}
-              </span>
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">
+                Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
+                  {roomCode}
+                </span>
+              </CardTitle>
+              <Button
+                onClick={() => setShowEndRoomConfirm(true)}
+                variant="destructive"
+                className="flex items-center gap-2"
+                disabled={isEndingRoom}
+              >
+                <LogOut size={16} />
+                End Room
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* End Room Confirmation Modal */}
+            {showEndRoomConfirm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <Card className="w-full max-w-md mx-4 bg-white dark:bg-gray-800">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                      <AlertTriangle size={20} />
+                      End Room Confirmation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Are you sure you want to end this room? This action cannot be undone.
+                    </p>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                      <li>• All students will be disconnected</li>
+                      <li>• Active polls will be stopped</li>
+                      <li>• Room will be permanently closed</li>
+                    </ul>
+                    <div className="flex gap-3 justify-end">
+                      <Button
+                        onClick={() => setShowEndRoomConfirm(false)}
+                        variant="outline"
+                        disabled={isEndingRoom}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={endRoom}
+                        variant="destructive"
+                        disabled={isEndingRoom}
+                        className="flex items-center gap-2"
+                      >
+                        {isEndingRoom ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Ending Room...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut size={16} />
+                            End Room
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Tab Navigation */}
             <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
               <button

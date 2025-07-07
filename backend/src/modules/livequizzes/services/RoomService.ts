@@ -26,7 +26,8 @@ export class RoomService {
 
   async isRoomValid(code: string): Promise<boolean> {
     const room = await Room.findOne({ roomCode: code });
-    return !!room && room.status === 'active';
+    console.log('[isRoomValid] Fetched room:', room);
+    return !!room && room.status.toLowerCase() === 'active';
   }
 
   async isRoomEnded(code: string): Promise<boolean> {
@@ -42,6 +43,11 @@ export class RoomService {
     return true;
   }
 
+  async canJoinRoom(code: string): Promise<boolean> {
+    const room = await Room.findOne({ roomCode: code });
+    return !!room && room.status === 'active';
+  }
+  
   async getAllRooms(): Promise<RoomType[]> {
     const rooms = await Room.find();
     return rooms.map(this.mapRoom);

@@ -34,7 +34,7 @@ export default function JoinPollRoom() {
     }
     try {
       const res = await api.get(`/livequizzes/rooms/${roomCode}`);
-      if (res.data?.roomCode) {
+      if (res.data?.success && res.data.room?.roomCode) {
         localStorage.setItem("activeRoomCode", roomCode);
         localStorage.setItem("joinedRoom", "true");
         toast.success("Joined room!");

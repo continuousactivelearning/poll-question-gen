@@ -173,6 +173,9 @@ JSON:`;
   ): string {
     const base = `You are an AI question generator.
 Based on the transcript below, generate ${count} question(s) of type ${questionType}.
+For each question:
+- Provide exactly 4 options.
+- Mark the correct option.
 
 You must output JSON **exactly** in this shape, no nesting, no markdown:
 [

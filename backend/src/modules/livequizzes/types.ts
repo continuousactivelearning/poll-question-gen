@@ -12,6 +12,9 @@ const TYPES = {
   TranscriptionService: Symbol.for('TranscriptionService'),
   AIContentService: Symbol.for('AIContentService'),
   CleanupService: Symbol.for('CleanupService'),
+
+  // Socket.IO
+  PollSocket: Symbol.for('PollSocket'),
 };
 
 export { TYPES as LIVE_QUIZ_TYPES };

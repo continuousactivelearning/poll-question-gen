@@ -62,6 +62,14 @@ export default function StudentPollRoom() {
     localStorage.setItem("activeRoomCode", roomCode);
     localStorage.setItem("joinedRoom", "true");
     toast.success("Joined room!");
+
+    socket.on('room-ended', () => {
+      toast.error('Room has ended');
+      navigate({ to: '/student/home' });
+    });
+    return () => {
+      socket.off('room-ended');
+    };
   }, [roomCode]);
 
   useEffect(() => {
