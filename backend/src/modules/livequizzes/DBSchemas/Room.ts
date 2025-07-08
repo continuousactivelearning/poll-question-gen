@@ -21,8 +21,10 @@ const RoomSchema = new mongoose.Schema({
   name: { type: String, required: true },
   teacherId: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
+  endedAt: { type: Date }, 
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
   polls: [PollSchema]
 });
 
+RoomSchema.index({ teacherId: 1 });
 export const Room = mongoose.model('Room', RoomSchema);

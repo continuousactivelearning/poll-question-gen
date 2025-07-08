@@ -27,6 +27,8 @@ import StudentProfile from '@/pages/student/StudentProfile'
 import TeacherProfile from '@/pages/teacher/TeacherProfile'
 import TeacherSettings from '@/pages/teacher/TeacherSettings'
 import StudentSettings from '@/pages/student/StudentSettings'
+import ManageRoom from '@/pages/teacher/TeacherManageRooms'
+import TeacherPollAnalysis from '@/pages/teacher/TeacherPollAnalysis'
 
 // Root route with error and notFound handling
 const rootRoute = new RootRoute({
@@ -158,6 +160,20 @@ const teacherGenAIHomeRoute = new Route({
   component: GenAIHomePage,
 });
 
+// Teacher manage rooms route
+const teacherManageRoomsRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/manage-rooms',
+  component: ManageRoom,
+}); 
+
+// Teacher poll analysis route
+const teacherPollAnalysisRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/manage-rooms/pollanalysis/$roomId',
+  component: TeacherPollAnalysis,
+});
+
 // Teacher poll room route
 const teacherPollRoomRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
@@ -231,6 +247,8 @@ const routeTree = rootRoute.addChildren([
     teacherDashboardRoute,
     teacherProfileRoute,
     teacherSettingsRoute,
+    teacherManageRoomsRoute,
+    teacherPollAnalysisRoute,
   ]),
   studentLayoutRoute.addChildren([
     studentPollRoomRoute,
