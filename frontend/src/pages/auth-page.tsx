@@ -233,7 +233,7 @@ export default function AuthPage() {
         avatar: result.user.photoURL || ""
       });
       
-      navigate({ to: "/student/pollroom" });
+      navigate({ to: "/student/home" });
     } catch (error: unknown) {
       console.error("Email Signup Failed", error);
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/email-already-in-use') {
@@ -255,9 +255,9 @@ export default function AuthPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       if (user.role === 'teacher') {
-        navigate({ to: '/teacher/pollroom' });
+        navigate({ to: '/teacher/home' });
       } else if (user.role === 'student') {
-        navigate({ to: '/student/pollroom' });
+        navigate({ to: '/student/home' });
       }
     }
   }, [isAuthenticated, user, navigate]);

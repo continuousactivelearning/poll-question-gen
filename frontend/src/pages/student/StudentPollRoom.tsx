@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Zap, Users, Menu, Info, History, LogOut, Clock, CheckCircle, Circle, Trophy } from "lucide-react";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const Socket_URL = import.meta.env.VITE_SOCKET_URL;
 const API_URL = import.meta.env.VITE_API_URL;
@@ -42,6 +43,7 @@ export default function StudentPollRoom() {
   const params = useParams({ from: '/student/pollroom/$code' });
   const roomCode = params.code;
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [joinedRoom, setJoinedRoom] = useState(false);
   const [polls, setPolls] = useState<Poll[]>([]);
@@ -121,7 +123,7 @@ export default function StudentPollRoom() {
     setIsAnimating(true);
     try {
       await api.post(`/livequizzes/rooms/${roomCode}/polls/answer`, {
-        pollId, userId: "student-456", answerIndex
+        pollId, userId: user?.uid, answerIndex
       });
       setTimeout(() => {
         setAnsweredPolls(prev => ({ ...prev, [pollId]: answerIndex }));

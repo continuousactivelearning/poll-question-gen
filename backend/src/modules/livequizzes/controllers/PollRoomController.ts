@@ -90,6 +90,22 @@ export class PollRoomController {
   }
 
   //@Authorized()
+  @Get('/teacher/:teacherId')
+  async getAllRoomsByTeacher(@Param('teacherId') teacherId: string) {
+    return await this.roomService.getRoomsByTeacher(teacherId);
+  }
+  //@Authorized()
+  @Get('/teacher/:teacherId/active')
+  async getActiveRoomsByTeacher(@Param('teacherId') teacherId: string) {
+    return await this.roomService.getRoomsByTeacherAndStatus(teacherId, 'active');
+  }
+  //@Authorized()
+  @Get('/teacher/:teacherId/ended')
+  async getEndedRoomsByTeacher(@Param('teacherId') teacherId: string) {
+    return await this.roomService.getRoomsByTeacherAndStatus(teacherId, 'ended');
+  }
+
+  //@Authorized()
   @Post('/:code/polls/answer')
   async submitPollAnswer(
     @Param('code') roomCode: string,

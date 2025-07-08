@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Users, Plus, Sparkles, ArrowRight } from "lucide-react";
+import { Users, Plus, Sparkles, ArrowRight, AlertCircle } from "lucide-react";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const api = axios.create({ baseURL: API_URL });
@@ -26,6 +27,7 @@ export default function CreatePollRoom() {
   const [roomName, setRoomName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const createRoom = async () => {
     if (!roomName.trim()) {
@@ -33,15 +35,21 @@ export default function CreatePollRoom() {
       return;
     }
 
+    if (!user?.uid) {
+      toast.error("Please log in to create a room");
+      return;
+    }
+
     setIsCreating(true);
     try {
       const res = await api.post("/livequizzes/rooms/", {
         name: roomName,
-        teacherId: "teacher-123"
+        teacherId: user.uid
       });
       toast.success("Room created successfully!");
       navigate({ to: `/teacher/pollroom/${res.data.roomCode}` });
     } catch (error) {
+      console.error("Error creating room:", error);
       toast.error("Failed to create room. Please try again.");
     } finally {
       setIsCreating(false);
@@ -156,7 +164,7 @@ export default function CreatePollRoom() {
                     What happens next?
                   </h3>
                   <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
-                    Once created, you'll get a unique room code that students can use to join your polling session. 
+                    Once created, you'll get a unique room code that students can use to join your polling session.
                     You can then create polls, manage participants, and view real-time results.
                   </p>
                 </div>

@@ -16,53 +16,57 @@ export class RoomService {
       polls: []
     }).save();
 
-    return this.mapRoom(newRoom);
+    return newRoom.toObject();  // return plain object
   }
 
   async getRoomByCode(code: string): Promise<RoomType | null> {
-    const room = await Room.findOne({ roomCode: code });
-    return room ? this.mapRoom(room) : null;
+    return await Room.findOne({ roomCode: code }).lean();
+  }
+
+  async getRoomsByTeacher(teacherId: string, status?: 'active' | 'ended'): Promise<RoomType[]> {
+    const query: any = { teacherId };
+    if (status) {
+      query.status = status;
+    }
+    return await Room.find(query).sort({ createdAt: -1 }).lean();
+  }
+
+  async getRoomsByTeacherAndStatus(teacherId: string, status: 'active' | 'ended'): Promise<RoomType[]> {
+    return await Room.find({ teacherId, status }).lean();
   }
 
   async isRoomValid(code: string): Promise<boolean> {
-    const room = await Room.findOne({ roomCode: code });
+    const room = await Room.findOne({ roomCode: code }).lean();
     console.log('[isRoomValid] Fetched room:', room);
     return !!room && room.status.toLowerCase() === 'active';
   }
 
   async isRoomEnded(code: string): Promise<boolean> {
-    const room = await Room.findOne({ roomCode: code });
+    const room = await Room.findOne({ roomCode: code }).lean();
     return room ? room.status === 'ended' : false;
   }
 
   async endRoom(code: string): Promise<boolean> {
-    const room = await Room.findOne({ roomCode: code });
-    if (!room) return false;
-    room.status = 'ended';
-    await room.save();
-    return true;
+    const updated = await Room.findOneAndUpdate({ roomCode: code }, { status: 'ended' }, { new: true }).lean();
+    return !!updated;
   }
 
   async canJoinRoom(code: string): Promise<boolean> {
-    const room = await Room.findOne({ roomCode: code });
+    const room = await Room.findOne({ roomCode: code }).lean();
     return !!room && room.status === 'active';
   }
-  
+
   async getAllRooms(): Promise<RoomType[]> {
-    const rooms = await Room.find();
-    return rooms.map(this.mapRoom);
+    return await Room.find().lean();
   }
 
   async getActiveRooms(): Promise<RoomType[]> {
-    const rooms = await Room.find({ status: 'active' });
-    return rooms.map(this.mapRoom);
+    return await Room.find({ status: 'active' }).lean();
   }
 
   async getEndedRooms(): Promise<RoomType[]> {
-    const rooms = await Room.find({ status: 'ended' });
-    return rooms.map(this.mapRoom);
+    return await Room.find({ status: 'ended' }).lean();
   }
-
   /**
    * Map Mongoose Room Document to plain RoomType matching interface
    */
