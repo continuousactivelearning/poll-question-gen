@@ -106,6 +106,14 @@ export class PollRoomController {
   }
 
   //@Authorized()
+  @Get('/:roomId/analysis')
+  async getPollAnalysis(@Param('roomId') roomId: string) {
+    // Fetch from service
+    const analysis = await this.roomService.getPollAnalysis(roomId);
+    return { success: true, data: analysis };
+  }
+
+  //@Authorized()
   @Post('/:code/polls/answer')
   async submitPollAnswer(
     @Param('code') roomCode: string,

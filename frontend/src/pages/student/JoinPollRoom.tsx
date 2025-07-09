@@ -1,13 +1,5 @@
 import { useState } from "react";
-import { 
-  BarChart3, 
-  Gauge, 
-  Users, 
-  Settings, 
-  HelpCircle, 
-  Check, 
-  Vote
-} from "lucide-react";
+import { Users, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -56,8 +48,8 @@ export default function JoinPollRoom() {
       </div>
 
       <div className="relative container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-          {/* Enhanced Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+          {/* Enhanced Sidebar
           <Card className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/80 h-fit dark:bg-gray-900/90 dark:border-gray-700/80 dark:shadow-gray-900/20">
             <CardHeader className="pb-4">
               <div className="flex items-center space-x-3">
@@ -96,10 +88,11 @@ export default function JoinPollRoom() {
               </nav>
             </CardContent>
           </Card>
+          */}
 
           {/* Enhanced Main Content */}
           <Card className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/80 dark:bg-gray-900/90 dark:border-gray-700/80 dark:shadow-gray-900/20">
-            <CardHeader className="pb-6">
+            <CardHeader className="pb-3">
               <div className="flex items-center space-x-3">
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition-opacity duration-300 dark:from-purple-400 dark:to-blue-400"></div>
@@ -111,12 +104,12 @@ export default function JoinPollRoom() {
                   <CardTitle className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Join Poll Room
                   </CardTitle>
-                  <p className="text-gray-600 dark:text-gray-400 mt-2">Enter your details to join an active poll session</p>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">Enter your details to join an active poll session</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div>
                   <label htmlFor="roomCode" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Room Code <span className="text-red-500">*</span>
