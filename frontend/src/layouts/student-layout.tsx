@@ -86,8 +86,8 @@ export default function StudentLayout() {
               variant="ghost"
               size="sm"
               className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/student/home')
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
                 }`}
               asChild
             >
@@ -103,8 +103,8 @@ export default function StudentLayout() {
               variant="ghost"
               size="sm"
               className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/student/pollroom')
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
                 }`}
               asChild
             >
@@ -112,6 +112,24 @@ export default function StudentLayout() {
                 <Users className="h-4 w-4 mr-2" />
                 <span className="relative z-10">Room</span>
                 {isActiveRoute('/student/pollroom') && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-md dark:from-purple-400/20 dark:to-blue-400/20" />
+                )}
+              </Link>
+            </Button>
+            {/* My Polls Button - Now navigates directly to my-polls page */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 group ${isActiveRoute('/student/my-polls')
+                ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 shadow-md shadow-purple-200/50 dark:from-purple-900/40 dark:to-blue-900/40 dark:text-purple-300 dark:shadow-purple-900/20'
+                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 hover:text-slate-900 hover:shadow-md hover:shadow-slate-200/50 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-800 dark:hover:to-gray-700 dark:hover:text-white dark:hover:shadow-gray-900/20'
+                }`}
+              asChild
+            >
+              <Link to="/student/my-polls">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="relative z-10">My Polls</span>
+                {isActiveRoute('/student/my-polls') && (
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-md dark:from-purple-400/20 dark:to-blue-400/20" />
                 )}
               </Link>
