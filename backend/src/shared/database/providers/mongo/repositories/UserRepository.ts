@@ -1,131 +1,70 @@
-import {IUserRepository} from '#shared/database/interfaces/IUserRepository.js';
-import {IUser} from '#shared/interfaces/models.js';
-import {classToPlain, plainToClass} from 'class-transformer';
-import {injectable, inject} from 'inversify';
-import {Collection, MongoClient, ClientSession, ObjectId} from 'mongodb';
-import {MongoDatabase} from '../MongoDatabase.js';
-import {InternalServerError, NotFoundError} from 'routing-controllers';
-import {GLOBAL_TYPES} from '#root/types.js';
-import {User} from '#auth/classes/transformers/User.js';
+import { IUserRepository } from '#shared/database/interfaces/IUserRepository.js';
+import { IUser } from '#shared/interfaces/models.js';
+import { injectable } from 'inversify';
+import { NotFoundError, InternalServerError } from 'routing-controllers';
+import { UserModel } from '#root/shared/database/models/User.js';
 
 @injectable()
 export class UserRepository implements IUserRepository {
-  private usersCollection!: Collection<IUser>;
-
-  constructor(
-    @inject(GLOBAL_TYPES.Database)
-    private db: MongoDatabase,
-  ) {}
-
-  /**
-   * Ensures that `usersCollection` is initialized before usage.
-   */
-  private async init(): Promise<void> {
-    if (!this.usersCollection) {
-      this.usersCollection = await this.db.getCollection<IUser>('users');
-    }
+  async getDBClient(): Promise<any> {
+    // Not needed when using Mongoose; return null or throw if you prefer
+    return null;
+  }
+  
+  async create(data: Partial<IUser>): Promise<string> {
+    const user = await UserModel.create({
+      firebaseUID: data.firebaseUID,   // ✅ this must be named `firebaseUID`
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      avatar: data.avatar,
+      roles: data.roles || ['student']
+    });
+    return user._id.toString();
   }
 
-  async getDBClient(): Promise<MongoClient> {
-    const client = await this.db.getClient();
-    if (!client) {
-      throw new Error('MongoDB client is not initialized');
-    }
-    return client;
+  async findByEmail(email: string): Promise<IUser | null> {
+    return await UserModel.findOne({ email }).lean<IUser>().exec();
   }
 
-  /**
-   * Creates a new user in the database.
-   * - Generates a MongoDB `_id` internally but uses `firebaseUID` as the external identifier.
-   */
-  async create(user: IUser, session?: ClientSession): Promise<string> {
-    await this.init();
-    const result = await this.usersCollection.insertOne(user, {session});
-    if (!result.acknowledged) {
-      throw new InternalServerError('Failed to create user');
-    }
-    return result.insertedId.toString();
+  async updateById(id: string, data: Partial<IUser>): Promise<IUser | null> {
+    return await UserModel.findByIdAndUpdate(id, data, { new: true }).lean<IUser>().exec();
   }
 
-  /**
-   * Finds a user by email.
-   */
-  async findByEmail(
-    email: string,
-    session?: ClientSession,
-  ): Promise<IUser | null> {
-    await this.init();
-    
-    const user = await this.usersCollection.findOne({email}, {session});
-    return user; 
-  }
-
-  /**
-   * Finds a user by ID.
-   */
-  async findById(id: string | ObjectId): Promise<IUser | null> {
-    await this.init();
-    const user = await this.usersCollection.findOne({_id: new ObjectId(id)});
+  async findById(id: string): Promise<IUser | null> {
+    const user = await UserModel.findById(id).lean<IUser>().exec();
     if (!user) {
       throw new NotFoundError('User not found');
     }
-    return classToPlain(new User(user)) as IUser;
+    return user;
   }
 
-  /**
-   * Finds a user by Firebase UID.
-   */
-  async findByFirebaseUID(
-    firebaseUID: string,
-    session?: ClientSession,
-  ): Promise<IUser | null> {
-    await this.init();
-    const user = await this.usersCollection.findOne({firebaseUID}, {session});
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
-    return classToPlain(new User(user)) as IUser;
-  }
+  async findByFirebaseUID(firebaseUID: string): Promise<IUser | null> {
+    const user = await UserModel.findOne({ firebaseUID }).lean<IUser>().exec();
+    return user || null;
+  }  
 
-  /**
-   * Adds a role to a user.
-   */
   async addRole(firebaseUID: string, role: string): Promise<IUser | null> {
-    await this.init();
-    const result = await this.usersCollection.findOneAndUpdate(
-      {firebaseUID},
-      {$addToSet: {roles: role}},
-      {returnDocument: 'after'},
-    );
-    return classToPlain(new User(result)) as IUser;
+    return await UserModel.findOneAndUpdate(
+      { firebaseUID },
+      { $addToSet: { roles: role } },
+      { new: true }
+    ).lean<IUser>().exec();
   }
 
-  /**
-   * Removes a role from a user.
-   */
   async removeRole(firebaseUID: string, role: string): Promise<IUser | null> {
-    await this.init();
-    const result = await this.usersCollection.findOneAndUpdate(
-      {firebaseUID},
-      {$pull: {roles: role}},
-      {returnDocument: 'after'},
-    );
-    return classToPlain(new User(result)) as IUser;
+    return await UserModel.findOneAndUpdate(
+      { firebaseUID },
+      { $pull: { roles: role } },
+      { new: true }
+    ).lean<IUser>().exec();
   }
 
-  /**
-   * Updates a user's password.
-   */
-  async updatePassword(
-    firebaseUID: string,
-    password: string,
-  ): Promise<IUser | null> {
-    await this.init();
-    const result = await this.usersCollection.findOneAndUpdate(
-      {firebaseUID},
-      {$set: {password}},
-      {returnDocument: 'after'},
-    );
-    return classToPlain(new User(result)) as IUser;
+  async updatePassword(firebaseUID: string, password: string): Promise<IUser | null> {
+    return await UserModel.findOneAndUpdate(
+      { firebaseUID },
+      { $set: { password } },
+      { new: true }
+    ).lean<IUser>().exec();
   }
 }

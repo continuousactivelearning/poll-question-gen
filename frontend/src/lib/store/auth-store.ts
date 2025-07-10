@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type User = {
+export type IUser = {
   uid: string;
   email: string;
   name?: string;
@@ -14,12 +14,12 @@ export type User = {
 };
 
 type AuthStore = {
-  user: User | null;
+  user: IUser | null;
   token: string | null;
   isAuthenticated: boolean;
   
   // Actions
-  setUser: (user: User) => void;
+  setUser: (user: IUser) => void;
   setToken: (token: string) => void;
   clearUser: () => void;
   hasRole: (role: string | string[]) => boolean;

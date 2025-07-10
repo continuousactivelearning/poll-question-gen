@@ -7,6 +7,7 @@ export interface IUser {
   firstName: string;
   lastName: string;
   roles: string[];
+  avatar?: string | null; // URL to the user's avatar image
 }
 
 export type Versions = {
