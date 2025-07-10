@@ -41,8 +41,8 @@ const app = createExpressServer({
   middlewares: [loggingHandler, HttpErrorHandler], // Add your middleware here
 });
 //app.use(loggingHandler);
-const routingControllersApp = createExpressServer(moduleOptions);
-app.use(routingControllersApp);
+//const routingControllersApp = createExpressServer(moduleOptions);
+//app.use(routingControllersApp);
 
 const openApiSpec = await generateOpenAPISpec(moduleOptions, validators);
 app.use(

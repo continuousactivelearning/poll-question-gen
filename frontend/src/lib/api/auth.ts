@@ -23,7 +23,7 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
     let backendUser = null;
     try {
       const res = await fetch(
-        `http://localhost:4001/api/users/firebase/${firebaseUser.uid}`,
+        `http://localhost:3000/api/users/firebase/${firebaseUser.uid}`,
         {
           headers: { 
             Authorization: `Bearer ${token}`,
