@@ -7,6 +7,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Upload, Mic, MicOff, Youtube, Wand2, Edit3, X, Loader2, LogOut, AlertTriangle } from "lucide-react";
 
+const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text).then(() => {
+    toast.success("Room code copied to clipboard!");
+  }).catch(() => {
+    toast.error("Failed to copy room code");
+  });
+};
+
 const API_URL = import.meta.env.VITE_API_URL;
 const api = axios.create({
   baseURL: API_URL,
@@ -247,24 +255,48 @@ export default function TeacherPollRoom() {
     <main className="relative flex-1 p-6 lg:p-8">
       <div className="relative z-10 max-w-4xl mx-auto">
         <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">
-                Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
-                  {roomCode}
-                </span>
-              </CardTitle>
-              <Button
-                onClick={() => setShowEndRoomConfirm(true)}
-                variant="destructive"
-                className="flex items-center gap-2"
-                disabled={isEndingRoom}
-              >
-                <LogOut size={16} />
-                End Room
-              </Button>
-            </div>
-          </CardHeader>
+         <CardHeader>
+  <div className="flex items-center justify-between">
+    <CardTitle className="text-2xl">
+      Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
+        {roomCode}
+      </span>
+    </CardTitle>
+    <div className="flex items-center gap-4">
+      <Button
+        onClick={() => copyToClipboard(roomCode)}
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copy Code
+      </Button>
+      <Button
+        onClick={() => setShowEndRoomConfirm(true)}
+        variant="destructive"
+        className="flex items-center gap-2"
+        disabled={isEndingRoom}
+      >
+        <LogOut size={16} />
+        End Room
+      </Button>
+    </div>
+  </div>
+</CardHeader>
           <CardContent className="space-y-6">
             {/* End Room Confirmation Modal */}
             {showEndRoomConfirm && (
