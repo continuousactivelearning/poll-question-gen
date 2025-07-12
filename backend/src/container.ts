@@ -6,6 +6,7 @@ import {
 } from '#shared/index.js';
 import {GLOBAL_TYPES} from './types.js';
 import {dbConfig} from './config/db.js';
+
 import { FirebaseAuthService } from './modules/auth/services/FirebaseAuthService.js';
 
 export const sharedContainerModule = new ContainerModule(options => {
