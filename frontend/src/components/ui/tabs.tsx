@@ -1,16 +1,28 @@
-
 import * as React from "react";
+import { cn } from "@/lib/utils"; // adjust path to your utils
+import { Button } from "./button";
+
+type TabsContextType = {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+};
+
+const TabsContext = React.createContext<TabsContextType | undefined>(undefined);
 
 interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
-  defaultValue?: string;
+  defaultValue: string;
   children: React.ReactNode;
 }
 
 export function Tabs({ defaultValue, children, className, ...props }: TabsProps) {
+  const [activeTab, setActiveTab] = React.useState(defaultValue);
+
   return (
-    <div className={className} {...props}>
-      {children}
-    </div>
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div className={cn("flex flex-col", className)} {...props}>
+        {children}
+      </div>
+    </TabsContext.Provider>
   );
 }
 
@@ -20,7 +32,7 @@ interface TabsListProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function TabsList({ children, className, ...props }: TabsListProps) {
   return (
-    <div className={className} {...props}>
+    <div className={cn("inline-flex items-center rounded-lg bg-muted p-1", className)} {...props}>
       {children}
     </div>
   );
@@ -32,15 +44,25 @@ interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 export function TabsTrigger({ value, children, className, ...props }: TabsTriggerProps) {
+  const ctx = React.useContext(TabsContext);
+  if (!ctx) throw new Error("TabsTrigger must be used within <Tabs>");
+
+  const isActive = ctx.activeTab === value;
+
   return (
-    <button
+    <Button
       type="button"
-      data-value={value}
-      className={className}
+      onClick={() => ctx.setActiveTab(value)}
+      aria-pressed={isActive}
+      className={cn(
+        "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+        isActive ? "bg-background text-foreground shadow-sm" : "hover:text-foreground/80",
+        className
+      )}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -50,9 +72,13 @@ interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function TabsContent({ value, children, className, ...props }: TabsContentProps) {
-  // For now, just render children; you can add logic to show/hide based on active tab if needed
+  const ctx = React.useContext(TabsContext);
+  if (!ctx) throw new Error("TabsContent must be used within <Tabs>");
+
+  if (ctx.activeTab !== value) return null;
+
   return (
-    <div className={className} data-value={value} {...props}>
+    <div className={cn("mt-2", className)} {...props}>
       {children}
     </div>
   );
