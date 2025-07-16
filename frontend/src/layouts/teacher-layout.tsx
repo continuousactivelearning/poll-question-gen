@@ -71,7 +71,7 @@ export default function TeacherLayout() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                <span className="font-normal">Edu</span>Poll
+                <span className="font-normal">Quick</span>Poll
               </h1>
               <p className="text-xs text-slate-600 -mt-1 dark:text-gray-400">
                 Education Polling System
@@ -129,7 +129,7 @@ export default function TeacherLayout() {
               </Link>
             </Button>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 ${
@@ -143,7 +143,7 @@ export default function TeacherLayout() {
                 <Settings className="h-4 w-4 mr-2" />
                 <span className="relative z-10">Settings</span>
               </Link>
-            </Button>
+            </Button> */}
           </nav>
 
           {/* Right side - more subdued */}
