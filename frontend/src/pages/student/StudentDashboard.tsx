@@ -1,46 +1,195 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
-import { useState } from "react";
-import { BookOpen, TrendingUp, Calendar, Trophy, Clock, Activity, CheckCircle, BarChart2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BookOpen, TrendingUp, Calendar, Trophy, Clock, Activity, CheckCircle, BarChart2, AlertCircle } from "lucide-react";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { useNavigate } from "@tanstack/react-router";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+export interface StudentData {
+  pollStats: {
+    total: number;
+    taken: number;
+    absent: number;
+  };
+  pollResults: {
+    name: string;
+    subject: string;
+    score: number;
+    date: string;
+  }[];
+  pollDetails: {
+    title: string;
+    type: string;
+    timer: string;
+  }[];
+  activePolls: {
+    name: string;
+    status: string;
+  }[];
+  upcomingPolls: {
+    name: string;
+    time: string;
+  }[];
+  scoreProgression: {
+    poll: string;
+    score: number;
+  }[];
+  performanceSummary: {
+    avgScore: string;
+    participationRate: string;
+    bestSubject: string;
+  };
+  roomWiseScores: {
+    roomName: string;
+    roomCode: string;
+    totalPolls: number;
+    attendedPolls: number;
+    taken: number;
+    score: number;
+    avgScore: number;
+    averageScore: string;
+    status: string;
+    createdAt: Date;
+  }[];
+}
 
 export default function StudentDashboard() {
+  const { user } = useAuthStore();
   const [isDark] = useState(false);
-  // Dummy data
-  const pollStats = { total: 20, taken: 15, absent: 5 };
-  const pollResults = [
-    { name: "Math Poll", subject: "Algebra", score: 15, date: "12 Aug 2024" },
-    { name: "Science Poll", subject: "Physics", score: 12, date: "15 Sep 2024" },
-  ];
+  const [dashboardData, setDashboardData] = useState<StudentData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const tasks = [
-    { name: "Discussion Algorithm", time: "08:00 - 12:00 PM", color: "red" },
-    { name: "Fundamental Math", time: "12:00 - 15:00 PM", color: "yellow" },
-    { name: "DNA Modifications in Humans", time: "Ongoing", color: "blue" },
-  ];
+  // Fetch dashboard data from backend
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const projectColors = isDark ? ["#3b82f6", "#f59e0b"] : ["#6366f1", "#f59e42"];
+        // Replace with actual student ID from auth store
+        const studentId = user?.uid;
+        if (!studentId) {
+          throw new Error('No student ID found');
+        }
 
-  // Poll details data
-  const pollDetails = [
-    { title: "DNA Modifications in Humans", type: "Word Cloud", timer: "01:30" },
-    { title: "Discussion Algorithm", type: "MCQ", timer: "00:45" },
-    { title: "Fundamental Math", type: "MCQ", timer: "00:30" },
-  ];
+        const response = await fetch(`${API_URL}/students/dashboard/${studentId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authorization header if needed
+            // 'Authorization': `Bearer ${user?.token}`
+          }
+        });
 
-  const assessmentResults = [
-    { grade: "A", value: 21 },
-    { grade: "B", value: 10 },
-    { grade: "C", value: 5 },
-    { grade: "D", value: 8 },
-    { grade: "E", value: 12 },
-  ];
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.uid) {
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !dashboardData) {
+    return (
+      <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="p-6 max-w-md mx-auto bg-white dark:bg-slate-800 border-red-200 dark:border-red-800">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Error Loading Dashboard</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+              <Button
+                onClick={() => window.location.reload()}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Try Again
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!dashboardData) {
+    return (
+      <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="p-6 max-w-md mx-auto bg-white dark:bg-slate-800">
+            <div className="text-center">
+              <BarChart2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-600 dark:text-gray-400 mb-2">No Data Available</h2>
+              <p className="text-gray-600 dark:text-gray-400">Dashboard data not found.</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    pollStats,
+    pollResults,
+    pollDetails,
+    activePolls,
+    upcomingPolls,
+    scoreProgression,
+    performanceSummary,
+    roomWiseScores
+  } = dashboardData;
+
+  const projectColors = isDark ? ["#3b82f6", "#f59e0b", "#10b981", "#f43f5e"] : ["#6366f1", "#f59e42", "#059669", "#e11d48"];
 
   const themeClasses = isDark ? 'dark' : '';
 
   return (
     <div className={`${themeClasses} transition-colors duration-300`}>
       <div className="p-6 space-y-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
+
+        {/* Error banner if there was an error but we have fallback data */}
+        {error && dashboardData && (
+          <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-300">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm">Using cached data. Some information may be outdated.</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Top Row: Welcome Banner and Poll Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Welcome Banner */}
@@ -48,12 +197,17 @@ export default function StudentDashboard() {
             <CardContent className="flex flex-row items-center justify-between p-8 h-64">
               {/* Left: Text (50%) */}
               <div className="w-1/2 flex flex-col justify-center">
-                <h2 className="text-2xl font-bold mb-2 drop-shadow-sm">Welcome Back! <span className="capitalize">Diane</span></h2>
+                <h2 className="text-2xl font-bold mb-2 drop-shadow-sm">
+                  Welcome Back! <span className="capitalize">{user?.firstName || 'Student'}</span>
+                </h2>
                 <p className="mb-4 text-lg font-semibold opacity-90 drop-shadow-sm">
                   Your Study, Your Say—Live!
                 </p>
                 <Button
                   className="bg-white/95 hover:bg-white text-blue-600 font-bold shadow-md w-fit transition-all duration-200 hover:scale-105"
+                  onClick={() => {
+                    navigate({ to: '/student/pollroom' });
+                  }}
                 >
                   Join Poll Room
                 </Button>
@@ -61,15 +215,7 @@ export default function StudentDashboard() {
               {/* Right: Image placeholder */}
               <div className="w-1/2 flex items-center justify-center">
                 <div className="w-48 h-48 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
-                  {/* Add your image here */}
-                  <img
-                    src="/student-illustration.png"
-                    alt="Welcome"
-                    className="w-40 h-40 object-cover rounded-full shadow-lg"
-                    style={{ objectFit: "cover" }}
-                  />
-                  {/* Optionally, keep the icon as a fallback */}
-                  {/* <BarChart3 className="w-24 h-24 text-white/80 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" /> */}
+                  <BarChart2 className="w-24 h-24 text-white/80" />
                 </div>
               </div>
             </CardContent>
@@ -83,108 +229,113 @@ export default function StudentDashboard() {
                   <BarChart2 className="h-5 w-5 text-blue-600" />
                   <span className="font-medium">Total Polls</span>
                 </div>
-                <span className="font-bold text-lg text-blue-600">{pollStats.total}</span>
+                <span className="font-bold text-lg text-blue-600">{pollStats?.total || 0}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 dark:text-green-400" />
                   <span className="font-semibold text-gray-700 dark:text-gray-300">Polls Taken</span>
                 </div>
-                <span className="text-blue-600 font-bold text-lg">{pollStats.taken}</span>
+                <span className="text-blue-600 font-bold text-lg">{pollStats?.taken || 0}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-red-500 dark:text-red-400" />
                   <span className="font-semibold text-gray-700 dark:text-gray-300">Polls Absent</span>
                 </div>
-                <span className="text-blue-600 font-bold text-lg">{pollStats.absent}</span>
+                <span className="text-blue-600 font-bold text-lg">{pollStats?.absent || 0}</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Middle Row: Poll Results, Poll Details, Active Polls, Upcoming Polls */}
+        {/* Middle Row: Recent Polls + Active Rooms + Upcoming Polls */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* My Poll Results */}
-          <Card className="lg:col-span-1 shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-            <CardHeader className="pb-3">
+
+          {/* Recent Polls (combined box) */}
+          <Card className="lg:col-span-2 shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-blue-700 dark:text-blue-400 flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
-                My Poll Results
+                Recent Polls
               </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-blue-600 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                onClick={() => {
+                  navigate({ to: '/student/my-polls' });
+                }}
+              >
+                View Detailed Analysis
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {pollResults.map((poll, idx) => (
-                <div key={poll.name} className="flex items-center gap-4 p-3 rounded-lg bg-blue-50 dark:bg-slate-700/50 border border-blue-100 dark:border-slate-600 hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors">
-                  <ResponsiveContainer width={48} height={48}>
-                    <PieChart>
-                      <Pie
-                        data={[{ value: poll.score }, { value: 20 - poll.score }]}
-                        dataKey="value"
-                        innerRadius={16}
-                        outerRadius={24}
-                        startAngle={90}
-                        endAngle={-270}
-                      >
-                        <Cell fill={projectColors[idx % projectColors.length]} />
-                        <Cell fill={isDark ? "#374151" : "#e5e7eb"} />
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div>
-                    <div className="font-bold text-lg text-blue-800 dark:text-blue-300">{poll.score}</div>
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{poll.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{poll.subject}</div>
-                    <div className="text-xs text-gray-400 dark:text-gray-500">Date: {poll.date}</div>
+            <CardContent className="space-y-3">
+              {pollResults && pollResults.length > 0 ? (
+                [...pollResults]
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 4)
+                  .map((poll, idx) => (
+                  <div
+                    key={`${poll.name}-${idx}`}
+                    className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-slate-700/50 border border-blue-100 dark:border-slate-600 hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <div className="flex flex-col">
+                      <div className="font-semibold text-blue-800 dark:text-blue-300">{poll.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Date: {new Date(poll.date).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-blue-700 dark:text-blue-400 font-bold">{poll.score}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs">
+                        Timer: {pollDetails[idx]?.timer || 'N/A'}{"s"}
+                      </div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No recent polls</p>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
-          {/* Poll Details */}
+          {/* Active Rooms */}
           <Card className="lg:col-span-1 shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
             <CardHeader className="pb-3">
               <CardTitle className="text-blue-700 dark:text-blue-400 flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Poll Details
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                Active Rooms
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {pollDetails.map((poll, idx) => (
-                <div key={poll.title} className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">
-                  <div className="font-semibold text-lg text-blue-800 dark:text-blue-300">{poll.title}</div>
-                  <div className="text-sm text-gray-700 dark:text-gray-400 mt-1">
-                    Type: <span className="font-semibold text-blue-600 dark:text-blue-400">{poll.type}</span>
-                  </div>
-                  <div className="text-sm text-gray-700 dark:text-gray-400 mt-1">
-                    Timer: <span className="font-semibold text-blue-600 dark:text-blue-400">{poll.timer}</span>
-                  </div>
+              {roomWiseScores && roomWiseScores.filter(r => r.status === 'active').length > 0 ? (
+                roomWiseScores
+                  .filter(r => r.status === 'active')
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .map((room, idx) => (
+                    <div
+                      key={`${room.roomCode}-${idx}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+                    >
+                      <div className="font-semibold text-blue-800 dark:text-blue-300">{room.roomName}</div>
+                      <div className="text-xs text-green-600 dark:text-green-400">Active</div>
+                    </div>
+                  ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 mx-auto mb-2"></div>
+                  <p>No active rooms</p>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
-          {/* Active Polls */}
-          <Card className="lg:col-span-1 shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-blue-700 dark:text-blue-400 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                Active Polls
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-700">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                <div>
-                  <div className="font-semibold text-blue-800 dark:text-blue-300">DNA Modifications in Humans</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Ongoing</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upcoming Polls */}
+          {/* Upcoming Polls (keep as-is) */}
           <Card className="lg:col-span-1 shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
             <CardHeader className="pb-3">
               <CardTitle className="text-blue-700 dark:text-blue-400 flex items-center gap-2">
@@ -193,20 +344,30 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {tasks.map((task, idx) => (
-                <div key={task.name} className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-700">
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  <div>
-                    <div className="font-semibold text-blue-800 dark:text-blue-300">{task.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{task.time}</div>
+              {upcomingPolls && upcomingPolls.length > 0 ? (
+                upcomingPolls.map((poll, idx) => (
+                  <div
+                    key={`${poll.name}-${idx}`}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-700"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <div>
+                      <div className="font-semibold text-blue-800 dark:text-blue-300">{poll.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{poll.time}</div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No upcoming polls</p>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Score Progression and Engagement Heatmap */}
+        {/* Score Progression and Room-wise Results */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Score Progression */}
           <Card className="shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -217,104 +378,96 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="h-72 p-0 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[
-                  { poll: 'Poll 1', score: 12 },
-                  { poll: 'Poll 2', score: 15 },
-                  { poll: 'Poll 3', score: 10 },
-                  { poll: 'Poll 4', score: 18 },
-                  { poll: 'Poll 5', score: 14 },
-                  { poll: 'Poll 6', score: 17 },
-                  { poll: 'Poll 7', score: 13 },
-                ]} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                  <XAxis 
-                    dataKey="poll" 
-                    tick={{ fontSize: 12, fill: isDark ? '#9ca3af' : '#6b7280' }}
-                    axisLine={{ stroke: isDark ? '#4b5563' : '#d1d5db' }}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12, fill: isDark ? '#9ca3af' : '#6b7280' }}
-                    axisLine={{ stroke: isDark ? '#4b5563' : '#d1d5db' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                      border: isDark ? '1px solid #374151' : '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      color: isDark ? '#f3f4f6' : '#1f2937'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="score" 
-                    fill="#3b82f6" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {scoreProgression && scoreProgression.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={scoreProgression} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <XAxis
+                      dataKey="poll"
+                      tick={{ fontSize: 12, fill: isDark ? '#9ca3af' : '#6b7280' }}
+                      axisLine={{ stroke: isDark ? '#4b5563' : '#d1d5db' }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: isDark ? '#9ca3af' : '#6b7280' }}
+                      axisLine={{ stroke: isDark ? '#4b5563' : '#d1d5db' }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                        border: isDark ? '1px solid #374151' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        color: isDark ? '#f3f4f6' : '#1f2937'
+                      }}
+                    />
+                    <Bar
+                      dataKey="score"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No score progression data</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Engagement Heatmap */}
+          {/* Room-wise Results */}
           <Card className="shadow-md dark:shadow-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
             <CardHeader>
               <CardTitle className="text-blue-700 dark:text-blue-400 flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Engagement Heatmap
+                <BookOpen className="h-5 w-5" />
+                Room-wise Results
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="w-full h-full flex flex-col justify-center items-center">
-                <table className="w-full h-full border-separate border-spacing-2 table-fixed">
-                  <thead>
-                    <tr>
-                      <th className="py-2 px-1 text-xs font-semibold text-left text-gray-700 dark:text-gray-300">Time/Day</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Mon</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Tue</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Wed</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Thu</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Fri</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Sat</th>
-                      <th className="py-2 px-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Sun</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {['Morning', 'Afternoon', 'Evening', 'Night'].map((period, i) => (
-                      <tr key={period} className="h-16">
-                        <td className="py-1 px-1 text-xs font-semibold w-24 min-w-[4.5rem] text-gray-700 dark:text-gray-300">{period}</td>
-                        {[0,1,2,3,4,5,6].map((d) => {
-                          // Dummy engagement: more active on Wed/Fri Afternoon/Evening, Sat Evening, Sun Night
-                          const active = (
-                            (d === 2 && (i === 1 || i === 2)) ||
-                            (d === 4 && (i === 1 || i === 2)) ||
-                            (d === 5 && i === 2) ||
-                            (d === 6 && i === 3)
-                          );
-                          return (
-                            <td
-                              key={d}
-                              className={`transition-colors w-[3rem] h-12 md:w-[4rem] md:h-16 rounded ${
-                                active 
-                                  ? 'bg-blue-500 dark:bg-blue-400' 
-                                  : 'bg-blue-100 dark:bg-slate-600'
-                              }`}
-                            />
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="mt-4 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-blue-100 dark:bg-slate-600"></div>
-                    <span>Low Activity</span>
+            <CardContent className="space-y-4">
+              {roomWiseScores && roomWiseScores.length > 0 ? (
+                roomWiseScores.map((room, idx) => (
+                  <div key={room.roomCode || idx} className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-blue-800 dark:text-blue-300">{room.roomName}</h3>
+                      <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        {room.averageScore || room.avgScore || '0'}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Polls Taken:</span>
+                        <span className="font-semibold text-blue-600 dark:text-blue-400 ml-2">
+                          {room.taken || room.attendedPolls || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Total Polls:</span>
+                        <span className="font-semibold text-blue-600 dark:text-blue-400 ml-2">{room.totalPolls || 0}</span>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Progress:</span>
+                        <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                          <div
+                            className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${room.totalPolls > 0 ? ((room.taken || room.attendedPolls || 0) / room.totalPolls) * 100 : 0}%`
+                            }}
+                          />
+                        </div>
+                        <span className="font-semibold text-blue-600 dark:text-blue-400">
+                          {room.totalPolls > 0 ? Math.round(((room.taken || room.attendedPolls || 0) / room.totalPolls) * 100) : 0}%
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-blue-500 dark:bg-blue-400"></div>
-                    <span>High Activity</span>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <BookOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No room results available</p>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -328,21 +481,25 @@ export default function StudentDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <div className="text-sm font-semibold text-green-800 dark:text-green-300">Average Score</div>
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">14.1</div>
-                <div className="text-xs text-green-600 dark:text-green-400">+2.3 from last week</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                  {performanceSummary?.avgScore || '0'}
+                </div>
+                <div className="text-xs text-green-600 dark:text-green-400">
+                  {parseFloat(performanceSummary?.avgScore || '0') > 14 ? '+' : ''}
+                  {(parseFloat(performanceSummary?.avgScore || '0') - 12).toFixed(1)} from baseline
+                </div>
               </div>
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="text-sm font-semibold text-blue-800 dark:text-blue-300">Participation Rate</div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">75%</div>
-                <div className="text-xs text-blue-600 dark:text-blue-400">15 out of 20 polls</div>
-              </div>
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="text-sm font-semibold text-blue-800 dark:text-blue-300">Best Subject</div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">Physics</div>
-                <div className="text-xs text-blue-600 dark:text-blue-400">Average: 16.2</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                  {performanceSummary?.participationRate || '0%'}
+                </div>
+                <div className="text-xs text-blue-600 dark:text-blue-400">
+                  {pollStats?.taken || 0} out of {pollStats?.total || 0} polls
+                </div>
               </div>
             </div>
           </CardContent>

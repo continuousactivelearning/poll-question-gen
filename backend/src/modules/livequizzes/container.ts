@@ -4,6 +4,8 @@ import { PollRoomController } from './controllers/PollRoomController.js';
 import { PollService } from './services/PollService.js';
 import { RoomService } from './services/RoomService.js';
 import { pollSocket } from './utils/PollSocket.js';
+import { DashboardService } from './services/DashboardService.js';
+import {DashboardController} from './controllers/DashboardController.js';
 
 // GenAI services
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
@@ -16,6 +18,7 @@ export const livequizzesContainerModule = new ContainerModule((options) => {
   // Services
   options.bind(LIVE_QUIZ_TYPES.PollService).to(PollService).inSingletonScope();
   options.bind(LIVE_QUIZ_TYPES.RoomService).to(RoomService).inSingletonScope();
+  options.bind(DashboardService).toSelf().inSingletonScope();
 
   // GenAI / media services
   options.bind(LIVE_QUIZ_TYPES.VideoService).to(VideoService).inSingletonScope();
@@ -26,6 +29,7 @@ export const livequizzesContainerModule = new ContainerModule((options) => {
 
   // Controllers
   options.bind(PollRoomController).toSelf().inSingletonScope();
+  options.bind(DashboardController).toSelf().inSingletonScope();
 
   // Socket
   options.bind(LIVE_QUIZ_TYPES.PollSocket).toConstantValue(pollSocket);

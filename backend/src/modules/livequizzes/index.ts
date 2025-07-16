@@ -9,6 +9,7 @@ import { PollRoomController } from './controllers/PollRoomController.js';
 
 import { CreatePollValidator } from './validators/CreatePollValidator.js';
 import { CreateRoomValidator } from './validators/CreateRoomValidator.js';
+import { DashboardController } from './controllers/DashboardController.js';
 
 export const livequizzesContainerModules: ContainerModule[] = [
   livequizzesContainerModule,
@@ -17,6 +18,7 @@ export const livequizzesContainerModules: ContainerModule[] = [
 
 export const livequizzesModuleControllers: Function[] = [
   PollRoomController,
+  DashboardController,
 ];
 
 export async function setupLivequizzesContainer(container: Container): Promise<void> {

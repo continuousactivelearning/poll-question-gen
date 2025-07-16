@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Room } from '../DBSchemas/Room.js';
+import { Room } from '../../../shared/database/models/Room.js';
 import type { Room as RoomType, Poll, PollAnswer } from '../interfaces/PollRoom.js';
 import { UserModel } from '../../../shared/database/models/User.js';
 
@@ -82,13 +82,13 @@ export class RoomService {
 
     // 3️⃣ Fetch user names (THIS IS WHERE to add)
     const userIds = Array.from(participantsMap.keys());
-    const users = await this.userModel.find({ uid: { $in: userIds } }, 'uid name').lean();
+    const users = await this.userModel.find({ firebaseUID: { $in: userIds } }, 'firebaseUID firstName').lean();
 
     // 4️⃣ Convert map to array and merge names
     const participants = Array.from(participantsMap.values()).map((p) => {
       const user = users.find(u => u.firebaseUID === p.userId);
       return {
-        name: user?.firstName || p.userId,
+        name: user?.firstName ?? 'Anonymous',
         score: p.score,
         correct: p.correct,
         wrong: p.wrong,

@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import crypto from 'crypto';
-import { Room } from '../DBSchemas/Room.js';
+import { Room } from '../../../shared/database/models/Room.js';
 import { pollSocket } from '../utils/PollSocket.js';
 
 @injectable()
