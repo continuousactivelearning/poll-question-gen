@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Clock, BarChart2, AlertCircle, Loader2, Play, Square, MoreVertical, Eye } from "lucide-react";
+import { Users, Clock, BarChart2, AlertCircle, Loader2, Play, Square, MoreVertical, Eye } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -108,11 +108,11 @@ export default function ManageRoom() {
         return `~${estimatedDuration} mins`;
     };
 
-    const getStatusColor = (status: string) => {
+   /* const getStatusColor = (status: string) => {
         return status === 'active'
             ? 'text-green-600 dark:text-green-400'
             : 'text-gray-600 dark:text-gray-400';
-    };
+    };*/
 
     const handleEndRoom = async (roomCode: string, event: React.MouseEvent) => {
         event.stopPropagation();

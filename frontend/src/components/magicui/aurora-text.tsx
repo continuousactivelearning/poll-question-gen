@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import React, { memo } from "react";
 
@@ -41,3 +41,4 @@ export const AuroraText = memo(
 );
 
 AuroraText.displayName = "AuroraText";
+*/

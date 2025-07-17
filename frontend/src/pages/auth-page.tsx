@@ -9,8 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
-import { AnimatedGridPattern } from "@/components/magicui/animated-grid-pattern";
-import { AuroraText } from "@/components/magicui/aurora-text";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 

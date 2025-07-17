@@ -45,7 +45,7 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selec
           lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
           email: firebaseUser.email || '',
           avatar: firebaseUser.photoURL || null,
-          roles: selectedRole, // ✅ Use the selected role from UI
+          role: selectedRole, // ✅ Use the selected role from UI
 
           // Additional profile fields
           phoneNumber: null,
@@ -93,21 +93,20 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selec
       throw error;
     }
 
-    console.log('Backend user data:', backendUser?.roles[0]);
+    console.log('Backend user data:', backendUser?.role);
     // Map user with backend data - ensure all fields are properly mapped
     const mappedUser = {
       uid: firebaseUser.uid,
       email: firebaseUser.email || backendUser?.email || '',
       name: firebaseUser.displayName ||
         (backendUser ? `${backendUser.firstName} ${backendUser.lastName}`.trim() : ''),
-      role: backendUser?.roles || selectedRole, // Use backend role or selected role
+      role: backendUser?.role || selectedRole, // Use backend role or selected role
       avatar: firebaseUser.photoURL || backendUser?.avatar || '',
       // from mongoDB
       userId: backendUser?._id,
       firstName: backendUser?.firstName || firebaseUser.displayName?.split(' ')[0] || '',
       lastName: backendUser?.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
       // Additional fields from IUser
-      roles: [selectedRole], // Use array format with selected role
       dateOfBirth: backendUser?.dateOfBirth || '',
       address: backendUser?.address || '',
       emergencyContact: backendUser?.emergencyContact || '',

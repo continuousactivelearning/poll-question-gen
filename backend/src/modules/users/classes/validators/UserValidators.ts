@@ -74,15 +74,13 @@ export class UserByFirebaseUIDResponse implements IUser {
   lastName: string;
 
   @JSONSchema({
-    description: "User's roles",
-    example: ['student'],
-    type: 'array',
-    items: {
-      type: 'string',
-    },
+    description: "User's role",
+    example: 'student',
+    type: 'string',
     readOnly: true,
   })
-  roles: string[];
+  @IsString()
+  role: string;
 }
 
 /**
@@ -110,6 +108,9 @@ export class CreateUserProfileBody {
 
   @IsEmail()
   email!: string;
+
+  @IsString()
+  role!: string;
 
   @IsOptional()
   @IsUrl({}, { message: 'avatar must be a valid URL address' })

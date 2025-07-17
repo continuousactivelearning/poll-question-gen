@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ 
-      role: user?.role || null,
+      role: (user?.role as Role) || null,
       isAuthenticated,
       login, 
       loginWithGoogle,

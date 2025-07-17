@@ -5,7 +5,7 @@ export type IUser = {
   uid: string;
   email: string;
   name?: string;
-  role: 'teacher' | 'student' | 'admin' | null;
+  role: string | null;
   avatar?: string;
   // Backend user fields
   userId?: string;
@@ -39,7 +39,7 @@ type AuthStore = {
   setUserRole: (role: Role) => void;
 
   clearUser: () => void;
-  hasRole: (role: string | string[]) => boolean;
+  hasRole: (role: string) => boolean;
 };
 
 export const useAuthStore = create<AuthStore>()(

@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import { motion } from "@motionone/react";
 import {
@@ -152,3 +152,4 @@ export function AnimatedGridPattern({
     </svg>
   );
 }
+*/

@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import { useState, useEffect } from "react";
-import { BookOpen, TrendingUp, Calendar, Trophy, Clock, Activity, CheckCircle, BarChart2, AlertCircle } from "lucide-react";
+import { BookOpen, TrendingUp, Calendar, Trophy, Clock, CheckCircle, BarChart2, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -163,14 +163,14 @@ export default function StudentDashboard() {
     pollStats,
     pollResults,
     pollDetails,
-    activePolls,
+    //activePolls,
     upcomingPolls,
     scoreProgression,
     performanceSummary,
     roomWiseScores
   } = dashboardData;
 
-  const projectColors = isDark ? ["#3b82f6", "#f59e0b", "#10b981", "#f43f5e"] : ["#6366f1", "#f59e42", "#059669", "#e11d48"];
+  //const projectColors = isDark ? ["#3b82f6", "#f59e0b", "#10b981", "#f43f5e"] : ["#6366f1", "#f59e42", "#059669", "#e11d48"];
 
   const themeClasses = isDark ? 'dark' : '';
 

@@ -1,6 +1,6 @@
 // src/pages/student/mypoll.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Clock4, BarChart3, AlertCircle, Loader2, Eye, CheckCircle, XCircle, Trophy, Target } from "lucide-react";
+import { Calendar, Users, BarChart3, AlertCircle, Loader2, Eye, CheckCircle, XCircle, Trophy, Target } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";

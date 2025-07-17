@@ -40,8 +40,15 @@ export default function AppRoutes() {
                 </Route>
 
                 {/* ✅ Register Student Routes */}
-                <Route path={studentRoutes.path} element={studentRoutes.element && React.isValidElement(studentRoutes.element) ? <ProtectedRoute role="student">{studentRoutes.element}</ProtectedRoute> : <Navigate to="/auth" />}>
-                    {teacherRoutes.children?.map((child, idx) => (
+                <Route
+                    path={studentRoutes.studentRoutes.path}
+                    element={
+                        studentRoutes.studentRoutes.element && React.isValidElement(studentRoutes.studentRoutes.element)
+                            ? <ProtectedRoute role="student">{studentRoutes.studentRoutes.element}</ProtectedRoute>
+                            : <Navigate to="/auth" />
+                    }
+                >                    
+                {teacherRoutes.children?.map((child, idx) => (
                         <Route
                             key={idx}
                             path={child.path}
