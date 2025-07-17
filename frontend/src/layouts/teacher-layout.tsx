@@ -101,7 +101,7 @@ export default function TeacherLayout() {
               variant="ghost"
               size="sm"
               className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 ${
-                isActiveRoute('/teacher/create-poll')
+                isActiveRoute('/teacher/pollroom')
                   ? 'bg-blue-50 text-blue-800 border border-blue-200 shadow-sm dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-800'
                   : 'text-slate-700 hover:bg-blue-50 hover:text-blue-800 border border-transparent dark:text-gray-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-100'
               }`}

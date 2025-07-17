@@ -1,58 +1,158 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { useState } from "react";
-import { ClipboardList, Users, TrendingUp, Clock, Calendar, HelpCircle, BarChart2 } from "lucide-react";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { useState, useEffect } from "react";
+import { ClipboardList, Users, TrendingUp, Clock, Calendar, HelpCircle, BarChart2, Loader2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { useNavigate } from "@tanstack/react-router";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+export interface TeacherData {
+  summary: {
+    totalAssessmentRooms: number;
+    totalPolls: number;
+    totalResponses: number;
+    participationRate: string; // e.g. '85%'
+  };
+  activeRooms: RoomPreview[];
+  recentRooms: RoomPreview[];
+  faqs: FAQ[];
+}
+
+export interface RoomPreview {
+  roomName: string;
+  roomCode: string;
+  totalPolls?: number;         // present in recentRooms
+  totalResponses?: number;     // now present in both recentRooms & activeRooms
+  status?: 'active' | 'ended'; // optional, present in recentRooms
+  createdAt: string;           // ISO date string
+}
+
+export interface FAQ {
+  question: string;
+  answer: string;
+}
 
 export default function TeacherDashboard() {
+  const { user } = useAuthStore();
   const [isDark] = useState(false);
+  const [dashboardData, setDashboardData] = useState<TeacherData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // Dashboard statistics
-  const stats = {
-    totalAssessments: 12,
-    totalResponses: 340,
-    participationRate: 80,
-    liveParticipation: {
-      attended: 34,
-      notAttended: 6,
-      rate: 85
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const teacherId = user?.uid;
+      if (!teacherId) {
+        throw new Error('No teacher ID found');
+      }
+
+      const response = await fetch(`${API_URL}/teachers/dashboard/${teacherId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      const data = await response.json();
+      setDashboardData(data);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Recent assessment data
-  const recentAssessments = [
-    { name: "Algebra Midterm", created: "2024-06-01", participants: 28, absent: 2 },
-    { name: "Chemistry Quiz", created: "2024-05-30", participants: 25, absent: 5 },
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h2>
+            <p className="text-red-600">{error}</p>
+            <Button
+              onClick={fetchDashboardData}
+              className="mt-4 bg-red-600 hover:bg-red-700"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const stats: TeacherData["summary"] = dashboardData?.summary ?? {
+    totalAssessmentRooms: 0,
+    totalPolls: 0,
+    totalResponses: 0,
+    participationRate: '0%'
+  };
+  const activeRooms = dashboardData?.activeRooms || [];
+  const recentRooms = dashboardData?.recentRooms || [];
+  const faqs = dashboardData?.faqs || [];
+
+  // Calculate participation rate for pie chart
+  const participationData = [
+    { name: "Responses", value: stats.totalResponses || 0 },
+    { name: "No Response", value: Math.max(0, (stats.totalPolls || 0) - (stats.totalResponses || 0)) }
   ];
 
-  const assessmentResults = [
-    { option: "A", responses: 20 },
-    { option: "B", responses: 10 },
-    { option: "C", responses: 5 },
-    { option: "D", responses: 8 },
-    { option: "E", responses: 12 },
-  ];
+  // Enhanced bar chart data for recent rooms with both polls and responses
+  // Sort by date (newest first) and then reverse to show latest on the right
+  const roomsBarData = recentRooms
+    .sort((b, a) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .slice(0, 4)
+    .reverse()
+    .map(room => ({
+      name: room.roomName?.substring(0, 10) + (room.roomName?.length > 10 ? '...' : ''),
+      polls: room.totalPolls || 0,
+      responses: room.totalResponses || 0
+    }));
 
-  const activeAssessments = [
-    { title: "Algebra Midterm", status: "Ongoing" },
-  ];
+  // Combine active and recent rooms, with active rooms marked
+  const combinedRooms = [
+    ...activeRooms.map(room => ({ ...room, status: 'active' as const })),
+    ...recentRooms.filter(room => room.status !== 'active')
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const upcomingAssessments = [
-    { name: "English Literature", time: "Tomorrow 10:00 AM" },
-    { name: "History Exam", time: "Friday 2:00 PM" },
-  ];
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
-  const faqs = [
-    { 
-      question: "How do I create an assessment?", 
-      answer: "Navigate to 'Create Assessment' and follow the step-by-step process." 
-    },
-    { 
-      question: "Can I reuse previous assessments?", 
-      answer: "Yes, all your assessments are saved in your library for future use." 
-    },
-  ];
+  const getStatusColor = (status: 'active' | 'ended' | undefined): string => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500';
+      case 'ended':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -64,11 +164,13 @@ export default function TeacherDashboard() {
             Overview of your teaching analytics and assessments
           </p>
         </div>
-        <Button 
+        <Button
           className="bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={() => window.location.href = '/teacher/pollroom'}
+          onClick={() => {
+            navigate({ to: '/teacher/pollroom' });
+          }}
         >
-          Create New Assessment
+          Create New Room
         </Button>
       </div>
 
@@ -82,8 +184,8 @@ export default function TeacherDashboard() {
               <p className="mb-4 opacity-90">
                 Track, analyze, and enhance student learning outcomes
               </p>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 className="bg-white text-blue-800 hover:bg-white/90"
               >
                 Quick Start Guide
@@ -103,99 +205,120 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart2 className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">Total Assessments</span>
+                <span className="font-medium">Total Rooms</span>
               </div>
-              <span className="font-bold text-lg text-blue-600">{stats.totalAssessments}</span>
+              <span className="font-bold text-lg text-blue-600">{stats.totalAssessmentRooms || 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-blue-600" />
+                <span className="font-medium">Total Polls</span>
+              </div>
+              <span className="font-bold text-lg text-blue-600">{stats.totalPolls || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-blue-600" />
                 <span className="font-medium">Total Responses</span>
               </div>
-              <span className="font-bold text-lg text-blue-600">{stats.totalResponses}</span>
+              <span className="font-bold text-lg text-blue-600">{stats.totalResponses || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-600" />
                 <span className="font-medium">Participation Rate</span>
               </div>
-              <span className="font-bold text-lg text-blue-600">{stats.participationRate}%</span>
+              <span className="font-bold text-lg text-blue-600">{stats.participationRate || '0%'}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Assessment Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {/* Recent Assessments */}
-        <Card>
-          <CardHeader>
+      {/* Room Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Combined Rooms Section */}
+        <Card className="md:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
               <ClipboardList className="h-5 w-5" />
-              Recent Assessments
+              My Rooms
             </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-blue-600 hover:text-blue-700"
+              onClick={() => {
+                navigate({ to: '/teacher/manage-rooms' });
+              }}
+            >
+              View All <ExternalLink className="h-4 w-4 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentAssessments.map((assessment, idx) => (
-              <div key={idx} className="p-3 rounded-lg bg-blue-50 dark:bg-slate-700 border border-blue-100 dark:border-slate-600">
-                <div className="font-semibold">{assessment.name}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {new Date(assessment.created).toLocaleDateString()}
-                </div>
-                <div className="flex gap-4 mt-2 text-sm">
-                  <span className="text-green-600 dark:text-green-400">
-                    {assessment.participants} participants
-                  </span>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    {assessment.absent} absent
-                  </span>
+            {combinedRooms.slice(0, 3).map((room, idx) => (
+              <div key={idx} className={`p-4 rounded-lg border transition-all hover:shadow-md ${room.status === 'active'
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                  : 'bg-blue-50 dark:bg-slate-700 border-blue-100 dark:border-slate-600'
+                }`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="font-semibold text-gray-900 dark:text-white">{room.roomName}</div>
+                      {room.status === 'active' && (
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      Code: <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{room.roomCode}</span>
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      Created: {formatDate(room.createdAt)}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                          {room.totalPolls || 0}
+                        </span>
+                        <span className="text-xs text-gray-500">polls</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                          {room.totalResponses || 0}
+                        </span>
+                        <span className="text-xs text-gray-500">responses</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${room.status === 'active'
+                          ? 'text-green-600 border-green-200 dark:text-green-400'
+                          : 'text-gray-500 border-gray-200'
+                        }`}
+                    >
+                      {room.status === 'active' ? 'Active' : 'Ended'}
+                    </Badge>
+                    {room.status === 'active' && (
+                      <Button size="sm" variant="outline" className="text-xs"
+                        onClick={() => {
+                          navigate({ to: `/teacher/pollroom/${room.roomCode}` });
+                        }}
+                      >
+                        Go to Room
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        {/* Active Assessments */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              Active Assessments
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {activeAssessments.map((assessment, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-slate-700 border border-green-100 dark:border-slate-600">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <div>
-                  <div className="font-semibold">{assessment.title}</div>
-                  <Badge variant="outline" className="text-green-600 dark:text-green-400 mt-1">
-                    {assessment.status}
-                  </Badge>
-                </div>
+            {combinedRooms.length === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg mb-2">No rooms created yet</p>
+                <p className="text-sm">Create your first room to start engaging with students</p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Assessments */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-              <Calendar className="h-5 w-5" />
-              Upcoming
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {upcomingAssessments.map((assessment, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-slate-700 border border-blue-100 dark:border-slate-600">
-                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                <div>
-                  <div className="font-semibold">{assessment.name}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{assessment.time}</div>
-                </div>
-              </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -208,15 +331,39 @@ export default function TeacherDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              View Student Progress
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => {
+                navigate({ to: '/teacher/pollroom' });
+              }}
+            >
+              Create New Room
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Schedule Assessment
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => {
+                navigate({ to: '/teacher/manage-rooms' });
+              }}
+            >
               Generate Reports
             </Button>
+            <div className="pt-4 border-t">
+              <div className="text-center space-y-2">
+                <div className="text-sm text-gray-500">Room Statistics</div>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div>
+                    <div className="text-lg font-bold text-blue-600">{stats.totalAssessmentRooms || 0}</div>
+                    <div className="text-xs text-gray-500">Total</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-green-600">{activeRooms.length}</div>
+                    <div className="text-xs text-gray-500">Active</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -227,7 +374,7 @@ export default function TeacherDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-blue-800 dark:text-blue-200">
-              Participation Analytics
+              Response Analytics
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -235,10 +382,7 @@ export default function TeacherDashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={[
-                      { name: "Participated", value: stats.liveParticipation.attended },
-                      { name: "Absent", value: stats.liveParticipation.notAttended },
-                    ]}
+                    data={participationData}
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
@@ -248,25 +392,26 @@ export default function TeacherDashboard() {
                     <Cell fill="#3b82f6" />
                     <Cell fill="#ef4444" />
                   </Pie>
+                  <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex gap-6 mt-4">
                 <div className="text-center">
-                  <div className="text-sm text-gray-500">Participated</div>
+                  <div className="text-sm text-gray-500">Responses</div>
                   <div className="text-xl font-bold text-blue-600">
-                    {stats.liveParticipation.attended}
+                    {stats.totalResponses || 0}
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-gray-500">Absent</div>
-                  <div className="text-xl font-bold text-red-500">
-                    {stats.liveParticipation.notAttended}
+                  <div className="text-sm text-gray-500">Total Polls</div>
+                  <div className="text-xl font-bold text-green-600">
+                    {stats.totalPolls || 0}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-sm text-gray-500">Rate</div>
-                  <div className="text-xl font-bold text-green-600">
-                    {stats.liveParticipation.rate}%
+                  <div className="text-xl font-bold text-orange-600">
+                    {stats.participationRate || '0%'}
                   </div>
                 </div>
               </div>
@@ -274,31 +419,49 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
 
-        {/* Assessment Results */}
+        {/* Room Poll and Response Distribution */}
         <Card>
           <CardHeader>
             <CardTitle className="text-blue-800 dark:text-blue-200">
-              Recent Assessment Results
+              Recent Room Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={assessmentResults}>
-                <XAxis 
-                  dataKey="option" 
-                  tick={{ fill: isDark ? '#9ca3af' : '#6b7280' }}
+              <BarChart data={roomsBarData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}
                 />
-                <YAxis 
-                  tick={{ fill: isDark ? '#9ca3af' : '#6b7280' }}
+                <YAxis
+                  tick={{ fill: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}
                 />
-                <Tooltip />
-                <Bar 
-                  dataKey="responses" 
-                  fill="#3b82f6" 
-                  radius={[4, 4, 0, 0]}
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: isDark ? '#374151' : '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+                <Bar
+                  dataKey="polls"
+                  fill="#3b82f6"
+                  radius={[2, 2, 0, 0]}
+                  name="Polls"
+                />
+                <Bar
+                  dataKey="responses"
+                  fill="#10b981"
+                  radius={[2, 2, 0, 0]}
+                  name="Responses"
                 />
               </BarChart>
             </ResponsiveContainer>
+            <div className="text-center mt-2 text-sm text-gray-500">
+              ← Older rooms &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Latest rooms →
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -315,9 +478,12 @@ export default function TeacherDashboard() {
           <CardContent>
             <div className="p-4 bg-blue-50 dark:bg-slate-700 rounded-lg">
               <p className="text-gray-700 dark:text-gray-300">
-                Your assessments show a {stats.participationRate}% average participation rate. 
-                The most recent assessment had {stats.liveParticipation.rate}% participation. 
-                Continue engaging students with interactive content to maintain these strong results.
+                You have created {stats.totalAssessmentRooms || 0} assessment rooms with a total of {stats.totalPolls || 0} polls.
+                Your polls have received {stats.totalResponses || 0} responses with a participation rate of {stats.participationRate || '0%'}.
+                {activeRooms.length > 0 ?
+                  ` You currently have ${activeRooms.length} active room${activeRooms.length > 1 ? 's' : ''}.` :
+                  ' Create a new room to start engaging with students.'
+                }
               </p>
             </div>
           </CardContent>
@@ -342,6 +508,11 @@ export default function TeacherDashboard() {
                 </div>
               </div>
             ))}
+            {faqs.length === 0 && (
+              <div className="text-center text-gray-500 py-4">
+                No FAQs available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
