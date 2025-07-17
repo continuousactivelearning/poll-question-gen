@@ -11,12 +11,16 @@ import {
   HttpCode,
   Param,
   Params,
+  NotFoundError,
 } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import {
   UserByFirebaseUIDParams,
   UserByFirebaseUIDResponse,
   UserNotFoundErrorResponse,
+  UpdateUserProfileBody,
+  CreateUserProfileBody,
+  UserProfileResponse,
 } from '../classes/validators/UserValidators.js';
 
 @OpenAPI({ tags: ['Users'] })
@@ -29,97 +33,122 @@ export class UserController {
   ) { }
 
   /**
-   * Get user by Firebase UID (full transformer)
+   * Get full user object by Firebase UID (transformed)
    */
   @OpenAPI({
     summary: 'Get user by Firebase UID',
-    description: 'Retrieves a user profile using their Firebase UID.',
+    description: 'Retrieves a full user object using their Firebase UID.',
   })
   @Get('/firebase/:firebaseUID')
   @HttpCode(200)
-  @ResponseSchema(UserByFirebaseUIDResponse, {
-    description: 'User profile retrieved successfully',
-  })
-  @ResponseSchema(UserNotFoundErrorResponse, {
-    statusCode: 404,
-    description: 'User not found',
-  })
+  @ResponseSchema(UserByFirebaseUIDResponse)
+  @ResponseSchema(UserNotFoundErrorResponse, { statusCode: 404 })
   async getUserByFirebaseUID(
     @Params() params: UserByFirebaseUIDParams,
   ): Promise<User> {
     const user = await this.userService.findByFirebaseUID(params.firebaseUID);
+    if (!user) throw new NotFoundError('User not found');
     return new User(user);
   }
 
   /**
-   * Create or find user by Firebase UID
+   *  Find or create user by Firebase UID
    */
   @OpenAPI({
     summary: 'Find or create user by Firebase UID',
-    description: 'If a user does not exist with the given Firebase UID, creates a new user.',
+    description: 'If user does not exist with the given UID, creates one.',
   })
   @Post('/firebase/:firebaseUID/profile')
   @HttpCode(201)
+  @ResponseSchema(UserProfileResponse)
   async findOrCreateProfileByFirebaseUID(
     @Param('firebaseUID') firebaseUID: string,
-    @Body() body: {
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-      avatar?: string | null;
-      role?: string;
-    },
+    @Body() body: CreateUserProfileBody,
   ) {
-    return await this.userService.findOrCreateByFirebaseUID(firebaseUID, body);
-  }
-
-  /**
-   * Get profile by internal user ID
-   */
-  @OpenAPI({
-    summary: 'Get user profile by internal user ID',
-    description: 'Fetches user profile data like firstName, lastName, email, avatar, role.',
-  })
-  @Get('/:id/profile')
-  @HttpCode(200)
-  async getProfile(@Param('id') id: string) {
-    return await this.userService.getProfile(id);
-  }
-
-  /**
-   * Update user profile by internal user ID
-   */
-  @OpenAPI({
-    summary: 'Update user profile by internal user ID',
-    description: 'Updates firstName, lastName, and/or avatar for a user.',
-  })
-  @Put('/:id/profile')
-  @HttpCode(200)
-  async updateProfile(
-    @Param('id') id: string,
-    @Body() body: { firstName?: string; lastName?: string; avatar?: string },
-  ) {
-    return await this.userService.updateProfile(id, body);
-  }
-
-  /**
-   * Get user profile by Firebase UID (simple JSON, no transformer)
-   */
-  @OpenAPI({
-    summary: 'Get user profile by Firebase UID (plain JSON)',
-    description: 'Fetches user data by Firebase UID as plain JSON.',
-  })
-  @Get('/firebase/:firebaseUID/profile')
-  @HttpCode(200)
-  async getProfileByFirebaseUID(@Param('firebaseUID') firebaseUID: string) {
-    const user = await this.userService.findByFirebaseUID(firebaseUID);
+    const user = await this.userService.findOrCreateByFirebaseUID(firebaseUID, body);
     return {
       id: user._id?.toString() || '',
+      firebaseUID: user.firebaseUID,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       avatar: user.avatar || null,
       role: user.roles[0] || '',
+      dateOfBirth: user.dateOfBirth || null,
+      address: user.address || null,
+      emergencyContact: user.emergencyContact || null,
+      phoneNumber: user.phoneNumber || null,
+      institution: user.institution || null,
+      designation: user.designation || null,
+      bio: user.bio || null,
+      isVerified: user.isVerified || false,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  /**
+   *  Get user profile by internal ID
+   */
+  @OpenAPI({
+    summary: 'Get user profile by internal user ID',
+  })
+  @Get('/:id/profile')
+  @HttpCode(200)
+  @ResponseSchema(UserProfileResponse)
+  async getProfile(@Param('id') id: string) {
+    const user = await this.userService.getProfile(id);
+    if (!user) throw new NotFoundError('User not found');
+    return user;
+  }
+
+  /**
+   *  Update profile by internal ID
+   */
+  @OpenAPI({
+    summary: 'Update user profile by internal user ID',
+  })
+  @Put('/:id/profile')
+  @HttpCode(200)
+  @ResponseSchema(UserProfileResponse)
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() body: UpdateUserProfileBody,
+  ) {
+    const updated = await this.userService.updateProfile(id, body);
+    return updated;
+  }
+
+  /**
+   *  Get simple profile by Firebase UID (raw JSON)
+   */
+  @OpenAPI({
+    summary: 'Get user profile by Firebase UID (plain JSON)',
+  })
+  @Get('/firebase/:firebaseUID/profile')
+  @HttpCode(200)
+  @ResponseSchema(UserProfileResponse)
+  async getProfileByFirebaseUID(@Param('firebaseUID') firebaseUID: string) {
+    const user = await this.userService.findByFirebaseUID(firebaseUID);
+    if (!user) throw new NotFoundError('User not found');
+    return {
+      id: user._id?.toString() || '',
+      firebaseUID: user.firebaseUID,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      avatar: user.avatar || null,
+      role: user.roles[0] || '',
+      dateOfBirth: user.dateOfBirth || null,
+      address: user.address || null,
+      emergencyContact: user.emergencyContact || null,
+      phoneNumber: user.phoneNumber || null,
+      institution: user.institution || null,
+      designation: user.designation || null,
+      bio: user.bio || null,
+      isVerified: user.isVerified || false,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 }

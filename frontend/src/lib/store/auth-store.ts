@@ -11,16 +11,33 @@ export type IUser = {
   userId?: string;
   firstName?: string;
   lastName?: string;
+
+  dateOfBirth?: string; // in ISO format e.g., "2001-01-01"
+  address?: string;
+  emergencyContact?: string;
+  phoneNumber?: string | null;
+  institution?: string | null;
+  designation?: string | null;
+  bio?: string | null;
+
+  isVerified?: boolean;
+  createdAt?: string; // dates usually come as ISO strings from API
+  updatedAt?: string;
 };
+
+type Role = 'student' | 'teacher';
 
 type AuthStore = {
   user: IUser | null;
   token: string | null;
   isAuthenticated: boolean;
+  role: Role | null;
   
   // Actions
   setUser: (user: IUser) => void;
   setToken: (token: string) => void;
+  setUserRole: (role: Role) => void;
+
   clearUser: () => void;
   hasRole: (role: string | string[]) => boolean;
 };
@@ -29,9 +46,10 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
+      role: null,
       token: localStorage.getItem('firebase-auth-token'),
       isAuthenticated: !!localStorage.getItem('firebase-auth-token'),
-      
+      setUserRole: (role) => set({ role }),
       setUser: (user) => {
         // Store backend user info in localStorage
         if (user.userId) localStorage.setItem('user-id', user.userId);

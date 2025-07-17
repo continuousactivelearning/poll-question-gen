@@ -24,27 +24,33 @@ export class UserService extends BaseService {
         lastName: data.lastName || '',
         email: data.email || '',
         avatar: data.avatar || null,
-        roles: ['teacher']
+        roles: data.roles || ['student'],
+        phoneNumber: data.phoneNumber || null,
+        institution: data.institution || null,
+        designation: data.designation || null,
+        bio: data.bio || null,
+        isVerified: data.isVerified || false,
+        dateOfBirth: data.dateOfBirth || undefined,
+        address: data.address || undefined,
+        emergencyContact: data.emergencyContact || undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       user = await this.userRepo.findById(userId);
     }
     return user;
   }
-  
-  
+
   async findByFirebaseUID(firebaseUID: string): Promise<IUser> {
     const user = await this.userRepo.findByFirebaseUID(firebaseUID);
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
+    if (!user) throw new NotFoundError('User not found');
     return user;
   }
 
   async getProfile(userId: string) {
     const user = await this.userRepo.findById(userId);
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
+    if (!user) throw new NotFoundError('User not found');
+
     return {
       id: user._id?.toString() || '',
       firstName: user.firstName,
@@ -52,14 +58,29 @@ export class UserService extends BaseService {
       email: user.email,
       avatar: user.avatar || null,
       role: user.roles[0] || '',
+      phoneNumber: user.phoneNumber,
+      institution: user.institution,
+      designation: user.designation,
+      bio: user.bio,
+      isVerified: user.isVerified,
+      dateOfBirth: user.dateOfBirth,
+      address: user.address,
+      emergencyContact: user.emergencyContact,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 
-  async updateProfile(userId: string, data: { firstName?: string; lastName?: string; avatar?: string }) {
-    const updated = await this.userRepo.updateById(userId, data);
-    if (!updated) {
-      throw new NotFoundError('User not found');
-    }
+  async updateProfile(
+    userId: string,
+    data: Partial<Pick<IUser, 'firstName' | 'lastName' | 'avatar' | 'phoneNumber' | 'bio' | 'institution' | 'designation' | 'dateOfBirth' | 'address' | 'emergencyContact'>>
+  ) {
+    const updated = await this.userRepo.updateById(userId, {
+      ...data,
+      updatedAt: new Date(),
+    });
+    if (!updated) throw new NotFoundError('User not found');
+
     return {
       id: updated._id?.toString() || '',
       firstName: updated.firstName,
@@ -67,14 +88,26 @@ export class UserService extends BaseService {
       email: updated.email,
       avatar: updated.avatar || null,
       role: updated.roles[0] || '',
+      phoneNumber: updated.phoneNumber,
+      institution: updated.institution,
+      designation: updated.designation,
+      bio: updated.bio,
+      isVerified: updated.isVerified,
+      dateOfBirth: updated.dateOfBirth,
+      address: updated.address,
+      emergencyContact: updated.emergencyContact,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
     };
   }
 
   async updateAvatar(userId: string, avatarUrl: string) {
-    const updatedUser = await this.userRepo.updateById(userId, { avatar: avatarUrl });
-    if (!updatedUser) {
-      throw new NotFoundError('User not found');
-    }
+    const updatedUser = await this.userRepo.updateById(userId, {
+      avatar: avatarUrl,
+      updatedAt: new Date(),
+    });
+    if (!updatedUser) throw new NotFoundError('User not found');
+
     return {
       success: true,
       message: 'Avatar updated successfully',

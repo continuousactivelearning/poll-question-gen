@@ -9,8 +9,12 @@ import {
 import { useAuthStore } from '../store/auth-store';
 import { queryClient } from './client';
 
-// Enhanced mapFirebaseUserToAppUser to properly handle MongoDB user creation
-const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
+// Updated auth functions to pass role from UI to backend
+
+// In your auth page, modify the login functions to pass the selected role:
+
+// Enhanced mapFirebaseUserToAppUser to accept role parameter
+const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
   if (!firebaseUser) return null;
 
   try {
@@ -34,24 +38,37 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
       } else if (res.status === 404) {
         console.log('User not found in backend, creating new user...');
 
-        // Create user in backend MongoDB
+        // Create user in backend MongoDB with selected role
+        const newUser = {
+          firebaseUID: firebaseUser.uid,
+          firstName: firebaseUser.displayName?.split(' ')[0] || '',
+          lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+          email: firebaseUser.email || '',
+          avatar: firebaseUser.photoURL || null,
+          roles: selectedRole, // ✅ Use the selected role from UI
+
+          // Additional profile fields
+          phoneNumber: null,
+          bio: null,
+          institution: null,
+          designation: null,
+          address: null,
+          emergencyContact: null,
+          dateOfBirth: null,
+
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
         const createRes = await fetch(`http://localhost:3000/api/users/firebase/${firebaseUser.uid}/profile`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            firebaseUID: firebaseUser.uid,
-            firstName: firebaseUser.displayName?.split(' ')[0] || '',
-            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
-            email: firebaseUser.email || '',
-            avatar: firebaseUser.photoURL || '',
-            role: 'teacher', // Default role
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }),
+          body: JSON.stringify(newUser),
         });
+
         console.log(firebaseUser);
         if (!firebaseUser.uid) {
           console.error('Firebase user UID is missing!');
@@ -75,6 +92,7 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
       console.error('Backend user operation failed:', error);
       throw error;
     }
+
     console.log('Backend user data:', backendUser?.roles[0]);
     // Map user with backend data - ensure all fields are properly mapped
     const mappedUser = {
@@ -82,11 +100,22 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
       email: firebaseUser.email || backendUser?.email || '',
       name: firebaseUser.displayName ||
         (backendUser ? `${backendUser.firstName} ${backendUser.lastName}`.trim() : ''),
-      role: backendUser?.roles || 'student',
+      role: backendUser?.roles || selectedRole, // Use backend role or selected role
       avatar: firebaseUser.photoURL || backendUser?.avatar || '',
+      // from mongoDB
       userId: backendUser?._id,
       firstName: backendUser?.firstName || firebaseUser.displayName?.split(' ')[0] || '',
       lastName: backendUser?.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+      // Additional fields from IUser
+      roles: [selectedRole], // Use array format with selected role
+      dateOfBirth: backendUser?.dateOfBirth || '',
+      address: backendUser?.address || '',
+      emergencyContact: backendUser?.emergencyContact || '',
+      phoneNumber: backendUser?.phoneNumber || '',
+      institution: backendUser?.institution || '',
+      designation: backendUser?.designation || '',
+      bio: backendUser?.bio || '',
+      isVerified: backendUser?.isVerified || false,
       createdAt: backendUser?.createdAt,
       updatedAt: backendUser?.updatedAt
     };
@@ -99,13 +128,46 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
   }
 };
 
-// Initialize auth listener
+// Updated login functions to pass the selected role
+export const loginWithGoogle = async (selectedRole: string = 'student') => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = await mapFirebaseUserToAppUser(result.user, selectedRole);
+    if (user) {
+      useAuthStore.getState().setUser(user);
+      console.log('Google login successful:', user);
+    }
+    return result;
+  } catch (error) {
+    console.error('Google login error:', error);
+    throw error;
+  }
+};
+
+// Updated email login to accept role
+export const loginWithEmail = async (email: string, password: string, selectedRole: string = 'student') => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const user = await mapFirebaseUserToAppUser(result.user, selectedRole);
+    if (user) {
+      useAuthStore.getState().setUser(user);
+      console.log('Email login successful:', user);
+    }
+    return result;
+  } catch (error) {
+    console.error('Email login error:', error);
+    throw error;
+  }
+};
+
+// Updated auth state listener to handle existing users
 export const initAuth = () => {
   const { setUser, clearUser } = useAuthStore.getState();
 
   return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
+        // For existing users, don't pass a role (it will use existing role from DB)
         const user = await mapFirebaseUserToAppUser(firebaseUser);
         if (user) {
           console.log('User authenticated and stored:', user);
@@ -124,38 +186,6 @@ export const initAuth = () => {
       clearUser();
     }
   });
-};
-
-// Login with Google in a popup
-export const loginWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = await mapFirebaseUserToAppUser(result.user);
-    if (user) {
-      useAuthStore.getState().setUser(user);
-      console.log('Google login successful:', user);
-    }
-    return result;
-  } catch (error) {
-    console.error('Google login error:', error);
-    throw error;
-  }
-};
-
-// Login with email/password
-export const loginWithEmail = async (email: string, password: string) => {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const user = await mapFirebaseUserToAppUser(result.user);
-    if (user) {
-      useAuthStore.getState().setUser(user);
-      console.log('Email login successful:', user);
-    }
-    return result;
-  } catch (error) {
-    console.error('Email login error:', error);
-    throw error;
-  }
 };
 
 // Enhanced logout function

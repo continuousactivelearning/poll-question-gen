@@ -151,7 +151,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      const result = await loginWithGoogle();
+      const result = await loginWithGoogle(activeRole);
 
       setUser({
         uid: result.user.uid,
@@ -161,7 +161,7 @@ export default function AuthPage() {
         avatar: result.user.photoURL || "",
       });
 
-      navigate({ to: `/${activeRole}` });
+      navigate({ to: `/${activeRole}/home` });
     } catch (error) {
       console.error("Google Login Failed", error);
       setFormErrors({
@@ -180,7 +180,7 @@ export default function AuthPage() {
       setLoading(true);
       setFormErrors({});
 
-      const result = await loginWithEmail(email, password);
+      const result = await loginWithEmail(email, password, activeRole);
 
       setUser({
         uid: result.user.uid,
@@ -190,7 +190,7 @@ export default function AuthPage() {
         avatar: result.user.photoURL || "",
       });
 
-      navigate({ to: `/${activeRole}` });
+      navigate({ to: `/${activeRole}/home` });
     } catch (error) {
       console.error("Email Login Failed", error);
       setFormErrors({
@@ -231,11 +231,13 @@ export default function AuthPage() {
         uid: result.user.uid,
         email: result.user.email || "",
         name: fullName,
-        role: "student",
+        //role: "student",
+        role: activeRole, // Use selected role for signup too
         avatar: result.user.photoURL || ""
       });
 
-      navigate({ to: "/student/pollroom" });
+      navigate({ to: `/${activeRole}/home` });
+      //navigate({ to: "/student/home" });
     } catch (error: unknown) {
       console.error("Email Signup Failed", error);
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/email-already-in-use') {
@@ -257,9 +259,9 @@ export default function AuthPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       if (user.role === 'teacher') {
-        navigate({ to: '/teacher/pollroom' });
+        navigate({ to: '/teacher/home' });
       } else if (user.role === 'student') {
-        navigate({ to: '/student/pollroom' });
+        navigate({ to: '/student/home' });
       }
     }
   }, [isAuthenticated, user, navigate]);
