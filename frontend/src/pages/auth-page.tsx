@@ -689,13 +689,3 @@ export default function AuthPage() {
   );
 }
 
-/* Add this to the bottom of the file or in a global CSS file */
-<style jsx global>{`
-@keyframes zoom-in {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.12); }
-}
-.animate-zoom-in {
-  animation: zoom-in 2s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-`}</style>
