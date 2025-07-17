@@ -4,13 +4,11 @@ import {GLOBAL_TYPES} from '#root/types.js';
 import {injectable, inject} from 'inversify';
 import {InternalServerError} from 'routing-controllers';
 import admin from 'firebase-admin';
-import {IEnrollment, IUser} from '#root/shared/interfaces/models.js';
+import {IUser} from '#root/shared/interfaces/models.js';
 import {BaseService} from '#root/shared/classes/BaseService.js';
 import {IUserRepository} from '#root/shared/database/interfaces/IUserRepository.js';
 import {MongoDatabase} from '#root/shared/database/providers/mongo/MongoDatabase.js';
-import { InviteStatusType, InviteActionType } from '#root/shared/interfaces/models.js';
 import { appConfig } from '#root/config/app.js';
-import { USERS_TYPES } from '#root/modules/users/types.js';
 
 /**
  * Custom error thrown during password change operations.

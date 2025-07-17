@@ -1,8 +1,8 @@
-import { 
-  Router, 
-  Route, 
-  RootRoute, 
-  redirect, 
+import {
+  Router,
+  Route,
+  RootRoute,
+  redirect,
   createMemoryHistory,
   Outlet,
   NotFoundRoute,
@@ -21,6 +21,16 @@ import TeacherPollRoom from '@/pages/teacher/TeacherPollRoom'
 import CreatePollRoom from '@/pages/teacher/CreatePollRoom'
 import JoinPollRoom from '@/pages/student/JoinPollRoom'
 import StudentPollRoom from '@/pages/student/StudentPollRoom'
+import TeacherDashboard from '@/pages/teacher/TeacherDashboard'
+import StudentDashboard from '@/pages/student/StudentDashboard'
+import StudentProfile from '@/pages/student/StudentProfile'
+import TeacherProfile from '@/pages/teacher/TeacherProfile'
+import TeacherSettings from '@/pages/teacher/TeacherSettings'
+import StudentSettings from '@/pages/student/StudentSettings'
+import ManageRoom from '@/pages/teacher/TeacherManageRooms'
+import TeacherPollAnalysis from '@/pages/teacher/TeacherPollAnalysis'
+import StudentPollAnalysis from '@/pages/student/StudentPollAnalysis'
+import MyPolls from '@/pages/student/MyPolls'
 
 // Root route with error and notFound handling
 const rootRoute = new RootRoute({
@@ -33,7 +43,7 @@ const rootRoute = new RootRoute({
         <div className="text-center p-8 bg-red-50 rounded-lg shadow-lg max-w-md">
           <h1 className="text-2xl font-bold text-red-800 mb-4">Something went wrong</h1>
           <p className="text-red-600 mb-6">{error instanceof Error ? error.message : 'An unexpected error occurred'}</p>
-          <button 
+          <button
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             onClick={() => window.location.href = '/auth'}
           >
@@ -94,7 +104,7 @@ const teacherLayoutRoute = new Route({
     if (!isAuthenticated) {
       throw redirect({ to: '/auth' });
     }
-    
+
     // Role check - must be a teacher
     if (user?.role !== 'teacher') {
       if (user?.role === 'student') {
@@ -118,7 +128,7 @@ const studentLayoutRoute = new Route({
     if (!isAuthenticated) {
       throw redirect({ to: '/auth' });
     }
-    
+
     // Role check - must be a student
     if (user?.role !== 'student') {
       if (user?.role === 'teacher') {
@@ -131,6 +141,20 @@ const studentLayoutRoute = new Route({
   component: StudentLayout,
 });
 
+// Teacher dashboard route
+const teacherDashboardRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/home',
+  component: TeacherDashboard,
+});
+
+// Teacher profile route
+const teacherProfileRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/profile',
+  component: TeacherProfile,
+});
+
 // Teacher genAI home route
 const teacherGenAIHomeRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
@@ -138,18 +162,53 @@ const teacherGenAIHomeRoute = new Route({
   component: GenAIHomePage,
 });
 
+// Teacher manage rooms route
+const teacherManageRoomsRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/manage-rooms',
+  component: ManageRoom,
+}); 
+
+// Teacher poll analysis route
+const teacherPollAnalysisRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/manage-rooms/pollanalysis/$roomId',
+  component: TeacherPollAnalysis,
+});
+
 // Teacher poll room route
 const teacherPollRoomRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
   path: '/pollroom/$code',
-  component: TeacherPollRoom ,
+  component: TeacherPollRoom,
 });
 
 // Teacher Create live Poll Room route
 const teacherCreateRoomRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
   path: '/pollroom',
-  component: CreatePollRoom ,
+  component: CreatePollRoom,
+});
+
+// Teacher settings route
+const teacherSettingsRoute = new Route({
+  getParentRoute: () => teacherLayoutRoute,
+  path: '/settings',
+  component: TeacherSettings,
+});
+
+// Student dashboard route
+const studentDashboardRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/home',
+  component: StudentDashboard,
+});
+
+// Student profile route
+const studentProfileRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/profile',
+  component: StudentProfile,
 });
 
 // Student poll room route
@@ -166,6 +225,27 @@ const studentJoinRoomRoute = new Route({
   component: JoinPollRoom,
 });
 
+// Student My Poll route
+const studentMyPollRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/my-polls',
+  component: MyPolls,
+});
+
+// Student poll analysis route
+const studentPollAnalysisRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/my-polls/$code',
+  component: StudentPollAnalysis,
+});
+
+// Student settings route
+const studentSettingsRoute = new Route({
+  getParentRoute: () => studentLayoutRoute,
+  path: '/settings',
+  component: StudentSettings,
+});
+
 // Create a catch-all not found route
 const notFoundRoute = new NotFoundRoute({
   getParentRoute: () => rootRoute,
@@ -180,10 +260,20 @@ const routeTree = rootRoute.addChildren([
     teacherGenAIHomeRoute,
     teacherPollRoomRoute,
     teacherCreateRoomRoute,
+    teacherDashboardRoute,
+    teacherProfileRoute,
+    teacherSettingsRoute,
+    teacherManageRoomsRoute,
+    teacherPollAnalysisRoute,
   ]),
   studentLayoutRoute.addChildren([
     studentPollRoomRoute,
     studentJoinRoomRoute,
+    studentDashboardRoute,
+    studentProfileRoute,
+    studentSettingsRoute,
+    studentPollAnalysisRoute,
+    studentMyPollRoute,
   ]),
 ]);
 
@@ -205,16 +295,16 @@ export const router = new Router({
 export const useRedirectBasedOnRole = () => {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     if (isAuthenticated && user?.role) {
       const path = window.location.pathname;
-      
+
       // If the user is at root or auth page and already authenticated, redirect to their role's dashboard
       if (path === '/' || path === '/auth') {
         navigate({ to: `/${user.role.toLowerCase()}` });
       }
-      
+
       // If user is trying to access a different role's route, redirect to their proper route
       else if (
         (path.startsWith('/teacher') && user.role !== 'teacher') ||

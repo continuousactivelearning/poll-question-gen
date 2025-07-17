@@ -1,12 +1,11 @@
 ﻿const TYPES = {
   //Services
-  EnrollmentService: Symbol.for('EnrollmentService'),
-  ProgressService: Symbol.for('ProgressService'),
   UserService: Symbol.for('UserService'),
 
+  //Controllers
+  UserController: Symbol.for('UserController'),
+
   //Repositories
-  ProgressRepo: Symbol.for('ProgressRepo'),
-  EnrollmentRepo: Symbol.for('EnrollmentRepo'),
   ItemRepo: Symbol.for('ItemRepo'),
 };
 

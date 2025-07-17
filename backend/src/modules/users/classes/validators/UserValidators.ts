@@ -1,6 +1,7 @@
 import { IUser } from '#root/shared/interfaces/models.js';
-import {IsNotEmpty, IsString, IsEmail} from 'class-validator';
-import {JSONSchema} from 'class-validator-jsonschema';
+import { IsNotEmpty, IsOptional, IsString, IsEmail, IsUrl, IsBoolean, IsDateString } from 'class-validator';
+import { JSONSchema } from 'class-validator-jsonschema';
+import { Type } from 'class-transformer';
 
 /**
  * Validator for Firebase UID parameter in user lookup endpoints.
@@ -100,8 +101,122 @@ export class UserNotFoundErrorResponse {
   message: string;
 }
 
+export class CreateUserProfileBody {
+  @IsString()
+  firstName!: string;
+
+  @IsString()
+  lastName!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: 'avatar must be a valid URL address' })
+  avatar?: string | null;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  institution?: string;
+
+  @IsOptional()
+  @IsString()
+  designation?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  emergencyContact?: string;
+}
+
+export class UpdateUserProfileBody extends CreateUserProfileBody { }
+
+export class UserProfileResponse {
+  @IsString()
+  id!: string;
+
+  @IsString()
+  firstName!: string;
+
+  @IsString()
+  lastName!: string;
+
+  @IsString()
+  email!: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string | null;
+
+  @IsOptional()
+  @IsString()
+  role?: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  institution?: string;
+
+  @IsOptional()
+  @IsString()
+  designation?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  emergencyContact?: string;
+
+  @IsOptional()
+  @Type(() => Date)
+  createdAt?: Date;
+
+  @IsOptional()
+  @Type(() => Date)
+  updatedAt?: Date;
+}
+
 export const USER_VALIDATORS = [
   UserByFirebaseUIDParams,
   UserByFirebaseUIDResponse,
-  UserNotFoundErrorResponse
+  UserNotFoundErrorResponse,
+  CreateUserProfileBody,
+  UpdateUserProfileBody,
+  UserProfileResponse,
 ]

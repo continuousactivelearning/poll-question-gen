@@ -11,6 +11,7 @@ import {
 } from 'routing-controllers';
 import { Request, Response } from 'express';
 import multer from 'multer';
+import { pollSocket } from '../utils/PollSocket.js';
 import { inject, injectable } from 'inversify';
 import { RoomService } from '../services/RoomService.js';
 import { PollService } from '../services/PollService.js';
@@ -20,12 +21,13 @@ import { AIContentService } from '#root/modules/genai/services/AIContentService.
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
-import type { File as MulterFile } from 'multer';
+import type { QuestionSpec } from '#root/modules/genai/services/AIContentService.js';
+// import type { File as MulterFile } from 'multer';
 
 declare module 'express-serve-static-core' {
   interface Request {
-    file?: MulterFile;
-    files?: MulterFile[];
+    file?: Express.Multer.File;
+    files?: Express.Multer.File[];
   }
 }
 const upload = multer({ dest: 'uploads/' });
@@ -40,10 +42,10 @@ export class PollRoomController {
     @inject(LIVE_QUIZ_TYPES.AIContentService) private aiContentService: AIContentService,
     @inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
     @inject(LIVE_QUIZ_TYPES.RoomService) private roomService: RoomService,
-    @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService
-  ) {}
+    @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService,
+  ) { }
 
-  @Authorized()
+  //@Authorized()
   @Post('/')
   async createRoom(@Body() body: { name: string; teacherId: string }) {
     const room = await this.roomService.createRoom(body.name, body.teacherId);
@@ -53,16 +55,21 @@ export class PollRoomController {
     };
   }
 
-  @Authorized()
+  //@Authorized()
   @Get('/:code')
   async getRoom(@Param('code') code: string) {
     const room = await this.roomService.getRoomByCode(code);
-    if (!room) throw new Error('Room not found');
-    return room;
-  }
+    if (!room) {
+      return { success: false, message: 'Room not found' };
+    }
+    if (room.status !== 'active') {
+      return { success: false, message: 'Room is ended' };
+    }
+    return { success: true, room };  // return room data
+  }  
 
   // 🔹 Create Poll in Room
-  @Authorized()
+  //@Authorized()
   @Post('/:code/polls')
   async createPollInRoom(
     @Param('code') roomCode: string,
@@ -82,7 +89,31 @@ export class PollRoomController {
 
   }
 
-  @Authorized()
+  //@Authorized()
+  @Get('/teacher/:teacherId')
+  async getAllRoomsByTeacher(@Param('teacherId') teacherId: string) {
+    return await this.roomService.getRoomsByTeacher(teacherId);
+  }
+  //@Authorized()
+  @Get('/teacher/:teacherId/active')
+  async getActiveRoomsByTeacher(@Param('teacherId') teacherId: string) {
+    return await this.roomService.getRoomsByTeacherAndStatus(teacherId, 'active');
+  }
+  //@Authorized()
+  @Get('/teacher/:teacherId/ended')
+  async getEndedRoomsByTeacher(@Param('teacherId') teacherId: string) {
+    return await this.roomService.getRoomsByTeacherAndStatus(teacherId, 'ended');
+  }
+
+  //@Authorized()
+  @Get('/:roomId/analysis')
+  async getPollAnalysis(@Param('roomId') roomId: string) {
+    // Fetch from service
+    const analysis = await this.roomService.getPollAnalysis(roomId);
+    return { success: true, data: analysis };
+  }
+
+  //@Authorized()
   @Post('/:code/polls/answer')
   async submitPollAnswer(
     @Param('code') roomCode: string,
@@ -93,22 +124,24 @@ export class PollRoomController {
   }
 
   // Fetch Results for All Polls in Room
-  @Authorized()
+  //@Authorized()
   @Get('/:code/polls/results')
   async getResultsForRoom(@Param('code') code: string) {
     return await this.pollService.getPollResults(code);
   }
 
-  @Authorized()
+  //@Authorized()
   @Post('/:code/end')
   async endRoom(@Param('code') code: string) {
     const success = await this.roomService.endRoom(code);
     if (!success) throw new Error('Room not found');
+    // Emit to all clients in the room
+    pollSocket.emitToRoom(code, 'room-ended', {});
     return { success: true, message: 'Room ended successfully' };
   }
 
   // 🔹 AI Question Generation from transcript or YouTube
-  @Authorized()
+  //@Authorized()
   @Post('/:code/generate-questions')
   @HttpCode(200)
   async generateQuestionsFromTranscript(
@@ -148,17 +181,39 @@ export class PollRoomController {
         return res.status(400).json({ message: 'Please upload a file or provide a youtubeUrl.' });
       }
 
-      const segments = await this.aiContentService.segmentTranscript(transcript, model);
+      const SEGMENTATION_THRESHOLD = parseInt(process.env.TRANSCRIPT_SEGMENTATION_THRESHOLD || '6000', 10);
+      const defaultModel = 'gemma3';
+      const selectedModel = model?.trim() || defaultModel;
+      let segments: Record<string, string>;
+      if (transcript.length <= SEGMENTATION_THRESHOLD) {
+        console.log('[generateQuestions] Small transcript detected. Using full transcript without segmentation.');
+        segments = { full: transcript };
+      } else {
+        console.log('[generateQuestions] Transcript is long; running segmentation...');
+        segments = await this.aiContentService.segmentTranscript(transcript, selectedModel);
+      }
+      // ✅ Safe default questionSpec
+      let safeSpec: QuestionSpec[] = [{ SOL: 2 }]; // default
+      if (questionSpec && typeof questionSpec === 'object' && !Array.isArray(questionSpec)) {
+        safeSpec = [questionSpec];
+      } else if (Array.isArray(questionSpec) && typeof questionSpec[0] === 'object') {
+        safeSpec = questionSpec;
+      } else {
+        console.warn('Invalid questionSpec provided; using default [{ SOL: 2 }]');
+      }
+      console.log('Using questionSpec:', safeSpec);
+      console.log('[generateQuestions] Transcript length:', transcript.length);
+      console.log('[generateQuestions] Transcript preview:', segments);
       const generatedQuestions = await this.aiContentService.generateQuestions({
         segments,
-        globalQuestionSpecification: questionSpec ? [questionSpec] : [{}],
-        model,
+        globalQuestionSpecification: safeSpec,
+        model: selectedModel,
       });
 
       return res.json({
         message: 'Questions generated successfully from transcript.',
         transcriptPreview: transcript.substring(0, 200) + '...',
-        segmentsCount: segments.length,
+        segmentsCount: Object.keys(segments).length,
         totalQuestions: generatedQuestions.length,
         questions: generatedQuestions,
       });

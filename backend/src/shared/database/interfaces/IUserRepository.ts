@@ -23,6 +23,8 @@ export interface IUserRepository {
    * @returns A promise that resolves to the user if found, or null if not found.
    */
   findByEmail(email: string, session?: ClientSession): Promise<IUser | null>;
+  findById(id: string): Promise<IUser | null>;
+  updateById(id: string, data: Partial<IUser>): Promise<IUser | null>;
 
   /**
    * Adds a role to a user.
