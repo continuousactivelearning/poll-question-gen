@@ -260,7 +260,7 @@ export default function StudentDashboard() {
                 <Trophy className="h-5 w-5" />
                 Recent Polls
               </CardTitle>
-              <Button
+              {/* <Button
                 size="sm"
                 variant="outline"
                 className="text-blue-600 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
@@ -269,7 +269,7 @@ export default function StudentDashboard() {
                 }}
               >
                 View Detailed Analysis
-              </Button>
+              </Button> */}
             </CardHeader>
             <CardContent className="space-y-3">
               {pollResults && pollResults.length > 0 ? (
