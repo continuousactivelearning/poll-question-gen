@@ -25,7 +25,7 @@ export type IUser = {
   updatedAt?: string;
 };
 
-type Role = 'student' | 'teacher';
+type Role = string;
 
 type AuthStore = {
   user: IUser | null;

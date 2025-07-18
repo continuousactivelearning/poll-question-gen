@@ -6,7 +6,6 @@ export interface IUserDocument extends Document {
     firstName: string;
     lastName: string;
     role?: string; // legacy
-    roles?: string[];
     avatar?: string | null;
     dateOfBirth?: string;
     address?: string;
@@ -24,7 +23,7 @@ const UserSchema = new Schema<IUserDocument>(
         email: { type: String, required: true, unique: true },
         firstName: { type: String, default: '' },
         lastName: { type: String, default: '' },
-        roles: { type: [String], default: ['student'] },
+        role: { type: String, default: 'student' },
         avatar: { type: String, default: null },
 
         // New fields

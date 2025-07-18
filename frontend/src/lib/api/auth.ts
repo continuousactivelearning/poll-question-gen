@@ -14,9 +14,9 @@ import { queryClient } from './client';
 // In your auth page, modify the login functions to pass the selected role:
 
 // Enhanced mapFirebaseUserToAppUser to accept role parameter
-const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
+export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
   if (!firebaseUser) return null;
-
+console.log("Mapuserdata file", selectedRole);
   try {
     // Get token for backend API calls
     const token = await firebaseUser.getIdToken(true);
@@ -120,6 +120,7 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selec
     };
 
     console.log('Mapped user data:', mappedUser);
+    localStorage.setItem('auth-mapped', 'true');
     return mappedUser;
   } catch (error) {
     console.error('Error mapping Firebase user:', error);
@@ -162,10 +163,16 @@ export const loginWithEmail = async (email: string, password: string, selectedRo
 // Updated auth state listener to handle existing users
 export const initAuth = () => {
   const { setUser, clearUser } = useAuthStore.getState();
-
   return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
+        const alreadyMapped = localStorage.getItem('auth-mapped');
+        if (alreadyMapped === 'true') {
+          console.log("🔁 Skipping mapping in initAuth – already mapped in login/signup.");
+          localStorage.removeItem('auth-mapped');
+          return;
+        }
+        else{// If not mapped
         // For existing users, don't pass a role (it will use existing role from DB)
         const user = await mapFirebaseUserToAppUser(firebaseUser);
         if (user) {
@@ -176,6 +183,7 @@ export const initAuth = () => {
           console.error('Failed to map Firebase user to app user');
           clearUser();
         }
+      }
       } catch (error) {
         console.error('Error during auth state change:', error);
         clearUser();

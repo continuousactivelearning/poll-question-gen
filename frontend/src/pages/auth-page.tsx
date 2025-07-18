@@ -94,7 +94,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [activeRole, setActiveRole] = useState<"teacher" | "student">("student");
+  const [activeRole, setActiveRole] = useState<string>("student");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [formErrors, setFormErrors] = useState<{
@@ -177,7 +177,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-
+      console.log("activerole", activeRole)
       const result = await loginWithEmail(email, password, activeRole);
 
       setUser({
