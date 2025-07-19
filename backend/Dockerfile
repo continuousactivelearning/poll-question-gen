@@ -5,8 +5,12 @@ FROM node:18
 RUN corepack enable
 WORKDIR /app
 
+
+
 # Copy backend files
 COPY . .
+# Add this right after setting WORKDIR
+\
 
 # Install dependencies
 RUN pnpm install

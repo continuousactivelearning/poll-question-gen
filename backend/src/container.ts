@@ -18,6 +18,7 @@ export const sharedContainerModule = new ContainerModule(options => {
   // Auth
   options.bind(FirebaseAuthService).toSelf().inSingletonScope();
 
+  
   // Database
   options.bind(GLOBAL_TYPES.Database).to(MongoDatabase).inSingletonScope();
 
