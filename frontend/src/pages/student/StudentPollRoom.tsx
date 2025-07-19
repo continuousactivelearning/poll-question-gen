@@ -13,15 +13,10 @@ import {
 import { toast } from "sonner";
 import { Zap, Users, Menu, Info, History, LogOut, Clock, CheckCircle, Circle, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/hooks/use-auth";
+import api from "@/lib/api/api";
 
 const Socket_URL = import.meta.env.VITE_SOCKET_URL;
-const API_URL = import.meta.env.VITE_API_URL;
-
 const socket = io(Socket_URL);
-const api = axios.create({
-  baseURL: API_URL,
-  headers: { "Content-Type": "application/json" },
-});
 
 type Poll = {
   _id: string;

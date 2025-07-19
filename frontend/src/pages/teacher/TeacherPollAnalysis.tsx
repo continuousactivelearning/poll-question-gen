@@ -5,10 +5,7 @@ import { Calendar, Clock4, Users, Crown, Medal, Search, Loader2 } from "lucide-r
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL;
-const api = axios.create({ baseURL: API_URL });
+import api from "@/lib/api/api";
 
 interface Participant {
   name: string;

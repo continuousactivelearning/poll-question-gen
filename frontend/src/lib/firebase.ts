@@ -31,12 +31,13 @@ export const provider = new GoogleAuthProvider();
 export const loginWithGoogle = async (role: string = "student") => {
   const result = await signInWithPopup(auth, provider);
   const idToken = await result.user.getIdToken();
-  const user = await mapFirebaseUserToAppUser(result.user, role);
+ /* const user = await mapFirebaseUserToAppUser(result.user, role);
+  localStorage.setItem('auth-mapped', 'true');
   if (user) {
     useAuthStore.getState().setUser(user);
     console.log('User authenticated and stored:', user);
     localStorage.setItem('isAuth', 'true');
-  }
+  }*/
   // Store token and role in Zustand
   const setAuthState = useAuthStore.getState();
   setAuthState.setToken(idToken);
@@ -54,12 +55,13 @@ export const loginWithEmail = async (
   const result = await signInWithEmailAndPassword(auth, email, password);
   const idToken = await result.user.getIdToken();
   
-  const user = await mapFirebaseUserToAppUser(result.user, role);
+  /*const user = await mapFirebaseUserToAppUser(result.user, role);
+  localStorage.setItem('auth-mapped', 'true');
   if (user) {
     useAuthStore.getState().setUser(user);
     console.log('User authenticated and stored:', user);
     localStorage.setItem('isAuth', 'true');
-  }
+  }*/
   // Store token and role in Zustand
   const setAuthState = useAuthStore.getState();
   setAuthState.setToken(idToken);

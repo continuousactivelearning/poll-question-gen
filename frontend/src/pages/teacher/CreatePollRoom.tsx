@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from '@tanstack/react-router';
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Users, ClipboardList, Sparkles, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/hooks/use-auth";
-
-const API_URL = import.meta.env.VITE_API_URL;
-const api = axios.create({ baseURL: API_URL });
+import api from "@/lib/api/api"
 
 /*
 const AuroraText = ({

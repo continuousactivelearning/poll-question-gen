@@ -49,7 +49,10 @@ export const useAuthStore = create<AuthStore>()(
       role: null,
       token: localStorage.getItem('firebase-auth-token'),
       isAuthenticated: !!localStorage.getItem('firebase-auth-token'),
-      setUserRole: (role) => set({ role }),
+      setUserRole: (role) => {
+        localStorage.setItem('user-role', role),
+        set({ role });
+      },
       setUser: (user) => {
         // Store backend user info in localStorage
         if (user.userId) localStorage.setItem('user-id', user.userId);

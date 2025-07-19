@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createExpressServer, RoutingControllersOptions } from 'routing-controllers';
 import { appConfig } from './config/app.js';
 import { loggingHandler } from './shared/middleware/loggingHandler.js';
-import { HttpErrorHandler } from './shared/index.js';
+import { authorizationChecker, HttpErrorHandler } from './shared/index.js';
 import { generateOpenAPISpec } from './shared/functions/generateOpenApiSpec.js';
 import { apiReference } from '@scalar/express-api-reference';
 import { loadAppModules } from './bootstrap/loadModules.js';
@@ -27,7 +27,8 @@ const moduleOptions: RoutingControllersOptions = {
   controllers: controllers,
   middlewares: [HttpErrorHandler],
   routePrefix: '/api',
-  authorizationChecker: async () => true,
+  //authorizationChecker: async () => true,
+  authorizationChecker: authorizationChecker,
   currentUserChecker: currentUserChecker,
   defaultErrorHandler: true,
   development: appConfig.isDevelopment,

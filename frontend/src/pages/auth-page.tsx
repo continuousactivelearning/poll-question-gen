@@ -149,6 +149,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
+      useAuthStore.getState().setUserRole?.(activeRole);
       const result = await loginWithGoogle(activeRole);
 
       setUser({
@@ -177,7 +178,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      console.log("activerole", activeRole)
+      useAuthStore.getState().setUserRole?.(activeRole);
       const result = await loginWithEmail(email, password, activeRole);
 
       setUser({

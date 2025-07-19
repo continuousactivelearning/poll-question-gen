@@ -185,12 +185,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: { "Content-Type": "application/json" },
-});
+import api from "@/lib/api/api";
 
 export default function JoinPollRoom() {
   const [roomCode, setRoomCode] = useState("");

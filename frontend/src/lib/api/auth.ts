@@ -13,7 +13,6 @@ import { queryClient } from './client';
 
 // In your auth page, modify the login functions to pass the selected role:
 
-// Enhanced mapFirebaseUserToAppUser to accept role parameter
 export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
   if (!firebaseUser) return null;
 console.log("Mapuserdata file", selectedRole);
@@ -120,7 +119,6 @@ console.log("Mapuserdata file", selectedRole);
     };
 
     console.log('Mapped user data:', mappedUser);
-    localStorage.setItem('auth-mapped', 'true');
     return mappedUser;
   } catch (error) {
     console.error('Error mapping Firebase user:', error);
@@ -166,15 +164,18 @@ export const initAuth = () => {
   return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
-        const alreadyMapped = localStorage.getItem('auth-mapped');
+       /* const alreadyMapped = localStorage.getItem('auth-mapped');
         if (alreadyMapped === 'true') {
           console.log("🔁 Skipping mapping in initAuth – already mapped in login/signup.");
           localStorage.removeItem('auth-mapped');
           return;
         }
         else{// If not mapped
-        // For existing users, don't pass a role (it will use existing role from DB)
-        const user = await mapFirebaseUserToAppUser(firebaseUser);
+        // For existing users, don't pass a role (it will use existing role from DB)*/
+        const currentrole = localStorage.getItem('user-role');
+        console.log('in initauth', currentrole);
+        if (currentrole){
+        const user = await mapFirebaseUserToAppUser(firebaseUser,currentrole);
         if (user) {
           console.log('User authenticated and stored:', user);
           localStorage.setItem('isAuth', 'true');
@@ -182,8 +183,8 @@ export const initAuth = () => {
         } else {
           console.error('Failed to map Firebase user to app user');
           clearUser();
-        }
       }
+    }
       } catch (error) {
         console.error('Error during auth state change:', error);
         clearUser();

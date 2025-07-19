@@ -6,8 +6,7 @@ import { ClipboardList, Users, TrendingUp, Clock, HelpCircle, BarChart2, Loader2
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useNavigate } from "@tanstack/react-router";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/api/api";
 
 export interface TeacherData {
   summary: {
@@ -57,12 +56,8 @@ export default function TeacherDashboard() {
         throw new Error('No teacher ID found');
       }
 
-      const response = await fetch(`${API_URL}/teachers/dashboard/${teacherId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-      const data = await response.json();
-      setDashboardData(data);
+      const response = await api.get(`/teachers/dashboard/${teacherId}`);
+      setDashboardData(response.data);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');

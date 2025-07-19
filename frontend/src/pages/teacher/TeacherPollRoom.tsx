@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Upload, Mic, MicOff, Youtube, Wand2, Edit3, X, Loader2, LogOut, AlertTriangle } from "lucide-react";
+import api from "@/lib/api/api";
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text).then(() => {
@@ -14,12 +15,6 @@ const copyToClipboard = (text: string) => {
     toast.error("Failed to copy room code");
   });
 };
-
-const API_URL = import.meta.env.VITE_API_URL;
-const api = axios.create({
-  baseURL: API_URL,
-  headers: { "Content-Type": "application/json" },
-});
 
 type PollResults = Record<string, Record<string, { count: number; users: string[] }>>;
 
@@ -33,7 +28,7 @@ export default function TeacherPollRoom() {
   const params = useParams({ from: '/teacher/pollroom/$code' });
   const navigate = useNavigate();
   const roomCode = params.code;
-
+  const { user } = useAuthStore();
   // Existing state
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
@@ -68,7 +63,7 @@ export default function TeacherPollRoom() {
     setIsEndingRoom(true);
     try {
       await api.post(`/livequizzes/rooms/${roomCode}/end`, {
-        teacherId: "teacher-123", // replace with real teacher ID
+        teacherId: user?.userId, // replace with real teacher ID
       });
 
       toast.success("Room ended successfully");
@@ -95,7 +90,7 @@ export default function TeacherPollRoom() {
       await api.post(`/livequizzes/rooms/${roomCode}/polls`, {
         question,
         options: options.filter(opt => opt.trim()),
-        creatorId: "teacher-123", // replace with real ID
+        creatorId: user?.userId, // replace with real ID
         timer: Number(timer),
         correctOptionIndex
       });
