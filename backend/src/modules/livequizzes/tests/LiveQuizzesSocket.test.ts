@@ -1,4 +1,4 @@
-/*import { describe, it, beforeAll, afterAll, beforeEach, expect, vi } from 'vitest';
+import { describe, it, beforeAll, afterAll, beforeEach, expect, vi } from 'vitest';
 import { Server as HttpServer } from 'http';
 import { Server as IOServer } from 'socket.io';
 import { io as Client, Socket as ClientSocket } from 'socket.io-client';
@@ -444,4 +444,3 @@ describe('PollRoom Socket Integration Tests', () => {
         });
     });
 });
-*/
