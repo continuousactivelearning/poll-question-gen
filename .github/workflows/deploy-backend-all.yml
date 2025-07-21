@@ -24,9 +24,9 @@ permissions:
 
 env:
   NODE_VERSION: '22'
-  DOCKER_IMAGE: vibe-backend
+  DOCKER_IMAGE: poll-question-gen-backend
   GCP_REGION: asia-south1
-  GCP_SERVICE: vibe-backend-staging
+  GCP_SERVICE: poll-question-gen-backend-staging
 
 jobs:
 
@@ -98,9 +98,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NODE_ENV=staging
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
-            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
             DB_URL=${{ secrets.DB_URL }}
 
   deploy_staging:
@@ -127,9 +124,6 @@ jobs:
             NODE_ENV=staging
             APP_URL=${{ secrets.APP_URL }}
             DB_URL=${{ secrets.DB_URL }}
-            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
             FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
             FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
             FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
@@ -156,7 +150,7 @@ jobs:
       - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v1
         with:
-          service: vibe-backend-production
+          service: poll-question-gen-backend-production
           region: ${{ env.GCP_REGION }}
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
@@ -164,9 +158,6 @@ jobs:
             NODE_ENV=production
             APP_URL=${{ secrets.APP_URL }}
             DB_URL=${{ secrets.DB_URL }}
-            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
             FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
             FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
             FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
