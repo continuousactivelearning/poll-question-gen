@@ -56,11 +56,13 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",
+    "@swc/helpers": "^0.5.17",
     "@types/chalk": "^2.2.4",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.0.10",
+    "@vitest/ui": "3.2.4",
     "concurrently": "^9.2.0",
     "express-rate-limit": "^7.5.1",
     "fluent-ffmpeg": "^2.1.3",

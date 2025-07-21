@@ -9,8 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
-import { AnimatedGridPattern } from "@/components/magicui/animated-grid-pattern";
-import { AuroraText } from "@/components/magicui/aurora-text";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -96,7 +94,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [activeRole, setActiveRole] = useState<"teacher" | "student">("student");
+  const [activeRole, setActiveRole] = useState<string>("student");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [formErrors, setFormErrors] = useState<{
@@ -151,6 +149,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
+      useAuthStore.getState().setUserRole?.(activeRole);
       const result = await loginWithGoogle(activeRole);
 
       setUser({
@@ -179,7 +178,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-
+      useAuthStore.getState().setUserRole?.(activeRole);
       const result = await loginWithEmail(email, password, activeRole);
 
       setUser({

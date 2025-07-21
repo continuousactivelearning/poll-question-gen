@@ -4,7 +4,9 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { logout } from "@/lib/api/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Home, Users, PlusCircle, Settings, User, ChevronDown } from "lucide-react";
+import { LogOut, Home, Users, PlusCircle, 
+  //Settings,
+   User, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import React from "react";
+// import React from "react";
 
-const AuroraText = ({
+/*const AuroraText = ({
   children,
   colors = ["#2563eb", "#1d4ed8", "#1e40af"],
 }: {
@@ -25,7 +27,7 @@ const AuroraText = ({
   <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent dark:from-blue-400 dark:via-blue-500 dark:to-blue-600">
     {children}
   </span>
-);
+);*/
 
 export default function TeacherLayout() {
   const { user } = useAuthStore();

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Clock, BarChart2, AlertCircle, Loader2, Play, Square, MoreVertical, Eye } from "lucide-react";
+import { Users, Clock, BarChart2, AlertCircle, Loader2, Play, Square, MoreVertical, Eye } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -11,8 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/api/api";
 
 interface Room {
     roomCode: string;
@@ -47,18 +46,9 @@ export default function ManageRoom() {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await fetch(`${API_URL}/livequizzes/rooms/teacher/${user.uid}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        //'Authorization': `Bearer ${user?.token}`
-                    },
-                });
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch rooms: ${response.status}`);
-                }
+                const response = await api.get(`/livequizzes/rooms/teacher/${user.uid}`);
 
-                const data = await response.json();
+                const data = await response.data;
 
                 // Sort rooms: active first, then ended
                 const sortedRooms = data.sort((a: Room, b: Room) => {
@@ -108,27 +98,18 @@ export default function ManageRoom() {
         return `~${estimatedDuration} mins`;
     };
 
-    const getStatusColor = (status: string) => {
+   /* const getStatusColor = (status: string) => {
         return status === 'active'
             ? 'text-green-600 dark:text-green-400'
             : 'text-gray-600 dark:text-gray-400';
-    };
+    };*/
 
     const handleEndRoom = async (roomCode: string, event: React.MouseEvent) => {
         event.stopPropagation();
         setEndingRoom(roomCode);
         
         try {
-            const response = await fetch(`${API_URL}/livequizzes/rooms/${roomCode}/end`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to end room');
-            }
+            await api.post(`/livequizzes/rooms/${roomCode}/end`);
             
             // Update the room status locally
             setRooms(prevRooms => 

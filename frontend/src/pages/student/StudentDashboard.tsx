@@ -1,12 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import { useState, useEffect } from "react";
-import { BookOpen, TrendingUp, Calendar, Trophy, Clock, Activity, CheckCircle, BarChart2, AlertCircle } from "lucide-react";
+import { BookOpen, TrendingUp, Calendar, Trophy, Clock, CheckCircle, BarChart2, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useNavigate } from "@tanstack/react-router";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/api/api";
 
 export interface StudentData {
   pollStats: {
@@ -77,21 +76,8 @@ export default function StudentDashboard() {
           throw new Error('No student ID found');
         }
 
-        const response = await fetch(`${API_URL}/students/dashboard/${studentId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            // Add authorization header if needed
-            // 'Authorization': `Bearer ${user?.token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setDashboardData(data);
+        const response = await api.get(`/students/dashboard/${studentId}`);
+        setDashboardData(response.data);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
@@ -163,14 +149,14 @@ export default function StudentDashboard() {
     pollStats,
     pollResults,
     pollDetails,
-    activePolls,
+    //activePolls,
     upcomingPolls,
     scoreProgression,
     performanceSummary,
     roomWiseScores
   } = dashboardData;
 
-  const projectColors = isDark ? ["#3b82f6", "#f59e0b", "#10b981", "#f43f5e"] : ["#6366f1", "#f59e42", "#059669", "#e11d48"];
+  //const projectColors = isDark ? ["#3b82f6", "#f59e0b", "#10b981", "#f43f5e"] : ["#6366f1", "#f59e42", "#059669", "#e11d48"];
 
   const themeClasses = isDark ? 'dark' : '';
 

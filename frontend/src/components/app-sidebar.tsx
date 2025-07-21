@@ -7,7 +7,7 @@ import {
   Bot,
   Command,
   Frame,
-  GalleryVerticalEnd,
+  //GalleryVerticalEnd,
   Map,
   PieChart,
   Settings2,

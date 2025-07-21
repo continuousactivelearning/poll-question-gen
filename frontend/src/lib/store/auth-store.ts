@@ -5,7 +5,7 @@ export type IUser = {
   uid: string;
   email: string;
   name?: string;
-  role: 'teacher' | 'student' | 'admin' | null;
+  role: string | null;
   avatar?: string;
   // Backend user fields
   userId?: string;
@@ -25,7 +25,7 @@ export type IUser = {
   updatedAt?: string;
 };
 
-type Role = 'student' | 'teacher';
+type Role = string;
 
 type AuthStore = {
   user: IUser | null;
@@ -39,7 +39,7 @@ type AuthStore = {
   setUserRole: (role: Role) => void;
 
   clearUser: () => void;
-  hasRole: (role: string | string[]) => boolean;
+  hasRole: (role: string) => boolean;
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -49,7 +49,10 @@ export const useAuthStore = create<AuthStore>()(
       role: null,
       token: localStorage.getItem('firebase-auth-token'),
       isAuthenticated: !!localStorage.getItem('firebase-auth-token'),
-      setUserRole: (role) => set({ role }),
+      setUserRole: (role) => {
+        localStorage.setItem('user-role', role),
+        set({ role });
+      },
       setUser: (user) => {
         // Store backend user info in localStorage
         if (user.userId) localStorage.setItem('user-id', user.userId);

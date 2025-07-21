@@ -1,13 +1,11 @@
-// src/pages/student/mypoll.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Clock4, BarChart3, AlertCircle, Loader2, Eye, CheckCircle, XCircle, Trophy, Target } from "lucide-react";
+import { Calendar, Users, BarChart3, AlertCircle, Loader2, Eye, CheckCircle, XCircle, Trophy, Target } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/api/api";
 
 interface StudentPollAnswer {
     pollId: string;
@@ -54,19 +52,8 @@ export default function MyPoll() {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await fetch(`${API_URL}/livequizzes/student/${user.uid}/attended-rooms`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        //'Authorization': `Bearer ${user?.token}`
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch attended rooms: ${response.status}`);
-                }
-
-                const data = await response.json();
+                const response = await api.get(`/livequizzes/student/${user.uid}/attended-rooms`);
+                const data = response.data;
 
                 // Sort rooms by attendance date (newest first)
                 const sortedRooms = data.sort((a: AttendedRoom, b: AttendedRoom) => {

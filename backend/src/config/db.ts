@@ -8,12 +8,17 @@ export const dbConfig = {
 
 export async function connectToDatabase() {
   try {
+    // Runtime validation
+    if (typeof dbConfig.url !== 'string') {
+      throw new Error(`Invalid DB_URL: expected string, got ${typeof dbConfig.url}`);
+    }
+
     await mongoose.connect(dbConfig.url, {
       dbName: dbConfig.dbName,
     });
     console.log('✅ Connected to MongoDB:', dbConfig.dbName);
   } catch (error) {
     console.error('❌ Failed to connect to MongoDB:', error);
-    process.exit(1); // exit process if DB connection fails
+    process.exit(1);
   }
 }

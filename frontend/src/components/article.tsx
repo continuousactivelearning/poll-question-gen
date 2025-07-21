@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useRef } from "react";
+/*import { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useRef } from "react";
 import MathRenderer from "./math-renderer";
 
 // Import Yoopta Editor Core
@@ -180,7 +180,7 @@ const Article = forwardRef<ArticleRef, ArticleProps>(({ content, estimatedReadTi
     return (
         <MathRenderer className="h-full w-full bg-background">
             <div className="h-full w-full flex flex-col">
-                {/* Article Metadata Topbar */}
+                //{ Article Metadata Topbar }
                 {(estimatedReadTimeInMinutes || points || tags?.length) && (
                     <div className="border-b bg-muted/50 px-4 py-3">
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -212,7 +212,7 @@ const Article = forwardRef<ArticleRef, ArticleProps>(({ content, estimatedReadTi
                     </div>
                 )}
                 
-                {/* Article Content */}
+                //{ Article Content }
                 <div className="flex-1 w-full p-4 overflow-y-auto">
                     <YooptaEditor
                         width="100%"
@@ -225,7 +225,7 @@ const Article = forwardRef<ArticleRef, ArticleProps>(({ content, estimatedReadTi
                     />
                 </div>
 
-                {/* Next Lesson Button */}
+                //{ Next Lesson Button }
                 {onNext && (
                     <div className="p-4 border-t border-border/20 bg-background/50 backdrop-blur-sm">
                         <div className="flex justify-end">
@@ -258,3 +258,4 @@ const Article = forwardRef<ArticleRef, ArticleProps>(({ content, estimatedReadTi
 Article.displayName = "Article";
 
 export default Article;
+*/

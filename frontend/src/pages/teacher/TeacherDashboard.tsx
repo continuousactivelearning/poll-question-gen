@@ -2,12 +2,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { useState, useEffect } from "react";
-import { ClipboardList, Users, TrendingUp, Clock, Calendar, HelpCircle, BarChart2, Loader2, ExternalLink } from "lucide-react";
+import { ClipboardList, Users, TrendingUp, Clock, HelpCircle, BarChart2, Loader2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useNavigate } from "@tanstack/react-router";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/api/api";
 
 export interface TeacherData {
   summary: {
@@ -57,12 +56,8 @@ export default function TeacherDashboard() {
         throw new Error('No teacher ID found');
       }
 
-      const response = await fetch(`${API_URL}/teachers/dashboard/${teacherId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-      const data = await response.json();
-      setDashboardData(data);
+      const response = await api.get(`/teachers/dashboard/${teacherId}`);
+      setDashboardData(response.data);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
@@ -143,7 +138,7 @@ export default function TeacherDashboard() {
     });
   };
 
-  const getStatusColor = (status: 'active' | 'ended' | undefined): string => {
+ /* const getStatusColor = (status: 'active' | 'ended' | undefined): string => {
     switch (status) {
       case 'active':
         return 'bg-green-500';
@@ -152,7 +147,7 @@ export default function TeacherDashboard() {
       default:
         return 'bg-gray-500';
     }
-  };
+  };*/
 
   return (
     <div className="max-w-7xl mx-auto p-6">

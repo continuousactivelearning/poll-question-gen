@@ -9,12 +9,12 @@ export function useAuth() {
   const navigate = useNavigate();
 
   // Check if user has a specific role
-  const checkRole = (requiredRole: string | string[]): boolean => {
+  const checkRole = (requiredRole: string): boolean => {
     return hasRole(requiredRole);
   };
 
   // Redirect if user doesn't have required role
-  const requireRole = (requiredRole: string | string[]): boolean => {
+  const requireRole = (requiredRole: string): boolean => {
     if (!isAuthenticated) {
       navigate({ to: '/auth' });
       return false;

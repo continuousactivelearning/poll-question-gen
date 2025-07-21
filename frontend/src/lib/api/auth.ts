@@ -13,10 +13,9 @@ import { queryClient } from './client';
 
 // In your auth page, modify the login functions to pass the selected role:
 
-// Enhanced mapFirebaseUserToAppUser to accept role parameter
-const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
+export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
   if (!firebaseUser) return null;
-
+console.log("Mapuserdata file", selectedRole);
   try {
     // Get token for backend API calls
     const token = await firebaseUser.getIdToken(true);
@@ -45,7 +44,7 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selec
           lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
           email: firebaseUser.email || '',
           avatar: firebaseUser.photoURL || null,
-          roles: selectedRole, // ✅ Use the selected role from UI
+          role: selectedRole, // ✅ Use the selected role from UI
 
           // Additional profile fields
           phoneNumber: null,
@@ -93,21 +92,20 @@ const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selec
       throw error;
     }
 
-    console.log('Backend user data:', backendUser?.roles[0]);
+    console.log('Backend user data:', backendUser?.role);
     // Map user with backend data - ensure all fields are properly mapped
     const mappedUser = {
       uid: firebaseUser.uid,
       email: firebaseUser.email || backendUser?.email || '',
       name: firebaseUser.displayName ||
         (backendUser ? `${backendUser.firstName} ${backendUser.lastName}`.trim() : ''),
-      role: backendUser?.roles || selectedRole, // Use backend role or selected role
+      role: backendUser?.role || selectedRole, // Use backend role or selected role
       avatar: firebaseUser.photoURL || backendUser?.avatar || '',
       // from mongoDB
       userId: backendUser?._id,
       firstName: backendUser?.firstName || firebaseUser.displayName?.split(' ')[0] || '',
       lastName: backendUser?.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
       // Additional fields from IUser
-      roles: [selectedRole], // Use array format with selected role
       dateOfBirth: backendUser?.dateOfBirth || '',
       address: backendUser?.address || '',
       emergencyContact: backendUser?.emergencyContact || '',
@@ -163,12 +161,21 @@ export const loginWithEmail = async (email: string, password: string, selectedRo
 // Updated auth state listener to handle existing users
 export const initAuth = () => {
   const { setUser, clearUser } = useAuthStore.getState();
-
   return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
-        // For existing users, don't pass a role (it will use existing role from DB)
-        const user = await mapFirebaseUserToAppUser(firebaseUser);
+       /* const alreadyMapped = localStorage.getItem('auth-mapped');
+        if (alreadyMapped === 'true') {
+          console.log("🔁 Skipping mapping in initAuth – already mapped in login/signup.");
+          localStorage.removeItem('auth-mapped');
+          return;
+        }
+        else{// If not mapped
+        // For existing users, don't pass a role (it will use existing role from DB)*/
+        const currentrole = localStorage.getItem('user-role');
+        console.log('in initauth', currentrole);
+        if (currentrole){
+        const user = await mapFirebaseUserToAppUser(firebaseUser,currentrole);
         if (user) {
           console.log('User authenticated and stored:', user);
           localStorage.setItem('isAuth', 'true');
@@ -176,7 +183,8 @@ export const initAuth = () => {
         } else {
           console.error('Failed to map Firebase user to app user');
           clearUser();
-        }
+      }
+    }
       } catch (error) {
         console.error('Error during auth state change:', error);
         clearUser();

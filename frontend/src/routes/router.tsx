@@ -16,7 +16,7 @@ import AuthPage from '@/pages/auth-page'
 import TeacherLayout from '@/layouts/teacher-layout'
 import StudentLayout from '@/layouts/student-layout'
 import { NotFoundComponent } from '@/components/not-found'
-import GenAIHomePage from '@/pages/teacher/genai-home'
+//import GenAIHomePage from '@/pages/teacher/genai-home'
 import TeacherPollRoom from '@/pages/teacher/TeacherPollRoom'
 import CreatePollRoom from '@/pages/teacher/CreatePollRoom'
 import JoinPollRoom from '@/pages/student/JoinPollRoom'
@@ -155,12 +155,12 @@ const teacherProfileRoute = new Route({
   component: TeacherProfile,
 });
 
-// Teacher genAI home route
+/* Teacher genAI home route
 const teacherGenAIHomeRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
   path: '/genai',
   component: GenAIHomePage,
-});
+});*/
 
 // Teacher manage rooms route
 const teacherManageRoomsRoute = new Route({
@@ -257,7 +257,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   authRoute,
   teacherLayoutRoute.addChildren([
-    teacherGenAIHomeRoute,
+    // teacherGenAIHomeRoute,
     teacherPollRoomRoute,
     teacherCreateRoomRoute,
     teacherDashboardRoute,

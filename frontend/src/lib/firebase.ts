@@ -10,6 +10,7 @@ import {
   updateProfile
 } from "firebase/auth";
 import { useAuthStore } from "./store/auth-store";
+import { mapFirebaseUserToAppUser } from "./api/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -27,10 +28,16 @@ export const provider = new GoogleAuthProvider();
 
 // -------------------- AUTH FUNCTIONS -------------------- //
 
-export const loginWithGoogle = async (role: "student" | "teacher" = "student") => {
+export const loginWithGoogle = async (role: string = "student") => {
   const result = await signInWithPopup(auth, provider);
   const idToken = await result.user.getIdToken();
-
+ /* const user = await mapFirebaseUserToAppUser(result.user, role);
+  localStorage.setItem('auth-mapped', 'true');
+  if (user) {
+    useAuthStore.getState().setUser(user);
+    console.log('User authenticated and stored:', user);
+    localStorage.setItem('isAuth', 'true');
+  }*/
   // Store token and role in Zustand
   const setAuthState = useAuthStore.getState();
   setAuthState.setToken(idToken);
@@ -42,11 +49,19 @@ export const loginWithGoogle = async (role: "student" | "teacher" = "student") =
 export const loginWithEmail = async (
   email: string,
   password: string,
-  role: "student" | "teacher" = "student"
+  role: string = "student"
 ) => {
+  console.log("role in firebase", role)
   const result = await signInWithEmailAndPassword(auth, email, password);
   const idToken = await result.user.getIdToken();
-
+  
+  /*const user = await mapFirebaseUserToAppUser(result.user, role);
+  localStorage.setItem('auth-mapped', 'true');
+  if (user) {
+    useAuthStore.getState().setUser(user);
+    console.log('User authenticated and stored:', user);
+    localStorage.setItem('isAuth', 'true');
+  }*/
   // Store token and role in Zustand
   const setAuthState = useAuthStore.getState();
   setAuthState.setToken(idToken);

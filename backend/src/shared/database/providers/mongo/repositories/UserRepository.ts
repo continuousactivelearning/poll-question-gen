@@ -18,7 +18,7 @@ export class UserRepository implements IUserRepository {
       firstName: data.firstName,
       lastName: data.lastName,
       avatar: data.avatar,
-      roles: data.roles || ['student']
+      role: data.role || 'student'
     });
     return user._id.toString();
   }

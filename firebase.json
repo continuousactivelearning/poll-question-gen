@@ -1,0 +1,11 @@
+{
+  "hosting": [
+    {
+      "target": "poll-gen-site",
+      "public": "frontend/dist",  
+      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    }
+  ]
+}
+
+
