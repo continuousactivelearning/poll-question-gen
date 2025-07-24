@@ -234,9 +234,9 @@ export default function TeacherProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950 flex flex-col">
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 w-full">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 w-full">
         <Card className="w-full max-w-4xl bg-white/90 dark:bg-gray-900/90 rounded-2xl shadow-xl border border-slate-200/80 dark:border-gray-700/80 mb-8">
-          <CardHeader className="flex flex-col items-center gap-4 pb-6 w-full p-8">
+          <CardHeader className="flex flex-col items-center gap-4 pb-6 w-full p-4 md:p-8">
             <div className="flex justify-end w-full">
               {!isEditing ? (
                 <Button
@@ -277,15 +277,15 @@ export default function TeacherProfile() {
               )}
             </div>
 
-            <Avatar className="h-32 w-32 mb-4 ring-4 ring-primary/30 shadow-lg">
+            <Avatar className="h-24 w-24 md:h-32 md:w-32 mb-4 ring-4 ring-primary/30 shadow-lg">
               <AvatarImage src={user.avatar || undefined} alt={displayName} />
               <AvatarFallback className="rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900">
-                <User className="h-16 w-16 text-purple-600 dark:text-purple-300" />
+                <User className="h-12 w-12 md:h-16 md:w-16 text-purple-600 dark:text-purple-300" />
               </AvatarFallback>
             </Avatar>
 
             <div className="text-center">
-              <CardTitle className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center justify-center gap-3 mb-2">
+              <CardTitle className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center justify-center gap-3 mb-2 text-center">
                 {isEditing ? (
                   <div className="flex flex-col items-center gap-4">
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -294,7 +294,7 @@ export default function TeacherProfile() {
                         <input
                           id="firstName"
                           type="text"
-                          className="text-lg font-semibold bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 px-4 py-2 text-center min-w-32"
+                          className="text-lg font-semibold bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 px-4 py-2 text-center w-full sm:w-auto min-w-32"
                           value={formData.firstName}
                           onChange={(e) => handleInputChange('firstName', e.target.value)}
                           disabled={saving}
@@ -307,7 +307,7 @@ export default function TeacherProfile() {
                         <input
                           id="lastName"
                           type="text"
-                          className="text-lg font-semibold bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 px-4 py-2 text-center min-w-32"
+                          className="text-lg font-semibold bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 px-4 py-2 text-center w-full sm:w-auto min-w-32"
                           value={formData.lastName}
                           onChange={(e) => handleInputChange('lastName', e.target.value)}
                           disabled={saving}
@@ -318,7 +318,7 @@ export default function TeacherProfile() {
                     </div>
                   </div>
                 ) : (
-                  <span>{displayName}</span>
+                  <span className="break-words">{displayName}</span>
                 )}
               </CardTitle>
 
@@ -342,7 +342,7 @@ export default function TeacherProfile() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-8 pb-8 space-y-8">
+          <CardContent className="px-4 md:px-8 pb-8 space-y-8">
             {/* Personal Information Section */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-6">

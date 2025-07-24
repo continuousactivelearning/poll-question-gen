@@ -50,7 +50,7 @@ const Tabs = ({ defaultValue, className, children, value, onValueChange }: {
 const TabsList = ({ className, children }: { className: string; children: React.ReactNode }) => {
   return (
     <div className={cn(
-      "inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+      "inline-flex h-9 sm:h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
       className
     )}>
       {children}
@@ -76,7 +76,7 @@ const TabsTrigger = ({ value, children, onClick }: {
     <button
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
         isActive ? "bg-background text-foreground shadow-sm" : "hover:text-foreground/80"
       )}
       data-value={value}
@@ -283,80 +283,80 @@ export default function AuthPage() {
         <polyline points="100,400 300,0 500,400 700,0 900,400" stroke="#a084e8" strokeWidth="1.5" fill="none" />
       </svg>
       {/* Hero Section */}
-      <section className="w-full flex flex-col md:flex-row items-center justify-between px-6 md:px-16 pt-12 pb-8 bg-white/80 rounded-b-3xl shadow-md relative overflow-hidden z-10">
+      <section className="w-full flex flex-col lg:flex-row items-center justify-between px-4 sm:px-6 lg:px-16 pt-6 sm:pt-12 pb-6 sm:pb-8 bg-white/80 rounded-b-2xl sm:rounded-b-3xl shadow-md relative overflow-hidden z-10">
         {/* Left: Heading, subheading, features */}
-        <div className="flex-1 flex flex-col items-start gap-6 z-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-black leading-tight">
+        <div className="flex-1 flex flex-col items-start gap-4 sm:gap-6 z-10 w-full lg:w-auto">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-black leading-tight">
             Poll Question Generation
           </h1>
-          <p className="text-gray-500 text-lg max-w-md">
+          <p className="text-gray-500 text-sm sm:text-base lg:text-lg max-w-md">
             Transform classroom engagement with real-time polling and instant feedback
           </p>
           {/* Features Grid */}
-          <div className="w-full max-w-2xl mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white/70 rounded-xl p-5 shadow flex flex-col gap-2">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+          <div className="w-full max-w-2xl mt-4 sm:mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+              <div className="bg-white/70 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow flex flex-col gap-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <span className="p-1.5 sm:p-2 rounded-lg bg-blue-50 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-6 sm:w-6">
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                       <circle cx="9" cy="7" r="4"></circle>
                       <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
                       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                   </span>
-                  <span className="font-semibold text-lg text-blue-600">Engage Students</span>
+                  <span className="font-semibold text-sm sm:text-lg text-blue-600">Engage Students</span>
                 </div>
-                <span className="text-gray-600 text-sm">Increase participation with live polls and interactive questions during lectures.</span>
+                <span className="text-gray-600 text-xs sm:text-sm">Increase participation with live polls and interactive questions during lectures.</span>
               </div>
-              <div className="bg-white/70 rounded-xl p-5 shadow flex flex-col gap-2">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="p-2 rounded-lg bg-green-50 text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+              <div className="bg-white/70 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow flex flex-col gap-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <span className="p-1.5 sm:p-2 rounded-lg bg-green-50 text-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-6 sm:w-6">
                       <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                     </svg>
                   </span>
-                  <span className="font-semibold text-lg text-green-600">Instant Feedback</span>
+                  <span className="font-semibold text-sm sm:text-lg text-green-600">Instant Feedback</span>
                 </div>
-                <span className="text-gray-600 text-sm">Get real-time insights into student understanding to adjust your teaching.</span>
+                <span className="text-gray-600 text-xs sm:text-sm">Get real-time insights into student understanding to adjust your teaching.</span>
               </div>
-              <div className="bg-white/70 rounded-xl p-5 shadow flex flex-col gap-2">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="p-2 rounded-lg bg-purple-50 text-purple-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+              <div className="bg-white/70 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow flex flex-col gap-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <span className="p-1.5 sm:p-2 rounded-lg bg-purple-50 text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-6 sm:w-6">
                       <path d="M3 3v18h18"></path>
                       <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
                     </svg>
                   </span>
-                  <span className="font-semibold text-lg text-purple-600">Track Progress</span>
+                  <span className="font-semibold text-sm sm:text-lg text-purple-600">Track Progress</span>
                 </div>
-                <span className="text-gray-600 text-sm">Monitor class performance over time with detailed analytics.</span>
+                <span className="text-gray-600 text-xs sm:text-sm">Monitor class performance over time with detailed analytics.</span>
               </div>
-              <div className="bg-white/70 rounded-xl p-5 shadow flex flex-col gap-2">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+              <div className="bg-white/70 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow flex flex-col gap-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <span className="p-1.5 sm:p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-6 sm:w-6">
                       <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                       <line x1="8" y1="21" x2="16" y2="21"></line>
                       <line x1="12" y1="17" x2="12" y2="21"></line>
                     </svg>
                   </span>
-                  <span className="font-semibold text-lg text-indigo-600">Easy Setup</span>
+                  <span className="font-semibold text-sm sm:text-lg text-indigo-600">Easy Setup</span>
                 </div>
-                <span className="text-gray-600 text-sm">Create and launch polls in seconds with our intuitive interface.</span>
+                <span className="text-gray-600 text-xs sm:text-sm">Create and launch polls in seconds with our intuitive interface.</span>
               </div>
             </div>
           </div>
         </div>
         {/* Right: Sign-in form (auth card) */}
-        <div className="flex-1 flex justify-center items-center w-full md:w-auto mt-8 md:mt-0 z-10">
-          <div className="mx-auto w-full max-w-md space-y-8">
+        <div className="flex-1 flex justify-center items-center w-full lg:w-auto mt-6 sm:mt-8 lg:mt-0 z-10">
+          <div className="mx-auto w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
             {/* Header */}
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {isSignUp ? "Create Account" : "Welcome Back"}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {isSignUp
                   ? "Join educators worldwide transforming their classrooms"
                   : "Sign in to access your poll dashboard"
@@ -381,7 +381,7 @@ export default function AuthPage() {
                     transition={{ duration: 0.3 }}
                   >
                     {/* Role Selection Tabs */}
-                    <CardHeader className="pb-4">
+                    <CardHeader className="pb-3 sm:pb-4">
                       <Tabs
                         defaultValue="student"
                         className="w-full"
@@ -394,7 +394,7 @@ export default function AuthPage() {
                         </TabsList>
                       </Tabs>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       {/* Auth Error Alert */}
                       {formErrors.auth && (
                         <motion.div
@@ -420,7 +420,7 @@ export default function AuthPage() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className={cn(
-                            "transition-all duration-200",
+                            "transition-all duration-200 text-sm sm:text-base",
                             formErrors.email && "border-destructive focus-visible:ring-destructive"
                           )}
                         />
@@ -440,7 +440,7 @@ export default function AuthPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className={cn(
-                            "transition-all duration-200",
+                            "transition-all duration-200 text-sm sm:text-base",
                             formErrors.password && "border-destructive focus-visible:ring-destructive"
                           )}
                         />
@@ -450,29 +450,29 @@ export default function AuthPage() {
                       </div>
                       {/* Sign In Button */}
                       <Button
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 sm:py-2 rounded-lg text-sm sm:text-base"
                         onClick={handleEmailLogin}
                         disabled={loading}
                       >
-                        {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2 inline" /> : null}
+                        {loading ? <Loader2 className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 inline" /> : null}
                         Sign in as {activeRole}
                       </Button>
-                      <div className="flex items-center my-4">
+                      <div className="flex items-center my-3 sm:my-4">
                         <Separator className="flex-1" />
-                        <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
+                        <span className="mx-3 sm:mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
                         <Separator className="flex-1" />
                       </div>
                       <Button
                         variant="outline"
-                        className="w-full flex items-center justify-center gap-2 border-gray-300"
+                        className="w-full flex items-center justify-center gap-2 border-gray-300 text-sm sm:text-base"
                         onClick={handleGoogleLogin}
                         disabled={loading}
                       >
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="h-5 w-5" />
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="h-4 w-4 sm:h-5 sm:w-5" />
                         Continue with Google
                       </Button>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-2 items-center">
+                    <CardFooter className="flex flex-col gap-2 items-center p-4 sm:p-6">
                       <span className="text-sm text-muted-foreground">
                         Don't have an account?{' '}
                         <button
@@ -493,14 +493,14 @@ export default function AuthPage() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <CardHeader>
-                      <CardTitle className="text-xl">Create Student Account</CardTitle>
-                      <CardDescription>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-lg sm:text-xl">Create Student Account</CardTitle>
+                      <CardDescription className="text-sm">
                         Join our platform to participate in classroom polls and activities
                       </CardDescription>
                     </CardHeader>
 
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       {/* Auth Error Alert */}
                       {formErrors.auth && (
                         <motion.div
@@ -526,7 +526,7 @@ export default function AuthPage() {
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           className={cn(
-                            "transition-all duration-200",
+                            "transition-all duration-200 text-sm sm:text-base",
                             formErrors.fullName && "border-destructive focus-visible:ring-destructive"
                           )}
                         />
@@ -547,7 +547,7 @@ export default function AuthPage() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className={cn(
-                            "transition-all duration-200",
+                            "transition-all duration-200 text-sm sm:text-base",
                             formErrors.email && "border-destructive focus-visible:ring-destructive"
                           )}
                         />
@@ -568,7 +568,7 @@ export default function AuthPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className={cn(
-                            "transition-all duration-200",
+                            "transition-all duration-200 text-sm sm:text-base",
                             formErrors.password && "border-destructive focus-visible:ring-destructive"
                           )}
                         />
@@ -644,7 +644,7 @@ export default function AuthPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className={cn(
-                            "transition-all duration-200",
+                            "transition-all duration-200 text-sm sm:text-base",
                             !passwordsMatch && confirmPassword && "border-destructive focus-visible:ring-destructive"
                           )}
                         />
@@ -655,7 +655,7 @@ export default function AuthPage() {
 
                       {/* Sign Up Button */}
                       <Button
-                        className="w-full h-11 font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 group"
+                        className="w-full h-10 sm:h-11 font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 group text-sm sm:text-base"
                         onClick={handleEmailSignup}
                         disabled={!passwordsMatch || passwordStrength.value < 50 || loading}
                       >
@@ -670,7 +670,7 @@ export default function AuthPage() {
                       </Button>
                     </CardContent>
 
-                    <CardFooter>
+                    <CardFooter className="p-4 sm:p-6">
                       <Button
                         variant="link"
                         className="w-full text-sm text-muted-foreground hover:text-foreground group"

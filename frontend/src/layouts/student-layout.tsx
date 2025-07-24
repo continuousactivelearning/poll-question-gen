@@ -58,21 +58,21 @@ export default function StudentLayout() {
 
       {/* Header - matching teacher's style */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-sm dark:bg-gray-900/95 dark:border-gray-800">
-        <div className="flex h-20 items-center justify-between px-6 lg:px-8">
+        <div className="flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative group">
-              <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl blur opacity-10 group-hover:opacity-15 transition-opacity duration-300 dark:from-blue-500 dark:to-blue-700 dark:opacity-15 dark:group-hover:opacity-20"></div>
-              <div className="relative h-14 w-14 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center overflow-hidden shadow-md dark:from-blue-500 dark:to-blue-700">
+              <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg sm:rounded-xl blur opacity-10 group-hover:opacity-15 transition-opacity duration-300 dark:from-blue-500 dark:to-blue-700 dark:opacity-15 dark:group-hover:opacity-20"></div>
+              <div className="relative h-10 w-10 sm:h-14 sm:w-14 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg sm:rounded-xl flex items-center justify-center overflow-hidden shadow-md dark:from-blue-500 dark:to-blue-700">
                 <img
                   src="https://continuousactivelearning.github.io/vibe/img/logo.png"
                   alt="EduPoll Logo"
-                  className="h-10 w-10 object-contain"
+                  className="h-6 w-6 sm:h-10 sm:w-10 object-contain"
                 />
               </div>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+              <h1 className="text-xl sm:text-2xl font-bold text-blue-900 dark:text-blue-100">
                 <span className="font-normal">Quick</span>Poll
               </h1>
               <p className="text-xs text-slate-600 -mt-1 dark:text-gray-400">
@@ -82,36 +82,34 @@ export default function StudentLayout() {
           </div>
 
           {/* Navigation Menu - student-specific options */}
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
-              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 ${
-                isActiveRoute('/student/home')
+              className={`relative h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-all duration-300 ${isActiveRoute('/student/home')
                   ? 'bg-blue-50 text-blue-800 border border-blue-200 shadow-sm dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-800'
                   : 'text-slate-700 hover:bg-blue-50 hover:text-blue-800 border border-transparent dark:text-gray-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-100'
-              }`}
+                }`}
               asChild
             >
               <Link to="/student/home">
-                <Home className="h-4 w-4 mr-2" />
-                <span className="relative z-10">Dashboard</span>
+                <Home className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="relative z-10 hidden sm:inline">Dashboard</span>
               </Link>
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
-              className={`relative h-10 px-4 text-sm font-medium transition-all duration-300 ${
-                isActiveRoute('/student/pollroom')
+              className={`relative h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-all duration-300 ${isActiveRoute('/student/pollroom')
                   ? 'bg-blue-50 text-blue-800 border border-blue-200 shadow-sm dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-800'
                   : 'text-slate-700 hover:bg-blue-50 hover:text-blue-800 border border-transparent dark:text-gray-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-100'
-              }`}
+                }`}
               asChild
             >
               <Link to="/student/pollroom">
-                <Users className="h-4 w-4 mr-2" />
-                <span className="relative z-10">Join Room</span>
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="relative z-10 hidden sm:inline">Join Room</span>
               </Link>
             </Button>
 
@@ -149,7 +147,7 @@ export default function StudentLayout() {
           </nav>
 
           {/* Right side - matching teacher's style */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
 
             {/* User Profile Dropdown - matching teacher's style */}
@@ -157,12 +155,12 @@ export default function StudentLayout() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative h-auto p-2 rounded-full hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 dark:hover:bg-blue-900/20"
+                  className="relative h-auto p-1 sm:p-2 rounded-full hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 dark:hover:bg-blue-900/20"
                 >
-                  <div className="relative flex items-center gap-2">
-                    <Avatar className="h-10 w-10 border-2 border-white shadow-sm dark:border-gray-800">
+                  <div className="relative flex items-center gap-1 sm:gap-2">
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-white shadow-sm dark:border-gray-800">
                       <AvatarImage src={user?.avatar} alt={user?.name} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white font-medium text-lg dark:from-blue-500 dark:to-blue-700">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white font-medium text-sm sm:text-lg dark:from-blue-500 dark:to-blue-700">
                         {user?.name?.charAt(0).toUpperCase() || 'S'}
                       </AvatarFallback>
                     </Avatar>
@@ -174,7 +172,7 @@ export default function StudentLayout() {
                         {user?.email || 'student@example.com'}
                       </div>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-slate-500 dark:text-gray-400" />
+                    <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-slate-500 dark:text-gray-400" />
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -243,7 +241,7 @@ export default function StudentLayout() {
       </header>
 
       {/* Main Content - matching teacher's style */}
-      <main className="relative flex-1 p-6 lg:p-8">
+      <main className="relative flex-1 p-4 sm:p-6 lg:p-8">
         <div className="relative z-10 max-w-7xl mx-auto">
           <Outlet />
         </div>
