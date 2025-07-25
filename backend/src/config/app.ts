@@ -14,7 +14,7 @@ export const appConfig = {
   isStaging: env('NODE_ENV') === 'staging',
   isDevelopment: env('NODE_ENV') === 'development',
   port: Number(env('PORT')) || Number(env('APP_PORT')) || 8080,
-  url: env('APP_URL'),
+  url: env('APP_URL') || 'http://localhost:8080',
   origins: env('APP_ORIGINS')?.split(',') || ['http://localhost:3000'],
   module: env('APP_MODULE') || 'all',
   // Only for development
