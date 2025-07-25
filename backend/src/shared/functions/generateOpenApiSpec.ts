@@ -144,12 +144,12 @@ export function generateOpenAPISpec(
   // Create OpenAPI specification
   const spec = routingControllersToSpec(storage, routingControllersOptions, {
     info: {
-      title: 'ViBe API Documentation',
+      title: 'PQG Documentation',
       version: '1.0.0',
-      description: 'API documentation for the ViBe platform',
+      description: 'API documentation for the PQG platform',
       contact: {
-        name: 'ViBe Team',
-        email: 'support@vibe.com',
+        name: 'PQG Team',
+        email: 'charankarnati180604@gmail.com',
       },
     },
 
