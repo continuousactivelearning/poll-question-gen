@@ -4,6 +4,8 @@ import { HttpError, InternalServerError } from 'routing-controllers';
 import { questionSchemas } from '../schemas/index.js';
 import { extractJSONFromMarkdown } from '../utils/extractJSONFromMarkdown.js';
 import { cleanTranscriptLines } from '../utils/cleanTranscriptLines.js';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { aiConfig } from '#root/config/ai.js';
 
 // --- Type Definitions ---
 export interface TranscriptSegment {
@@ -27,8 +29,10 @@ export type QuestionSpec = Partial<Record<QuestionType, number>>;
 
 @injectable()
 export class AIContentService {
-  private readonly ollimaApiBaseUrl = 'http://localhost:11434/api';
+  //private readonly ollimaApiBaseUrl = 'http://localhost:11434/api';
+  private readonly ollimaApiBaseUrl = `http://${aiConfig.serverIP}:${aiConfig.serverPort}/api`;
   private readonly llmApiUrl = `${this.ollimaApiBaseUrl}/generate`;
+  private readonly proxyAgent = aiConfig.proxyAddress? new SocksProxyAgent(aiConfig.proxyAddress): undefined;
 
   // --- Segmentation Logic ---
   public async segmentTranscript(
@@ -68,7 +72,9 @@ JSON:`;
         prompt,
         stream: false,
         options: { temperature: 0.1, top_p: 0.9 },
-      });
+      }, 
+      this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}
+    );
 
       const generatedText = response.data?.response;
       if (typeof generatedText !== 'string') {
@@ -174,7 +180,7 @@ JSON:`;
     const base = `You are an AI question generator.
 Based on the transcript below, generate ${count} question(s) of type ${questionType}.
 For each question:
-- Provide exactly 4 options.
+- Provide exactly 4 options only.
 - Mark the correct option.
 
 You must output JSON **exactly** in this shape, no nesting, no markdown:
@@ -256,7 +262,9 @@ ${transcriptContent}
               stream: false,
               format: schema ? format : undefined,
               options: { temperature: 0.2 }
-            });
+            },
+            this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}
+          );
 
             const text = response.data?.response;
             if (typeof text !== 'string') {
