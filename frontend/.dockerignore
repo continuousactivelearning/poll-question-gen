@@ -1,4 +1,4 @@
-node_modules
+ode_modules
 **/node_modules
 pnpm-lock.yaml
 .pnpm-store
