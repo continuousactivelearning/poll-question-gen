@@ -144,12 +144,12 @@ export function generateOpenAPISpec(
   // Create OpenAPI specification
   const spec = routingControllersToSpec(storage, routingControllersOptions, {
     info: {
-      title: 'Poll Question Generation',
+      title: 'ViBe API Documentation',
       version: '1.0.0',
-      description: 'API documentation',
+      description: 'API documentation for the ViBe platform',
       contact: {
-        name: 'Poll Question Generation Team',
-        email: 'charankarnati180604@gmail.com',
+        name: 'ViBe Team',
+        email: 'support@vibe.com',
       },
     },
 
