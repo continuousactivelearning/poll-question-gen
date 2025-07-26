@@ -7,8 +7,10 @@ const getAuthToken = (): string | null => {
   return localStorage.getItem('firebase-auth-token');
 };
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
 const fetchClient = createFetchClient<paths>({
-  baseUrl: "http://localhost:4001/api"
+  baseUrl: API_URL
 });
 
 // Add middleware to automatically include Authorization header

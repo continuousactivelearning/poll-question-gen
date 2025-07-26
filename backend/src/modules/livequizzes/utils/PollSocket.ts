@@ -1,5 +1,9 @@
 import { Server } from 'socket.io';
 import { RoomService } from '../services/RoomService.js';  // adjust the path as needed
+import dotenv from 'dotenv';
+
+dotenv.config();
+const appOrigins = process.env.APP_ORIGINS;
 
 class PollSocket {
   private io: Server | null = null;
@@ -8,7 +12,7 @@ class PollSocket {
 
   init(server: import('http').Server) {
     this.io = new Server(server, {
-      cors: { origin: 'http://localhost:5173' },
+      cors: { origin: appOrigins || 'http://localhost:5173' },
     });
 
     this.io.on('connection', socket => {

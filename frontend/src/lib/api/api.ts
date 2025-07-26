@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 //Use if backend require AUTHORIZATION for endpoints
-/*
+
 import { getAuth } from "firebase/auth";
 api.interceptors.request.use(
     async (config) => {
@@ -23,6 +23,6 @@ api.interceptors.request.use(
     },
     (error) => Promise.reject(error)
 );
-*/
+
 
 export default api;

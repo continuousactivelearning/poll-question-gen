@@ -15,7 +15,7 @@ const corsOptions: cors.CorsOptions = {
       'http://127.0.0.1:3000',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:4000',
-      'https://vibe-5b35a.web.app',
+      'https://poll-question-gen-376e6.web.app',
     ];
 
     // In production, add your production domain

@@ -21,7 +21,7 @@ const getOpenApiServers = () => {
   const isStaging = appConfig.isStaging;
   const isProd = appConfig.isProduction;
 
-  const appUrl = appConfig.url || 'https://vibe.vicharanashala.ai';
+  const appUrl = appConfig.url || 'https://poll-question-gen-376e6.web.app';
   const parsedUrl = new URL(appUrl);
 
   if (isDev) {
@@ -140,95 +140,23 @@ export function generateOpenAPISpec(
     // If specific validators are provided, filter schemas based on them
     schemas = getSchemasForValidators(validators);
   }
+  console.log('Controllers passed to OpenAPI:', routingControllersOptions.controllers.length);
 
   // Create OpenAPI specification
   const spec = routingControllersToSpec(storage, routingControllersOptions, {
     info: {
-      title: 'ViBe API Documentation',
+      title: 'Poll-Question-Gen API Documentation',
       version: '1.0.0',
-      description: 'API documentation for the ViBe platform',
+      description: 'API documentation for the Live-Poll platform',
       contact: {
         name: 'ViBe Team',
-        email: 'support@vibe.com',
+        email: 'support@pollquestiongen.com',
       },
     },
-
-    // tags: [
-    //   {
-    //     name: 'Authentication',
-    //     description: 'Operations for user authentication and authorization',
-    //   },
-    // ],
-    // 'x-tagGroups': [{
-    //   name: 'Auth Module',
-    //   tags: ['Authentication'],
-    // }, {
-    //   name: 'Courses Module',
-    //   tags: [
-    //     'Courses',
-    //     'Course Versions',
-    //     'Course Modules',
-    //     'Course Sections',
-    //     'Course Items',
-    //   ],
-    // }],
-
-    //   tags: [
-    //     // Authentication section
-    //     {
-    //       name: 'Authentication',
-    //       description: 'Operations for user authentication and authorization',
-    //     },
-
-    //     // Course section and sub-components
-    //     {
-    //       name: 'Courses',
-    //       description: 'Operations related to courses management',
-    //       'x-displayName': 'Courses',
-    //     },
-    //     {
-    //       name: 'Course Versions',
-    //       description: 'Operations for managing different versions of a course',
-    //       'x-displayName': 'Versions',
-    //       'x-resourceGroup': 'Courses',
-    //     },
-    //     {
-    //       name: 'Course Modules',
-    //       description:
-    //         'Operations for managing modules within a course version',
-    //       'x-displayName': 'Modules',
-    //       'x-resourceGroup': 'Courses',
-    //     },
-    //     {
-    //       name: 'Course Sections',
-    //       description:
-    //         'Operations for managing sections within a course module',
-    //       'x-displayName': 'Sections',
-    //       'x-resourceGroup': 'Courses',
-    //     },
-    //     {
-    //       name: 'Course Items',
-    //       description:
-    //         'Operations for managing individual items within a section',
-    //       'x-displayName': 'Items',
-    //       'x-resourceGroup': 'Courses',
-    //     },
-
-    //     // User management section
-    //     {
-    //       name: 'User Enrollments',
-    //       description: 'Operations for managing user enrollments in courses',
-    //     },
-    //     {
-    //       name: 'User Progress',
-    //       description: 'Operations for tracking and managing user progress',
-    //     },
-    //   ],
-    //   // Use Scalar's preferred grouping approach
-      tags:[
+    tags:[
         {
-          name: 'Courses',
-          description: 'Operations related to courses management',
+          name: 'Live Rooms',
+          description: 'Operations related to Room management',
         }
       ],
       'x-tagGroups': [
@@ -237,30 +165,12 @@ export function generateOpenAPISpec(
           tags: ['Authentication'],
         },
         {
-          name: 'Course Management',
-          tags: [
-            'Courses',
-            'Course Versions',
-            'Course Modules',
-            'Course Sections',
-            'Course Items',
-          ],
-        },
-        {
-          name: 'Quizzes',
-          tags: ['Quiz', 'Questions', 'Quiz Attempts', 'Question Banks'],
-        },
-        {
-          name: 'Notifications',
-          tags: ['Invites'],
+          name: 'LivePollRooms',
+          tags: ['Rooms', 'Dashboards'],
         },
         {
           name: 'Users',
-          tags: ['Enrollments','Progress','Users']
-        },
-        {
-          name: 'Settings',
-          tags: ['Course Settings', 'User Settings'],
+          tags: ['Users']
         },
         {
           name: 'Data Models',

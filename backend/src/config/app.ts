@@ -15,7 +15,7 @@ export const appConfig = {
   isDevelopment: env('NODE_ENV') === 'development',
   port: Number(env('APP_PORT')) || 3000,
   url: env('APP_URL'),
-  origins: env('APP_ORIGINS')?.split(',') || ['http://localhost:3000'],
+  origins: env('APP_ORIGINS')?.split(',') || ['http://localhost:5173'],
   module: env('APP_MODULE') || 'all',
   // Only for development
   firebase: {

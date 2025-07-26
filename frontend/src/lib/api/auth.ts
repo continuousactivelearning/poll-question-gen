@@ -9,6 +9,8 @@ import {
 import { useAuthStore } from '../store/auth-store';
 import { queryClient } from './client';
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
 // Updated auth functions to pass role from UI to backend
 
 // In your auth page, modify the login functions to pass the selected role:
@@ -24,7 +26,7 @@ console.log("Mapuserdata file", selectedRole);
     // Fetch backend user info directly using fetch
     let backendUser = null;
     try {
-      const res = await fetch(`http://localhost:3000/api/users/firebase/${firebaseUser.uid}`, {
+      const res = await fetch(`${API_URL}/users/firebase/${firebaseUser.uid}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -59,7 +61,7 @@ console.log("Mapuserdata file", selectedRole);
           updatedAt: new Date().toISOString(),
         };
 
-        const createRes = await fetch(`http://localhost:3000/api/users/firebase/${firebaseUser.uid}/profile`, {
+        const createRes = await fetch(`${API_URL}/users/firebase/${firebaseUser.uid}/profile`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -235,7 +237,7 @@ export async function getCurrentUserProfile() {
     const token = await auth.currentUser?.getIdToken(true);
     if (!token) return null;
 
-    const res = await fetch(`http://localhost:3000/api/users/firebase/${user.uid}`, {
+    const res = await fetch(`${API_URL}/users/firebase/${user.uid}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -269,7 +271,7 @@ export async function updateUserProfile(profileData: {
     const token = await auth.currentUser?.getIdToken(true);
     if (!token) throw new Error('No authentication token');
 
-    const res = await fetch(`http://localhost:3000/api/users/firebase/${user.uid}/profile`, {
+    const res = await fetch(`${API_URL}/users/firebase/${user.uid}/profile`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
