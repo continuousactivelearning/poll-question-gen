@@ -145,12 +145,12 @@ export function generateOpenAPISpec(
   // Create OpenAPI specification
   const spec = routingControllersToSpec(storage, routingControllersOptions, {
     info: {
-      title: 'Poll-Question-Gen API Documentation',
+      title: 'PQG Documentation',
       version: '1.0.0',
-      description: 'API documentation for the Live-Poll platform',
+      description: 'API documentation for the PQG platform',
       contact: {
-        name: 'ViBe Team',
-        email: 'support@pollquestiongen.com',
+        name: 'PQG Team',
+        email: 'charankarnati180604@gmail.com',
       },
     },
     tags:[

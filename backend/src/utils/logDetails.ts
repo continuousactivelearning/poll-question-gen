@@ -103,7 +103,7 @@ export function printStartupSummary() {
     t.printTable();
 
     if (isDev) {
-      log(chalk.yellow(`Visit API Reference at ${appConfig.url}/reference`));
+      log(chalk.yellow(`Visit API Reference at http://localhost:${appConfig.port}/reference`));
     }
 
   } else {

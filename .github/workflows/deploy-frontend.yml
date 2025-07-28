@@ -2,7 +2,7 @@ name: Deploy Frontend to Firebase (Staging & Optional Production)
 
 on:
   push:
-    branches: [staging, test-cicd, sohan/devops/branch]
+    branches: [main, test-cicd]
     paths:
       - "frontend/**"
       - ".github/workflows/deploy-frontend.yml"
@@ -101,10 +101,30 @@ jobs:
           EOL
 
       - name: Build frontend
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
         run: |
           cd frontend
+          # Create .env.production file with Firebase config
+          echo "VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY" > .env.production
+          echo "VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN" >> .env.production
+          echo "VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID" >> .env.production
+          echo "VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET" >> .env.production
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID" >> .env.production
+          echo "VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID" >> .env.production
+          echo "VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID" >> .env.production
+          
           # Modify the build command in package.json to skip TS checks
-          sed -i 's/"build": "tsc -b && vite build"/"build": "vite build --emptyOutDir"/g' package.json
+          sed -i 's/"build": "tsc -b && vite build"/"build": "vite build --emptyOutDir --mode production"/g' package.json
+          
+          # Install dependencies and build
+          pnpm install
           pnpm build
 
       - name: Upload build artifacts
