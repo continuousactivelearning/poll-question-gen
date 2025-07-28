@@ -1,9 +1,11 @@
 import { JsonController, Get, Param, Authorized } from 'routing-controllers';
 import { inject, injectable } from 'inversify';
 import { DashboardService } from '../services/DashboardService.js';
+import { OpenAPI } from 'routing-controllers-openapi';
 
 @injectable()
 @JsonController()
+@OpenAPI({ tags: ['Dashboards'], })
 // @Authorized(['admin', 'teacher']) // only teachers/admins can fetch other students
 export class DashboardController {
     constructor(
@@ -11,14 +13,14 @@ export class DashboardController {
     ) { }
 
     // Student Dashboard
-    //@Authorized(['student'])
+    @Authorized(['student'])
     @Get('/students/dashboard/:studentId')
     async getStudentDashboard(@Param('studentId') studentId: string) {
         return await this.dashboardService.getStudentDashboardData(studentId);
     }
 
     // Teacher Dashboard
-    //@Authorized(['teacher'])
+    @Authorized(['teacher'])
     @Get('/teachers/dashboard/:teacherId')
     async getTeacherDashboard(@Param('teacherId') teacherId: string) {
         return await this.dashboardService.getTeacherDashboardData(teacherId);

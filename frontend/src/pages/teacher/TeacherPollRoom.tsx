@@ -247,52 +247,52 @@ export default function TeacherPollRoom() {
   };
 
   return (
-    <main className="relative flex-1 p-6 lg:p-8">
-      <div className="relative z-10 max-w-4xl mx-auto">
+    <main className="relative flex-1 p-3 sm:p-6 lg:p-8">
+      <div className="relative z-10 max-w-lg sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto">
         <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
-         <CardHeader>
-  <div className="flex items-center justify-between">
-    <CardTitle className="text-2xl">
-      Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
-        {roomCode}
-      </span>
-    </CardTitle>
-    <div className="flex items-center gap-4">
-      <Button
-        onClick={() => copyToClipboard(roomCode)}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        Copy Code
-      </Button>
-      <Button
-        onClick={() => setShowEndRoomConfirm(true)}
-        variant="destructive"
-        className="flex items-center gap-2"
-        disabled={isEndingRoom}
-      >
-        <LogOut size={16} />
-        End Room
-      </Button>
-    </div>
-  </div>
-</CardHeader>
-          <CardContent className="space-y-6">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              <CardTitle className="text-lg sm:text-2xl">
+                Room Code: <span className="font-mono bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
+                  {roomCode}
+                </span>
+              </CardTitle>
+              <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
+                <Button
+                  onClick={() => copyToClipboard(roomCode)}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 sm:gap-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-xs sm:text-sm"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span className="hidden xs:inline">Copy Code</span>
+                </Button>
+                <Button
+                  onClick={() => setShowEndRoomConfirm(true)}
+                  variant="destructive"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                  disabled={isEndingRoom}
+                >
+                  <LogOut size={16} />
+                  <span className="hidden xs:inline">End Room</span>
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 sm:space-y-6">
             {/* End Room Confirmation Modal */}
             {showEndRoomConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -345,10 +345,10 @@ export default function TeacherPollRoom() {
             )}
 
             {/* Tab Navigation */}
-            <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <div className="flex gap-1 sm:gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs sm:text-sm">
               <button
                 onClick={() => setActiveTab('manual')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'manual'
+                className={`flex-1 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium transition-colors ${activeTab === 'manual'
                   ? 'bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400'
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                   }`}
@@ -357,7 +357,7 @@ export default function TeacherPollRoom() {
               </button>
               <button
                 onClick={() => setActiveTab('genai')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'genai'
+                className={`flex-1 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium transition-colors flex items-center justify-center gap-1 sm:gap-2 ${activeTab === 'genai'
                   ? 'bg-white text-purple-600 shadow-sm dark:bg-gray-700 dark:text-purple-400'
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                   }`}
@@ -369,13 +369,13 @@ export default function TeacherPollRoom() {
 
             {/* Manual Entry Tab */}
             {activeTab === 'manual' && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
                   <Input
                     placeholder="Poll question"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    className="dark:bg-gray-800/50"
+                    className="dark:bg-gray-800/50 text-xs sm:text-base"
                   />
                 </div>
 
@@ -390,7 +390,7 @@ export default function TeacherPollRoom() {
                         name="correctOption"
                         checked={correctOptionIndex === i}
                         onChange={() => setCorrectOptionIndex(i)}
-                        className="h-5 w-5 accent-purple-600 dark:accent-purple-400"
+                        className="h-4 w-4 sm:h-5 sm:w-5 accent-purple-600 dark:accent-purple-400"
                       />
                       <Input
                         placeholder={`Option ${i + 1}`}
@@ -400,7 +400,7 @@ export default function TeacherPollRoom() {
                           copy[i] = e.target.value;
                           setOptions(copy);
                         }}
-                        className="dark:bg-gray-800/50"
+                        className="dark:bg-gray-800/50 text-xs sm:text-base"
                       />
                     </div>
                   ))}
@@ -413,22 +413,22 @@ export default function TeacherPollRoom() {
                     value={timer}
                     min={5}
                     onChange={(e) => setTimer(Number(e.target.value))}
-                    className="dark:bg-gray-800/50"
+                    className="dark:bg-gray-800/50 text-xs sm:text-base"
                   />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
                   <Button
                     onClick={createPoll}
                     disabled={!question || options.filter(opt => opt.trim()).length < 2}
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1"
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 text-xs sm:text-base"
                   >
                     Create Poll
                   </Button>
                   <Button
                     variant="outline"
                     onClick={fetchResults}
-                    className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30"
+                    className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-base"
                   >
                     Fetch Results
                   </Button>
@@ -438,7 +438,7 @@ export default function TeacherPollRoom() {
 
             {/* GenAI Tab */}
             {activeTab === 'genai' && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {!showPreview ? (
                   <>
                     {/* YouTube URL Input */}
@@ -451,7 +451,7 @@ export default function TeacherPollRoom() {
                         placeholder="https://www.youtube.com/watch?v=..."
                         value={youtubeUrl}
                         onChange={(e) => setYoutubeUrl(e.target.value)}
-                        className="dark:bg-gray-800/50"
+                        className="dark:bg-gray-800/50 text-xs sm:text-base"
                       />
                     </div>
 
@@ -469,7 +469,7 @@ export default function TeacherPollRoom() {
                           accept="audio/*,video/*"
                           onChange={handleFileUpload}
                           ref={fileInputRef}
-                          className="dark:bg-gray-800/50"
+                          className="dark:bg-gray-800/50 text-xs sm:text-base"
                         />
                         {audioFile && (
                           <span className="text-sm text-green-600 dark:text-green-400 font-medium">
@@ -491,13 +491,13 @@ export default function TeacherPollRoom() {
                         <Button
                           onClick={isRecording ? stopRecording : startRecording}
                           variant={isRecording ? "destructive" : "outline"}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
                         >
                           {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
                           {isRecording ? "Stop Recording" : "Start Recording"}
                         </Button>
                         {recordedAudio && (
-                          <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                          <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
                             Recording ready
                           </span>
                         )}
@@ -516,7 +516,7 @@ export default function TeacherPollRoom() {
                           placeholder="e.g., Focus on key concepts, multiple choice only"
                           value={questionSpec}
                           onChange={(e) => setQuestionSpec(e.target.value)}
-                          className="dark:bg-gray-800/50"
+                          className="dark:bg-gray-800/50 text-xs sm:text-base"
                         />
                       </div>
 
@@ -527,7 +527,7 @@ export default function TeacherPollRoom() {
                         <select
                           value={selectedModel}
                           onChange={(e) => setSelectedModel(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800/50 dark:border-gray-600 dark:text-white"
+                          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800/50 dark:border-gray-600 dark:text-white text-xs sm:text-base"
                           aria-label="AI Model"
                         >
                           <option value="gemma3">Gemma 3</option>
@@ -537,11 +537,11 @@ export default function TeacherPollRoom() {
                       </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
                       <Button
                         onClick={generateQuestions}
                         disabled={isGenerating || (!youtubeUrl && !audioFile && !recordedAudio)}
-                        className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 flex items-center gap-2"
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
                       >
                         {isGenerating ? (
                           <>
@@ -558,7 +558,7 @@ export default function TeacherPollRoom() {
                       <Button
                         onClick={clearGenAIData}
                         variant="outline"
-                        className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                        className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 text-xs sm:text-base"
                       >
                         Clear
                       </Button>
@@ -568,30 +568,30 @@ export default function TeacherPollRoom() {
                   /* Generated Questions Preview */
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
                         Generated Questions Preview ({generatedQuestions.length})
                       </h3>
                       <Button
                         onClick={() => setShowPreview(false)}
                         variant="ghost"
                         size="sm"
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xs sm:text-sm"
                       >
                         <X size={16} />
                       </Button>
                     </div>
 
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                    <div className="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto">
                       {generatedQuestions.map((questionData, index) => (
                         <Card key={index} className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70">
-                          <CardContent className="p-4">
-                            <div className="space-y-3">
-                              <div className="flex items-start gap-2">
+                          <CardContent className="p-3 sm:p-4">
+                            <div className="space-y-2 sm:space-y-3">
+                              <div className="flex items-start gap-1 sm:gap-2">
                                 <Button
                                   onClick={() => setEditingQuestionIndex(editingQuestionIndex === index ? null : index)}
                                   variant="ghost"
                                   size="sm"
-                                  className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                                  className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-xs sm:text-sm"
                                 >
                                   <Edit3 size={14} />
                                 </Button>
@@ -599,7 +599,7 @@ export default function TeacherPollRoom() {
                                   onClick={() => deleteGeneratedQuestion(index)}
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs sm:text-sm"
                                   title="Delete question"
                                 >
                                   <X size={14} />
@@ -608,34 +608,34 @@ export default function TeacherPollRoom() {
                                   <Input
                                     value={questionData.question}
                                     onChange={(e) => editGeneratedQuestion(index, 'question', e.target.value)}
-                                    className="flex-1 dark:bg-gray-700/50"
+                                    className="flex-1 dark:bg-gray-700/50 text-xs sm:text-base"
                                   />
                                 ) : (
-                                  <p className="flex-1 font-medium text-gray-800 dark:text-gray-200">
+                                  <p className="flex-1 font-medium text-gray-800 dark:text-gray-200 text-xs sm:text-base">
                                     {questionData.question}
                                   </p>
                                 )}
                               </div>
 
-                              <div className="space-y-2">
+                              <div className="space-y-1 sm:space-y-2">
                                 {(questionData.options ?? []).map((option, optionIndex) => (
-                                  <div key={optionIndex} className="flex items-center gap-2">
+                                  <div key={optionIndex} className="flex items-center gap-1 sm:gap-2">
                                     <Input
                                       type="radio"
                                       name={`correct-${index}`}
                                       checked={questionData.correctOptionIndex === optionIndex}
                                       onChange={() => editGeneratedQuestion(index, 'correctOptionIndex', optionIndex)}
-                                      className="h-4 w-4 accent-purple-600 dark:accent-purple-400"
+                                      className="h-3 w-3 sm:h-4 sm:w-4 accent-purple-600 dark:accent-purple-400"
                                     />
                                     {editingQuestionIndex === index ? (
                                       <Input
                                         value={option}
                                         onChange={(e) => editGeneratedQuestion(index, `option-${optionIndex}`, e.target.value)}
-                                        className="flex-1 dark:bg-gray-700/50"
+                                        className="flex-1 dark:bg-gray-700/50 text-xs sm:text-base"
                                         placeholder={`Option ${optionIndex + 1}`}
                                       />
                                     ) : (
-                                      <span className={`flex-1 ${questionData.correctOptionIndex === optionIndex
+                                      <span className={`flex-1 text-xs sm:text-base ${questionData.correctOptionIndex === optionIndex
                                         ? 'text-green-600 dark:text-green-400 font-medium'
                                         : 'text-gray-700 dark:text-gray-300'
                                         } ${!option.trim() ? 'italic text-gray-400 dark:text-gray-500' : ''}`}>
@@ -650,7 +650,7 @@ export default function TeacherPollRoom() {
                                 onClick={() => selectGeneratedQuestion(questionData)}
                                 variant="outline"
                                 size="sm"
-                                className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30"
+                                className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-base"
                               >
                                 Use This Question
                               </Button>
@@ -667,7 +667,7 @@ export default function TeacherPollRoom() {
             {/* Poll Results */}
             {Object.keys(pollResults).length > 0 && (
               <div className="space-y-4 mt-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
                   Poll Results
                 </h3>
                 {Object.entries(pollResults ?? {}).map(([pollQuestion, options]) => (
@@ -676,22 +676,22 @@ export default function TeacherPollRoom() {
                     className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70"
                   >
                     <CardHeader>
-                      <CardTitle className="text-lg text-gray-800 dark:text-gray-200">
+                      <CardTitle className="text-xs sm:text-lg text-gray-800 dark:text-gray-200">
                         {pollQuestion}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ul className="space-y-2">
+                      <ul className="space-y-1 sm:space-y-2">
                         {Object.entries(options ?? {}).map(([opt, data]) => (
                           <li key={opt} className="flex items-baseline">
-                            <span className="font-medium text-purple-600 dark:text-purple-400 mr-2">
+                            <span className="font-medium text-purple-600 dark:text-purple-400 mr-1 sm:mr-2 text-xs sm:text-base">
                               {opt}:
                             </span>
-                            <span className="text-gray-700 dark:text-gray-300 mr-2">
+                            <span className="text-gray-700 dark:text-gray-300 mr-1 sm:mr-2 text-xs sm:text-base">
                               {data.count} votes
                             </span>
                             {data.users.length > 0 && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                              <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                                 ({data.users.join(", ")})
                               </span>
                             )}

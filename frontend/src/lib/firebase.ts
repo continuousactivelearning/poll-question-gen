@@ -10,7 +10,7 @@ import {
   updateProfile
 } from "firebase/auth";
 import { useAuthStore } from "./store/auth-store";
-import { mapFirebaseUserToAppUser } from "./api/auth";
+//import { mapFirebaseUserToAppUser } from "./api/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

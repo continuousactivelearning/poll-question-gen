@@ -23,6 +23,11 @@ import { AudioService } from '#root/modules/genai/services/AudioService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
 import type { QuestionSpec } from '#root/modules/genai/services/AIContentService.js';
 // import type { File as MulterFile } from 'multer';
+import { OpenAPI } from 'routing-controllers-openapi';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const appOrigins = process.env.APP_ORIGINS;
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -33,6 +38,7 @@ declare module 'express-serve-static-core' {
 const upload = multer({ dest: 'uploads/' });
 
 @injectable()
+@OpenAPI({tags: ['Rooms'],})
 @JsonController('/livequizzes/rooms')
 export class PollRoomController {
   constructor(
@@ -45,17 +51,17 @@ export class PollRoomController {
     @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService,
   ) { }
 
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Post('/')
   async createRoom(@Body() body: { name: string; teacherId: string }) {
     const room = await this.roomService.createRoom(body.name, body.teacherId);
     return {
       ...room,
-      inviteLink: `http://localhost:5173/student/pollroom/${room.roomCode}`,
+      inviteLink: `${appOrigins}/student/pollroom/${room.roomCode}`,
     };
   }
 
-  //@Authorized()
+  @Authorized()
   @Get('/:code')
   async getRoom(@Param('code') code: string) {
     const room = await this.roomService.getRoomByCode(code);
@@ -69,7 +75,7 @@ export class PollRoomController {
   }  
 
   // 🔹 Create Poll in Room
-  //@Authorized(['teacher','admin'])
+  @Authorized(['teacher','admin'])
   @Post('/:code/polls')
   async createPollInRoom(
     @Param('code') roomCode: string,
@@ -89,23 +95,23 @@ export class PollRoomController {
 
   }
 
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Get('/teacher/:teacherId')
   async getAllRoomsByTeacher(@Param('teacherId') teacherId: string) {
     return await this.roomService.getRoomsByTeacher(teacherId);
   }
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Get('/teacher/:teacherId/active')
   async getActiveRoomsByTeacher(@Param('teacherId') teacherId: string) {
     return await this.roomService.getRoomsByTeacherAndStatus(teacherId, 'active');
   }
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Get('/teacher/:teacherId/ended')
   async getEndedRoomsByTeacher(@Param('teacherId') teacherId: string) {
     return await this.roomService.getRoomsByTeacherAndStatus(teacherId, 'ended');
   }
 
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Get('/:roomId/analysis')
   async getPollAnalysis(@Param('roomId') roomId: string) {
     // Fetch from service
@@ -113,7 +119,7 @@ export class PollRoomController {
     return { success: true, data: analysis };
   }
 
-  //@Authorized()
+  @Authorized()
   @Post('/:code/polls/answer')
   async submitPollAnswer(
     @Param('code') roomCode: string,
@@ -124,13 +130,13 @@ export class PollRoomController {
   }
 
   // Fetch Results for All Polls in Room
-  //@Authorized()
+  @Authorized()
   @Get('/:code/polls/results')
   async getResultsForRoom(@Param('code') code: string) {
     return await this.pollService.getPollResults(code);
   }
 
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Post('/:code/end')
   async endRoom(@Param('code') code: string) {
     const success = await this.roomService.endRoom(code);
@@ -141,7 +147,7 @@ export class PollRoomController {
   }
 
   // 🔹 AI Question Generation from transcript or YouTube
-  //@Authorized(['teacher'])
+  @Authorized(['teacher'])
   @Post('/:code/generate-questions')
   @HttpCode(200)
   async generateQuestionsFromTranscript(

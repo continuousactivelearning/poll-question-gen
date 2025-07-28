@@ -161,100 +161,98 @@ export default function ManageRoom() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-8">
+        <div className="max-w-7xl mx-auto p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100">Assessment Sessions</h1>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-blue-100">Assessment Sessions</h1>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                         Manage your active and completed assessment sessions
                     </p>
                 </div>
                 <Button
                     onClick={() => navigate({ to: '/teacher/pollroom' })}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base w-full sm:w-auto"
                 >
                     Create New Session
                 </Button>
             </div>
 
             {rooms.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                    <BarChart2 className="h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
+                <div className="flex flex-col items-center justify-center py-12 sm:py-16 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+                    <BarChart2 className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
                         No assessment sessions found
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
                         Create your first session to begin interactive assessments
                     </p>
                     <Button
                         onClick={() => navigate({ to: '/teacher/pollroom' })}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
                     >
                         Create Session
                     </Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {rooms.map((room) => (
                         <Card
                             key={room.roomCode}
-                            className={`transition-all hover:shadow-lg ${
-                                room.status === 'ended' ? 'cursor-pointer hover:border-blue-300' : ''
-                            }`}
+                            className={`transition-all hover:shadow-lg ${room.status === 'ended' ? 'cursor-pointer hover:border-blue-300' : ''
+                                }`}
                             onClick={() => room.status === 'ended' ? handleViewAnalysis(room.roomCode, {} as React.MouseEvent) : undefined}
                         >
-                            <CardHeader className="pb-4">
-                                <div className="flex items-start justify-between">
-                                    <CardTitle className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0">
+                                    <CardTitle className="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200">
                                         {room.name}
                                     </CardTitle>
-                                    <Badge 
+                                    <Badge
                                         variant={room.status === 'active' ? 'default' : 'secondary'}
-                                        className={`${
-                                            room.status === 'active' 
+                                        className={`$${room.status === 'active'
                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                                 : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-                                        }`}
+                                            }`}
                                     >
                                         {room.status === 'active' ? 'Active' : 'Completed'}
                                     </Badge>
                                 </div>
-                                <div className="text-sm text-blue-600 dark:text-blue-400">
+                                <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                                     {formatDate(room.createdAt)}
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div className="flex items-center gap-2">
+                                <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+                                    <div className="flex items-center gap-1 sm:gap-2">
                                         <Users className="h-4 w-4 text-blue-500" />
                                         <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Participants</p>
-                                            <p className="font-medium">{calculateParticipants(room)}</p>
+                                            <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">Participants</p>
+                                            <p className="font-medium text-xs sm:text-base">{calculateParticipants(room)}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 sm:gap-2">
                                         <BarChart2 className="h-4 w-4 text-blue-500" />
                                         <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Questions</p>
-                                            <p className="font-medium">{room.polls.length}</p>
+                                            <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">Questions</p>
+                                            <p className="font-medium text-xs sm:text-base">{room.polls.length}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 sm:gap-2">
                                         <Clock className="h-4 w-4 text-blue-500" />
                                         <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
-                                            <p className="font-medium">{calculateDuration(room)}</p>
+                                            <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                                            <p className="font-medium text-xs sm:text-base">{calculateDuration(room)}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {room.status === 'active' ? (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col xs:flex-row gap-2">
                                         <Button
                                             onClick={(e) => handleReturnToRoom(room.roomCode, e)}
-                                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-base"
                                         >
-                                            <Play className="h-4 w-4 mr-2" />
+                                            <Play className="h-4 w-4 mr-1 sm:mr-2" />
                                             Continue
                                         </Button>
                                         <DropdownMenu>
@@ -264,34 +262,34 @@ export default function ManageRoom() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={(e) => handleEndRoom(room.roomCode, e)}
                                                     disabled={endingRoom === room.roomCode}
                                                     className="text-red-600 focus:text-red-600 dark:text-red-400"
                                                 >
                                                     {endingRoom === room.roomCode ? (
-                                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                        <Loader2 className="h-4 w-4 mr-1 sm:mr-2 animate-spin" />
                                                     ) : (
-                                                        <Square className="h-4 w-4 mr-2" />
+                                                        <Square className="h-4 w-4 mr-1 sm:mr-2" />
                                                     )}
                                                     End Session
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={(e) => handleViewAnalysis(room.roomCode, e)}
                                                 >
-                                                    <Eye className="h-4 w-4 mr-2" />
+                                                    <Eye className="h-4 w-4 mr-1 sm:mr-2" />
                                                     View Analysis
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
                                 ) : (
-                                    <Button 
+                                    <Button
                                         onClick={(e) => handleViewAnalysis(room.roomCode, e)}
                                         variant="outline"
-                                        className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                        className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 text-xs sm:text-base"
                                     >
-                                        <Eye className="h-4 w-4 mr-2" />
+                                        <Eye className="h-4 w-4 mr-1 sm:mr-2" />
                                         View Results
                                     </Button>
                                 )}
