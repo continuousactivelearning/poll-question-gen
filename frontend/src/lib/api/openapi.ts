@@ -7,7 +7,7 @@ const getAuthToken = (): string | null => {
   return localStorage.getItem('firebase-auth-token');
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 const fetchClient = createFetchClient<paths>({
   baseUrl: API_URL

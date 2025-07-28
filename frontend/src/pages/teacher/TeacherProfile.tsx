@@ -7,7 +7,7 @@ import { User, AtSign, BadgeCheck, Edit2, Save, Calendar, UserCheck, BookOpen, P
 import { useState, useEffect } from "react";
 import type { IUser } from "@/lib/store/auth-store";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('firebase-auth-token');

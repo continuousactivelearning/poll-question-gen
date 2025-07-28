@@ -12,7 +12,7 @@ class PollSocket {
 
   init(server: import('http').Server) {
     this.io = new Server(server, {
-      cors: { origin: appOrigins || 'http://localhost:5173' },
+      cors: { origin: appOrigins || 'http://localhost:3000' },
     });
 
     this.io.on('connection', socket => {
