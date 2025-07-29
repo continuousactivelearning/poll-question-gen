@@ -1,0 +1,24 @@
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: ["frontend/**"]
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file: ["backend/**"]
+
+devops:
+  - changed-files:
+      - any-glob-to-any-file:
+        - ".github/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+        - "**/README.md"
+        - "**/docs/**"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+        - "frontend/package*.json"
+        - "backend/package*.json"
