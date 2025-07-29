@@ -122,6 +122,8 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
+            APP_URL=${{ secrets.APP_URL }}
+            APP_ORIGINS=${{ secrets.APP_ORIGINS }}
             DB_URL=${{ secrets.DB_URL }}
             FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
             FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -152,6 +154,8 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
+            APP_URL=${{ secrets.APP_URL }}
+            APP_ORIGINS=${{ secrets.APP_ORIGINS }}
             DB_URL=${{ secrets.DB_URL }}
             FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
             FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
