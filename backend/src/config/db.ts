@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 export const dbConfig = {
   url: env('DB_URL'),
-  dbName: env('DB_NAME') || 'pollDB',
+  dbName: env('DB_NAME') || 'PollDB',
 };
 
 export async function connectToDatabase() {
