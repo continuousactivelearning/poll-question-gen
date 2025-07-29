@@ -10,7 +10,7 @@ import { FirebaseAuthService } from './modules/auth/services/FirebaseAuthService
 
 export const sharedContainerModule = new ContainerModule(options => {
   const uri = dbConfig.url;
-  const dbName = 'vibe';
+  const dbName = 'PollDB';
 
   options.bind(GLOBAL_TYPES.uri).toConstantValue(uri);
   options.bind(GLOBAL_TYPES.dbName).toConstantValue(dbName);
