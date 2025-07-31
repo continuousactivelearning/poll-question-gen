@@ -13,9 +13,10 @@ import { toast } from "sonner";
 import { Zap, Users, Menu, Info, History, LogOut, Clock, CheckCircle, Circle, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/hooks/use-auth";
 import api from "@/lib/api/api";
+import socket from "@/lib/api/socket";
 
-const Socket_URL = import.meta.env.VITE_SOCKET_URL;
-const socket = io(Socket_URL);
+//const Socket_URL = import.meta.env.VITE_SOCKET_URL;
+//const socket = io(Socket_URL);
 
 type Poll = {
   _id: string;
@@ -50,7 +51,15 @@ export default function StudentPollRoom() {
 
   useEffect(() => {
     if (!roomCode) return;
-    socket.emit("join-room", roomCode);
+    //socket.emit("join-room", roomCode);
+    // Ensure socket is connected before emitting
+    if (socket.connected) {
+      socket.emit('join-room', roomCode);
+    } else {
+      socket.once('connect', () => {
+        socket.emit('join-room', roomCode);
+      });
+    }
     setJoinedRoom(true);
     loadRoomDetails(roomCode);
     const savedAnswers = localStorage.getItem(`answeredPolls_${roomCode}`);
