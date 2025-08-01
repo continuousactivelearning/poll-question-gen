@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --default-timeout=100 --break-system-packages --no-cache-dir \
   torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && \
   pip install --default-timeout=100 --break-system-packages --no-cache-dir \
-  yt-dlp faster-whisper
+  yt-dlp git+https://github.com/openai/whisper.git
 
 FROM node:22-slim
 
