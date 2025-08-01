@@ -7,21 +7,23 @@ on:
       - 'backend/**'
       - '.github/workflows/ollama-ci.yml'
   workflow_dispatch:
-    
+
 jobs:
   call-ollama:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Authenticate Tailscale
-        run: |
-          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }} --ssh
-          echo "Tailscale connected"
-          tailscale status
+      - name: Set up Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          version: 1.66.4  # or latest stable
+
+      - name: Confirm Tailscale Connection
+        run: tailscale status
 
       - name: Wait for Tailscale connection
         run: sleep 5
@@ -29,5 +31,4 @@ jobs:
       - name: Test connection to Ollama
         run: |
           echo "Pinging Ollama server..."
-          curl --fail http://100.100.108.13:11434/api/tags || (echo "Failed to connect to Ollama"; exit 1)
-
+          curl --fail http://100.100.108.13:11434/api/tags || (echo "❌ Failed to connect to Ollama"; exit 1)
