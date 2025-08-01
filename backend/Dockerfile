@@ -21,7 +21,19 @@ RUN pnpm tsc || echo "TypeScript compilation had errors but continuing build"
 FROM node:22-alpine
 
 # Install system deps and Python build tools
-RUN apk add --no-cache dumb-init git wget
+RUN apk add --no-cache \
+    dumb-init \
+    git \
+    wget \
+    ffmpeg \
+    python3 \
+    py3-pip \
+    build-base \
+    && python3 -m ensurepip \
+    && pip3 install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip3 install yt-dlp \
+    && pip3 install --no-cache-dir git+https://github.com/openai/whisper.git \
+    && rm -rf /root/.cache
 
 WORKDIR /app
 
