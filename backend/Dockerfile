@@ -20,8 +20,16 @@ RUN pnpm tsc || echo "TypeScript compilation had errors but continuing build"
 
 FROM node:22-alpine
 
-RUN apk add --no-cache dumb-init git wget
-
+RUN apk add --no-cache \
+  dumb-init \
+  git \
+  wget \
+  ffmpeg \
+  py3-pip \
+  python3 \
+  build-base \
+  && pip3 install --no-cache-dir openai-whisper \
+  && rm -rf /root/.cache
 WORKDIR /app
 
 COPY package.json ./
