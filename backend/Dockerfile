@@ -1,10 +1,14 @@
 FROM node:22-slim AS builder
 
 # Install git and corepack
-RUN apt-get update && apt-get install -y git curl \
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
     && corepack enable \
     && corepack prepare pnpm@10.4.1 --activate \
-    && npm install -g rimraf
+    && npm install -g rimraf \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
