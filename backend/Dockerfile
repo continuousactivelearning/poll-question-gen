@@ -20,25 +20,7 @@ RUN pnpm tsc || echo "TypeScript compilation had errors but continuing build"
 
 FROM node:22-alpine
 
-# Install system dependencies
-RUN apk add --no-cache \
-    dumb-init \
-    git \
-    wget \
-    ffmpeg \
-    python3 \
-    python3-dev \
-    py3-pip \
-    build-base
-
-# Upgrade pip and install Python packages
-RUN python3 -m pip install --break-system-packages --no-cache-dir --upgrade pip setuptools wheel
-
-# Install yt-dlp
-RUN pip3 install --break-system-packages --no-cache-dir yt-dlp
-
-# Install whisper (pre-built wheel)
-RUN pip3 install --break-system-packages --no-cache-dir openai-whisper
+RUN apk add --no-cache dumb-init git wget
 
 WORKDIR /app
 
