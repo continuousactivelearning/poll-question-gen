@@ -18,18 +18,43 @@ RUN pnpm tsc || echo "TypeScript compilation had errors but continuing build"
 #     pnpx @sentry/wizard@latest -i sourcemaps --saas --org vicharana-shala --project vibe-server --auth-token $SENTRY_AUTH_TOKEN --url ./build; \
 #     fi
 
-FROM node:22-alpine
+FROM python:3.11-slim AS python-deps
 
-RUN apk add --no-cache dumb-init git wget
+# Install Python dependencies in a separate stage
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential \
+  git \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN pip install --default-timeout=100 --break-system-packages --no-cache-dir \
+  torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && \
+  pip install --default-timeout=100 --break-system-packages --no-cache-dir \
+  yt-dlp faster-whisper
+
+FROM node:22-slim
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  dumb-init \
+  wget \
+  ffmpeg \
+  python3 \
+  python3-pip \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# Copy Python and installed packages from python stage
+COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=python-deps /usr/local/bin /usr/local/bin
 
 WORKDIR /app
 
 COPY package.json ./
 COPY scripts ./scripts
-RUN npm install
+RUN npm install --omit=dev
 
 COPY --from=builder /app/build ./build
-
 COPY --from=builder /app/src/modules ./src/modules
 
 ENV PORT=8080
