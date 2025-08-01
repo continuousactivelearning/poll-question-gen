@@ -27,16 +27,18 @@ RUN apk add --no-cache \
     wget \
     ffmpeg \
     python3 \
-    py3-pip
+    python3-dev \
+    py3-pip \
+    build-base
 
 # Upgrade pip and install Python packages
-RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN python3 -m pip install --break-system-packages --no-cache-dir --upgrade pip setuptools wheel
 
 # Install yt-dlp
-RUN pip3 install --no-cache-dir yt-dlp
+RUN pip3 install --break-system-packages --no-cache-dir yt-dlp
 
 # Install whisper (pre-built wheel)
-RUN pip3 install --no-cache-dir openai-whisper
+RUN pip3 install --break-system-packages --no-cache-dir openai-whisper
 
 WORKDIR /app
 
