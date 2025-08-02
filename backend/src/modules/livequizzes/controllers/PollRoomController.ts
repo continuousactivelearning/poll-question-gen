@@ -16,12 +16,22 @@ import { inject, injectable } from 'inversify';
 import { RoomService } from '../services/RoomService.js';
 import { PollService } from '../services/PollService.js';
 import { LIVE_QUIZ_TYPES } from '../types.js';
-import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
-import { AIContentService } from '#root/modules/genai/services/AIContentService.js';
-import { VideoService } from '#root/modules/genai/services/VideoService.js';
-import { AudioService } from '#root/modules/genai/services/AudioService.js';
-import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
-import type { QuestionSpec } from '#root/modules/genai/services/AIContentService.js';
+//import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
+//import { AIContentService } from '#root/modules/genai/services/AIContentService.js';
+//import { VideoService } from '#root/modules/genai/services/VideoService.js';
+//import { AudioService } from '#root/modules/genai/services/AudioService.js';
+//import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
+import {
+  PythonMicroserviceClient, 
+  QuestionSpec,
+  GeneratedQuestion,
+  QuestionGenerationResponse,
+  CompleteProcessingResponse,
+  TranscriptionResponse,
+  SegmentationResponse,
+  VideoDownloadResponse,
+  AudioExtractionResponse } from '../services/PythonMicroServiceClint.js';
+//import type { QuestionSpec } from '#root/modules/genai/services/AIContentService.js';
 // import type { File as MulterFile } from 'multer';
 import { OpenAPI } from 'routing-controllers-openapi';
 import dotenv from 'dotenv';
@@ -35,20 +45,21 @@ declare module 'express-serve-static-core' {
     files?: Express.Multer.File[];
   }
 }
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: '../ai-content-service/uploads/' });
 
 @injectable()
 @OpenAPI({tags: ['Rooms'],})
 @JsonController('/livequizzes/rooms')
 export class PollRoomController {
   constructor(
-    @inject(LIVE_QUIZ_TYPES.VideoService) private videoService: VideoService,
-    @inject(LIVE_QUIZ_TYPES.AudioService) private audioService: AudioService,
-    @inject(LIVE_QUIZ_TYPES.TranscriptionService) private transcriptionService: TranscriptionService,
-    @inject(LIVE_QUIZ_TYPES.AIContentService) private aiContentService: AIContentService,
-    @inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
+    //@inject(LIVE_QUIZ_TYPES.VideoService) private videoService: VideoService,
+    //@inject(LIVE_QUIZ_TYPES.AudioService) private audioService: AudioService,
+    //@inject(LIVE_QUIZ_TYPES.TranscriptionService) private transcriptionService: TranscriptionService,
+    //@inject(LIVE_QUIZ_TYPES.AIContentService) private aiContentService: AIContentService,
+    //@inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
     @inject(LIVE_QUIZ_TYPES.RoomService) private roomService: RoomService,
     @inject(LIVE_QUIZ_TYPES.PollService) private pollService: PollService,
+    @inject(LIVE_QUIZ_TYPES.PythonMicroserviceClient) private pythonClient: PythonMicroserviceClient,
   ) { }
 
   //@Authorized(['teacher'])
@@ -146,7 +157,7 @@ export class PollRoomController {
     return { success: true, message: 'Room ended successfully' };
   }
 
-  // 🔹 AI Question Generation from transcript or YouTube
+/*  // 🔹 AI Question Generation from transcript or YouTube
   //@Authorized(['teacher'])
   @Post('/:code/generate-questions')
   @HttpCode(200)
@@ -229,5 +240,181 @@ export class PollRoomController {
     } finally {
       await this.cleanupService.cleanup(tempPaths);
     }
+  }
+}*/
+
+  //@Authorized(['teacher'])
+  @Post('/:code/generate-questions')
+  @HttpCode(200)
+  async generateQuestions(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const tempPaths: string[] = [];
+
+    // Handle file upload
+    await new Promise<void>((resolve, reject) => {
+      upload.single('file')(req, res, (err) => (err ? reject(err) : resolve()));
+    });
+
+    try {
+      const {
+        youtubeUrl,
+        transcript: directTranscript,
+        questionSpec,
+        model = 'gemma3',
+        language = 'English',
+        desiredSegments = 3
+      } = req.body;
+
+      // Safe default questionSpec
+      let safeSpec: QuestionSpec[] = [{ SOL: 2 }];
+      if (questionSpec && typeof questionSpec === 'object' && !Array.isArray(questionSpec)) {
+        safeSpec = [questionSpec];
+      } else if (Array.isArray(questionSpec) && typeof questionSpec[0] === 'object') {
+        safeSpec = questionSpec;
+      } else {
+        console.warn('Invalid questionSpec provided; using default [{ SOL: 2 }]');
+      }
+
+      let result: QuestionGenerationResponse;
+
+      // Route 1: File Upload (Audio/Video)
+      if (req.file) {
+        console.log('[generateQuestions] Processing uploaded file:', req.file.originalname);
+
+        const filePath = req.file.path;
+        tempPaths.push(filePath);
+
+        if (req.file.mimetype.startsWith('video/')) {
+          // Extract audio from video
+          const audioResult = await this.pythonClient.extractAudio(filePath);
+          tempPaths.push(audioResult.audio_path);
+
+          // Transcribe audio
+          const transcriptResult = await this.pythonClient.transcribe(audioResult.audio_path, language);
+
+          // Generate questions using transcript
+          result = await this.generateQuestionsFromTranscript(
+            transcriptResult.transcript,
+            safeSpec,
+            model,
+            desiredSegments
+          );
+        } else if (req.file.mimetype.startsWith('audio/')) {
+          // Direct audio transcription
+          const transcriptResult = await this.pythonClient.transcribe(filePath, language);
+
+          // Generate questions using transcript
+          result = await this.generateQuestionsFromTranscript(
+            transcriptResult.transcript,
+            safeSpec,
+            model,
+            desiredSegments
+          );
+        } else {
+          return res.status(400).json({
+            message: 'Unsupported file type. Please upload audio or video files.'
+          });
+        }
+
+      }
+      // Route 2: YouTube URL
+      else if (youtubeUrl) {
+        console.log('[generateQuestions] Processing YouTube URL:', youtubeUrl);
+
+        result = await this.pythonClient.processYouTubeVideo({
+          youtubeUrl,
+          language,
+          model,
+          desiredSegments,
+          globalQuestionSpecification: safeSpec
+        });
+
+      }
+      // Route 3: Direct Transcript
+      else if (directTranscript) {
+        console.log('[generateQuestions] Processing direct transcript, length:', directTranscript.length);
+
+        result = await this.generateQuestionsFromTranscript(
+          directTranscript,
+          safeSpec,
+          model,
+          desiredSegments
+        );
+
+      }
+      // No input provided
+      else {
+        return res.status(400).json({
+          message: 'Please provide one of: file upload, youtubeUrl, or transcript text.'
+        });
+      }
+
+      // Return unified response
+      return res.json({
+        success: true,
+        message: 'Questions generated successfully.',
+        data: {
+          totalQuestions: result.questions.length,
+          questions: result.questions,
+          inputType: req.file ? 'file' : youtubeUrl ? 'youtube' : 'transcript',
+          model: model,
+          //segmentsProcessed: result.segments ? Object.keys(result.segments).length : undefined
+        }
+      });
+
+    } catch (err: any) {
+      console.error('Error generating questions:', err);
+      return res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error'
+      });
+    } finally {
+      // Cleanup any temporary files
+      if (tempPaths.length > 0) {
+        await this.pythonClient.cleanup(tempPaths);
+      }
+    }
+  }
+
+  // Helper method for transcript-based question generation
+  private async generateQuestionsFromTranscript(
+    transcript: string,
+    questionSpec: QuestionSpec[],
+    model: string,
+    desiredSegments: number
+  ): Promise<QuestionGenerationResponse> {
+    const SEGMENTATION_THRESHOLD = parseInt(
+      process.env.TRANSCRIPT_SEGMENTATION_THRESHOLD || '6000',
+      10
+    );
+
+    let segments: Record<string, string>;
+
+    if (transcript.length <= SEGMENTATION_THRESHOLD) {
+      console.log('[generateQuestions] Small transcript detected. Using full transcript without segmentation.');
+      segments = { full: transcript };
+    } else {
+      console.log('[generateQuestions] Transcript is long; running segmentation...');
+      const segmentResult = await this.pythonClient.segmentTranscript(
+        transcript,
+        model,
+        desiredSegments
+      );
+      segments = segmentResult.segments;
+    }
+
+    // Generate questions from segments
+    const result = await this.pythonClient.generateQuestions({
+      segments,
+      globalQuestionSpecification: questionSpec,
+      model
+    });
+
+    return {
+      ...result,
+      segments // Include segments in response for debugging
+    };
   }
 }

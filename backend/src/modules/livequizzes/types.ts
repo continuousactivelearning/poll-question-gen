@@ -1,3 +1,5 @@
+import { PythonMicroserviceClient } from "./services/PythonMicroServiceClint.js";
+
 const TYPES = {
   // Controllers
   PollRoomController: Symbol.for('PollRoomController'),
@@ -14,6 +16,7 @@ const TYPES = {
   TranscriptionService: Symbol.for('TranscriptionService'),
   AIContentService: Symbol.for('AIContentService'),
   CleanupService: Symbol.for('CleanupService'),
+  PythonMicroserviceClient: Symbol.for('PythonMicroserviceClient'),
 
   // Socket.IO
   PollSocket: Symbol.for('PollSocket'),

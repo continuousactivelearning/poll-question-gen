@@ -1,0 +1,18 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+aiofiles==23.2.1
+aiohttp==3.9.1
+faster-whisper==0.10.0
+yt-dlp==2023.12.30
+ffmpeg-python==0.2.0
+python-json-logger==2.0.7
+pydantic==2.5.2
+httpx==0.25.2
+
+# Optional: For SOCKS proxy support
+# aiohttp-socks==0.8.4
+
+# System dependencies (install via system package manager):
+# - ffmpeg
+# - yt-dlp (or install via pip above)
