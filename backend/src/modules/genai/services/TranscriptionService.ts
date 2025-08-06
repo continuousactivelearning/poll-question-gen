@@ -21,31 +21,48 @@ export class TranscriptionService {
   private async runWhisperAndGetTextInternal(
     whisperCommand: string,
     expectedTranscriptFilePath: string,
-    // tempTranscriptDir: string, // No longer needed as argument
   ): Promise<string> {
-    // The tempTranscriptDir is created by the calling method `transcribe`
-    const {stdout, stderr} = await execAsync(whisperCommand); // stdout from whisper CLI might not be useful
+    try {
+      const maxRetries = 3;
+      let lastError: Error | null = null;
 
-    // Whisper CLI can write to stderr for progress/info even on success.
-    // The primary check is the existence of the transcript file.
-    if (stderr && !fs.existsSync(expectedTranscriptFilePath)) {
-      console.error(`Whisper CLI stderr: ${stderr}`);
-      // Throw error only if the expected file isn't there and there's stderr
-      throw new InternalServerError(`Whisper processing error: ${stderr}`);
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Attempt ${attempt}/${maxRetries} - Running Whisper command`);
+          
+          // Set a timeout for the whisper command (10 minutes)
+          const {stdout, stderr} = await Promise.race([
+            execAsync(whisperCommand, { timeout: 10 * 60 * 1000 }),
+            new Promise<{stdout: string, stderr: string}>((_, reject) => 
+              setTimeout(() => reject(new Error('Whisper command timed out after 10 minutes')), 10 * 60 * 1000)
+            )
+          ]);
+
+          // Check if the output file was created
+          if (fs.existsSync(expectedTranscriptFilePath)) {
+            const text = await fsp.readFile(expectedTranscriptFilePath, 'utf-8');
+            return text.trim();
+          }
+
+          console.warn(`Attempt ${attempt} failed - output file not found. stderr: ${stderr || 'No error output'}`);
+          lastError = new InternalServerError(`Whisper processing failed: Output file not generated`);
+        } catch (error: any) {
+          console.error(`Attempt ${attempt} failed with error:`, error.message);
+          lastError = error;
+        }
+
+        if (attempt < maxRetries) {
+          const delayMs = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+          console.log(`Waiting ${delayMs}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+
+      throw lastError || new InternalServerError('Whisper processing failed after multiple attempts');
+    } catch (error: any) {
+      console.error('Final error in Whisper processing:', error);
+      throw new InternalServerError(`Transcription failed: ${error.message}`);
     }
-
-    if (!fs.existsSync(expectedTranscriptFilePath)) {
-      console.error(
-        `Whisper output file not found: ${expectedTranscriptFilePath}. stderr: ${stderr}`,
-      );
-      throw new InternalServerError(
-        `Whisper output file not found. stderr: ${stderr}`,
-      );
-    }
-
-    const text = await fsp.readFile(expectedTranscriptFilePath, 'utf-8');
-    return text.trim();
-    // Removed outer try-catch; specific errors are thrown, others will propagate.
   }
 
   /**
@@ -151,21 +168,21 @@ export class TranscriptionService {
       //   finalWhisperExecutablePath = altPath;
       // }
 
-      // NEW CODE - Use the system-installed whisper executable
-      let finalWhisperExecutablePath = '/home/lab_user/miniconda3/bin/whisper';
-
-      // Fallback to check if whisper is in PATH
-      if (!fs.existsSync(finalWhisperExecutablePath)) {
-        // Removed try-catch around execAsync, errors will propagate
-        const {stdout} = await execAsync('where whisper');
-        finalWhisperExecutablePath = stdout.trim();
-        console.log(`Found whisper in PATH: ${finalWhisperExecutablePath}`);
-        if (!finalWhisperExecutablePath) {
-          // Added a check for empty stdout
-          throw new InternalServerError(
-            'Whisper not found in PATH and not at default location.',
-          );
+      let finalWhisperExecutablePath = 'whisper'; // Default to just 'whisper' to use PATH lookup
+      
+      try {
+        const {stdout} = await execAsync('which whisper || echo not_found');
+        const path = stdout.trim();
+        
+        if (path === 'not_found') {
+          finalWhisperExecutablePath = 'python -m whisper';
+          console.log('Using Python module approach for Whisper');
+        } else {
+          console.log(`Found whisper at: ${path}`);
         }
+      } catch (error) {
+        console.warn('Error finding whisper in PATH, falling back to Python module');
+        finalWhisperExecutablePath = 'python -m whisper';
       }
 
       const audioFileNameWithoutExt = path.basename(
@@ -178,7 +195,15 @@ export class TranscriptionService {
       );
 
       // Use VTT format to get timestamps, and add --verbose=False to reduce stderr output
-      const whisperCommand = `"${finalWhisperExecutablePath}" "${audioPath}" --model small --language ${language} --output_format vtt --output_dir "${tempTranscriptDir}" --verbose False`;
+      // Add --fp16 False to avoid potential issues with CPU-only environments
+      const whisperCommand = `"${finalWhisperExecutablePath}" "${audioPath}" \
+        --model small \
+        --language ${language} \
+        --output_format vtt \
+        --output_dir "${tempTranscriptDir}" \
+        --verbose False \
+        --fp16 False \
+        --threads ${Math.max(1, require('os').cpus().length - 1)}`;
 
       console.log(`Executing Whisper CLI: ${whisperCommand}`);
 

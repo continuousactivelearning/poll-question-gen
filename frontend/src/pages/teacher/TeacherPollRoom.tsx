@@ -533,6 +533,7 @@ export default function TeacherPollRoom() {
                           <option value="gemma3">Gemma 3</option>
                           <option value="gpt-4">GPT-4</option>
                           <option value="claude-3">Claude 3</option>
+                          <option value="deepseek-r1:70b">DeepSeek R1 (70B)</option>
                         </select>
                       </div>
                     </div>
