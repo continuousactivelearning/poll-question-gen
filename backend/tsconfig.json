@@ -10,7 +10,7 @@
         "sourceMap": true,
         "strict": false,
         "esModuleInterop": true,
-        "sourceRoot": "C:\\Users\\Aditya\\OneDrive\\Desktop\\vibe-jest-fix\\vibe\\backend\\src",
+        "sourceRoot": "./src",
         "resolveJsonModule": true,
         "allowArbitraryExtensions": false,
         "incremental": true,
