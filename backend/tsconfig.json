@@ -18,6 +18,7 @@
             "#root/*": ["./*"],
             "#shared/*": ["./shared/*"],
             "#auth/*": ["./modules/auth/*"],
+            "#genai/*": ["./modules/genai/*"],
             "#users/*": ["./modules/users/*"],
             "#livequizzes/*": ["./modules/livequizzes/*"],
         },

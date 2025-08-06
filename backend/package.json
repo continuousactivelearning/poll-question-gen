@@ -19,6 +19,7 @@
     "#root/*.js": "./build/*.js",
     "#shared/*.js": "./build/shared/*.js",
     "#auth/*.js": "./build/modules/auth/*.js",
+    "#genai/*.js": "./build/modules/genai/*.js",
     "#livequizzes/*.js": "./build/modules/livequizzes/*.js",
     "#temp/*.js": "./build/modules/temp/*.js",
     "#users/*.js": "./build/modules/users/*.js"
