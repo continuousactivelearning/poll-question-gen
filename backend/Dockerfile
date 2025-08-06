@@ -9,9 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python packages
 RUN pip install --default-timeout=100 --break-system-packages --no-cache-dir \
-  yt-dlp git+https://github.com/openai/whisper.git
-
-RUN python3 -c "import whisper; whisper.load_model('small')"
+  yt-dlp
 
 FROM node:22-alpine AS builder
 

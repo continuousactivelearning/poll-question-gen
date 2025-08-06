@@ -16,7 +16,7 @@ import { inject, injectable } from 'inversify';
 import { RoomService } from '../services/RoomService.js';
 import { PollService } from '../services/PollService.js';
 import { LIVE_QUIZ_TYPES } from '../types.js';
-import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
+//import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
 import { AIContentService } from '#root/modules/genai/services/AIContentService.js';
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
@@ -25,6 +25,8 @@ import type { QuestionSpec } from '#root/modules/genai/services/AIContentService
 // import type { File as MulterFile } from 'multer';
 import { OpenAPI } from 'routing-controllers-openapi';
 import dotenv from 'dotenv';
+import mime from 'mime-types';
+import * as fsp from 'fs/promises';
 
 dotenv.config();
 const appOrigins = process.env.APP_ORIGINS;
@@ -44,7 +46,7 @@ export class PollRoomController {
   constructor(
     @inject(LIVE_QUIZ_TYPES.VideoService) private videoService: VideoService,
     @inject(LIVE_QUIZ_TYPES.AudioService) private audioService: AudioService,
-    @inject(LIVE_QUIZ_TYPES.TranscriptionService) private transcriptionService: TranscriptionService,
+    //@inject(LIVE_QUIZ_TYPES.TranscriptionService) private transcriptionService: TranscriptionService,
     @inject(LIVE_QUIZ_TYPES.AIContentService) private aiContentService: AIContentService,
     @inject(LIVE_QUIZ_TYPES.CleanupService) private cleanupService: CleanupService,
     @inject(LIVE_QUIZ_TYPES.RoomService) private roomService: RoomService,
@@ -146,6 +148,42 @@ export class PollRoomController {
     return { success: true, message: 'Room ended successfully' };
   }
 
+@Get('/youtube-audio')
+@HttpCode(200)
+async getYoutubeAudio(@Req() req: Request, @Res() res: Response) {
+  const youtubeUrl = req.query.url as string;
+  const tempPaths: string[] = [];
+  try {
+    if (!youtubeUrl) {
+      return res.status(400).json({ message: 'Missing YouTube URL.' });
+    }
+    console.log('Received YouTube URL:', youtubeUrl);
+    // 1. Download the YouTube video (MP4 or similar)
+    const videoPath = await this.videoService.downloadVideo(youtubeUrl);
+    tempPaths.push(videoPath);
+
+    // 2. Extract audio from video (MP3 or WAV)
+    const audioPath = await this.audioService.extractAudio(videoPath);
+    tempPaths.push(audioPath);
+
+    // 3. Stream audio file to the client
+    const mimeType = mime.lookup(audioPath) || 'audio/mpeg';
+    const audioBuffer = await fsp.readFile(audioPath); 
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Length', audioBuffer.length);
+    res.setHeader('Content-Disposition', 'inline');
+
+    console.log("🧪 Audio path:", audioPath);
+    console.log("📦 Audio buffer size:", audioBuffer.length); // << This will likely be 44
+    return res.send(audioBuffer);
+  } catch (error: any) {
+    console.error('Error in /youtube-audio:', error);
+    await this.cleanupService.cleanup(tempPaths);
+    return res.status(500).json({ message: error.message || 'Internal Server Error' });
+  }
+}
+
   // 🔹 AI Question Generation from transcript or YouTube
   //@Authorized(['teacher'])
   @Post('/:code/generate-questions')
@@ -161,31 +199,7 @@ export class PollRoomController {
     });
 
     try {
-      const { youtubeUrl, questionSpec, model } = req.body;
-      let transcript = '';
-
-      if (req.file) {
-        const filePath = req.file.path;
-        tempPaths.push(filePath);
-
-        let audioPath = filePath;
-        if (req.file.mimetype.startsWith('video/')) {
-          audioPath = await this.audioService.extractAudio(filePath);
-          tempPaths.push(audioPath);
-        }
-
-        transcript = await this.transcriptionService.transcribe(audioPath);
-      } else if (youtubeUrl) {
-        const videoPath = await this.videoService.downloadVideo(youtubeUrl);
-        tempPaths.push(videoPath);
-
-        const audioPath = await this.audioService.extractAudio(videoPath);
-        tempPaths.push(audioPath);
-
-        transcript = await this.transcriptionService.transcribe(audioPath);
-      } else {
-        return res.status(400).json({ message: 'Please upload a file or provide a youtubeUrl.' });
-      }
+      const { transcript, questionSpec, model } = req.body;
 
       const SEGMENTATION_THRESHOLD = parseInt(process.env.TRANSCRIPT_SEGMENTATION_THRESHOLD || '6000', 10);
       const defaultModel = 'gemma3';
@@ -193,6 +207,7 @@ export class PollRoomController {
       let segments: Record<string, string>;
       if (transcript.length <= SEGMENTATION_THRESHOLD) {
         console.log('[generateQuestions] Small transcript detected. Using full transcript without segmentation.');
+        console.log('Transcript:', transcript);
         segments = { full: transcript };
       } else {
         console.log('[generateQuestions] Transcript is long; running segmentation...');
