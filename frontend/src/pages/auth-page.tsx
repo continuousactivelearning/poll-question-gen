@@ -287,7 +287,7 @@ export default function AuthPage() {
         {/* Left: Heading, subheading, features */}
         <div className="flex-1 flex flex-col items-start gap-4 sm:gap-6 z-10 w-full lg:w-auto">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-black leading-tight">
-            Poll Question Generation
+            VidyaMitra
           </h1>
           <p className="text-gray-500 text-sm sm:text-base lg:text-lg max-w-md">
             Transform classroom engagement with real-time polling and instant feedback
