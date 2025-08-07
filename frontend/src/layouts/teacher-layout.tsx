@@ -73,7 +73,7 @@ export default function TeacherLayout() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg sm:text-2xl font-bold text-blue-900 dark:text-blue-100">
-                <span className="font-normal">Quick</span>Poll
+                <span className="font-normal">Vidya</span>Mitra
               </h1>
               <p className="text-[10px] sm:text-xs text-slate-600 -mt-1 dark:text-gray-400">
                 Education Polling System
