@@ -1,7 +1,10 @@
 FROM node:22-alpine AS builder
 
 RUN apk add --no-cache git
-RUN corepack enable && corepack prepare pnpm@10.4.1 --activate && npm install -g rimraf
+RUN corepack enable && \
+  (corepack prepare pnpm@10.4.1 --activate || corepack prepare pnpm@10.4.1 --activate) && \
+  npm install -g rimraf
+
 
 WORKDIR /app
 
