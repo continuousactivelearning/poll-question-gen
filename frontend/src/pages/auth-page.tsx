@@ -230,13 +230,11 @@ export default function AuthPage() {
         uid: result.user.uid,
         email: result.user.email || "",
         name: fullName,
-        //role: "student",
-        role: activeRole, // Use selected role for signup too
+        role: activeRole,
         avatar: result.user.photoURL || ""
       });
 
       navigate({ to: `/${activeRole}/home` });
-      //navigate({ to: "/student/home" });
     } catch (error: unknown) {
       console.error("Email Signup Failed", error);
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/email-already-in-use') {
@@ -286,10 +284,15 @@ export default function AuthPage() {
       <section className="w-full flex flex-col lg:flex-row items-center justify-between px-4 sm:px-6 lg:px-16 pt-6 sm:pt-12 pb-6 sm:pb-8 bg-white/80 rounded-b-2xl sm:rounded-b-3xl shadow-md relative overflow-hidden z-10">
         {/* Left: Heading, subheading, features */}
         <div className="flex-1 flex flex-col items-start gap-4 sm:gap-6 z-10 w-full lg:w-auto">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-black leading-tight">
-            Poll Question Generation
-          </h1>
-          <p className="text-gray-500 text-sm sm:text-base lg:text-lg max-w-md">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight">
+              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                VidyaMitra
+              </span>
+            </h1>
+            <p className="text-sm font-medium text-blue-500/90">Empowering Education</p>
+          </div>
+          <p className="text-gray-600 text-sm sm:text-base lg:text-lg max-w-md">
             Transform classroom engagement with real-time polling and instant feedback
           </p>
           {/* Features Grid */}
@@ -689,4 +692,3 @@ export default function AuthPage() {
     </div>
   );
 }
-

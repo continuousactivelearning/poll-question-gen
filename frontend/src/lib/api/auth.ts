@@ -9,7 +9,7 @@ import {
 import { useAuthStore } from '../store/auth-store';
 import { queryClient } from './client';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 // Updated auth functions to pass role from UI to backend
 
