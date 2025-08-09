@@ -1,12 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
+import { ChevronDown, Check } from 'lucide-react';
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload, Mic, MicOff, Youtube, Wand2, Edit3, X, Loader2, LogOut, AlertTriangle } from "lucide-react";
+import { Wand2, Edit3, X, Loader2, LogOut, AlertTriangle } from "lucide-react";
 import api from "@/lib/api/api";
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useTranscriber } from "@/hooks/useTranscriber";
+import { AudioManager } from "@/whisper/components/AudioManager";
+import Transcript from "@/whisper/components/Transcript";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text).then(() => {
@@ -42,20 +46,19 @@ export default function TeacherPollRoom() {
 
   // GenAI feature state
   const [activeTab, setActiveTab] = useState<'manual' | 'genai'>('manual');
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [questionSpec, setQuestionSpec] = useState("");
   const [selectedModel, setSelectedModel] = useState("gemma3");
+  const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isGenerateClicked, setIsGenerateClicked] = useState(false);
+  const [audioManagerKey, setAudioManagerKey] = useState(0);
+  // Whisper transcription state and Whisper service for speech-to-text
+  const transcriber = useTranscriber();
+  const [transcript, setTranscript] = useState<string | null>(null);
 
   if (!roomCode) return <div>Loading...</div>;
 
@@ -63,16 +66,19 @@ export default function TeacherPollRoom() {
     setIsEndingRoom(true);
     try {
       await api.post(`/livequizzes/rooms/${roomCode}/end`, {
-        teacherId: user?.userId, // replace with real teacher ID
+        teacherId: user?.userId,
       });
 
       toast.success("Room ended successfully");
 
       // Clean up any ongoing recordings
-      if (mediaRecorderRef.current && isRecording) {
-        mediaRecorderRef.current.stop();
+      /*if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.onstop = null; // prevent re-triggering
+        if (mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
         setIsRecording(false);
-      }
+      }*/
 
       // Navigate back to teacher dashboard or rooms list
       navigate({ to: '/teacher/pollroom' });
@@ -114,7 +120,8 @@ export default function TeacherPollRoom() {
     }
   };
 
-  const startRecording = async () => {
+  // Whisper transcription functions
+  /*const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -126,38 +133,187 @@ export default function TeacherPollRoom() {
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         setRecordedAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
+
+        handleTranscription(audioBlob);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       toast.success("Recording started");
     } catch (error) {
+      setIsRecording(false);
       toast.error("Failed to start recording");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    try {
+      mediaRecorderRef.current?.stop();
       setIsRecording(false);
       toast.success("Recording stopped");
+    } catch (error) {
+      setIsRecording(false);
+      toast.error("Failed to stop recording");
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setAudioFile(file);
-      toast.success("File uploaded");
+      // Auto-transcribe the uploaded file
+      try {
+        handleTranscription(file);
+      } catch (error) {
+        toast.error("Failed to transcribe file");
+      } finally {
+        setIsTranscribing(false);
+      }
     }
   };
 
+  const convertToAudioBuffer = async (audio: Blob | File): Promise<AudioBuffer> => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const arrayBuffer = await audio.arrayBuffer();
+    return await audioContext.decodeAudioData(arrayBuffer);
+  };
+  const handleTranscription = async (audio: Blob | File) => {
+    try {
+      setIsTranscribing(true);
+      const audioBuffer = await convertToAudioBuffer(audio);
+      // Start transcription using the audioBuffer
+      transcriber.start(audioBuffer);
+    } catch (error) {
+      toast.error("Failed to transcribe file");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };*/
+
+  useEffect(() => {
+    setIsTranscribing(!!transcriber.output?.isBusy);
+  }, [transcriber.output?.isBusy]);
+
+  useEffect(() => {
+    const text = transcriber.output?.text;
+    const isComplete = !transcriber.output?.isBusy;
+    if (text && isComplete) {
+      setTranscript(text);
+      console.log("Transcribed successfully", text);
+      toast.success("Transcribed successfully");
+    }
+  }, [transcriber.output]);
+
+  useEffect(() => {
+    const text = transcriber.output?.text;
+    const isComplete = !transcriber.output?.isBusy;
+
+    if (isGenerateClicked && text && isComplete) {
+      setTranscript(text);
+      toast.success("Transcribed successfully");
+      setIsGenerating(true);
+      generateQuestions();
+      setIsGenerateClicked(false);
+    }
+  }, [transcriber.output?.isBusy, transcriber.output?.text, isGenerateClicked]);
+
+  /*const transcribeYoutube = async () => {
+    if (!youtubeUrl) {
+      toast.error("Please enter a YouTube URL");
+      return;
+    }
+
+    try {
+      setIsTranscribing(true);
+      
+      // Call backend to get audio file
+      const response = await api.post(
+        "/api/youtube-to-audio",
+        { url: youtubeUrl },
+        { responseType: "blob" } // ensure you get the audio as Blob
+      );
+
+      handleTranscription(response.data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to transcribe YouTube audio");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };*/
+
+  interface ModelSelectorProps {
+    selectedModel: string;
+    onModelChange: (model: string) => void;
+    className?: string;
+  }
+  const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelChange, className = "" }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const models = [
+      { value: "gemma3", label: "Gemma 3" },
+      { value: "gpt-4", label: "GPT-4" },
+      { value: "claude-3", label: "Claude 3" },
+      { value: "deepseek-r1:70b", label: "DeepSeek R1 (70B)" }
+    ];
+
+    const selectedModelLabel = models.find(model => model.value === selectedModel)?.label || "Select Model";
+
+    return (
+      <div className={`relative ${className}`}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800/50 dark:border-gray-600 dark:text-white text-xs sm:text-base bg-white dark:bg-gray-800 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          aria-label="AI Model"
+        >
+          <span className="text-left truncate">{selectedModelLabel}</span>
+          <ChevronDown
+            size={16}
+            className={`ml-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Dropdown */}
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+              {models.map((model) => (
+                <button
+                  key={model.value}
+                  type="button"
+                  onClick={() => {
+                    onModelChange(model.value);
+                    setIsOpen(false);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-xs sm:text-base flex items-center justify-between"
+                >
+                  <span>{model.label}</span>
+                  {selectedModel === model.value && (
+                    <Check size={16} className="text-purple-600 dark:text-purple-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   const generateQuestions = async () => {
-    if (!youtubeUrl && !audioFile && !recordedAudio) {
+    if (!transcript) {
       toast.error("Please provide YouTube URL, upload file, or record audio");
       return;
     }
@@ -165,12 +321,7 @@ export default function TeacherPollRoom() {
     setIsGenerating(true);
     try {
       const formData = new FormData();
-      if (youtubeUrl) formData.append('youtubeUrl', youtubeUrl);
-      if (audioFile) formData.append('file', audioFile);
-      else if (recordedAudio) {
-        const file = new File([recordedAudio], 'recording.wav', { type: 'audio/wav' });
-        formData.append('file', file);
-      }
+      formData.append('transcript', transcript);
       if (questionSpec) formData.append('questionSpec', questionSpec);
       formData.append('model', selectedModel);
 
@@ -235,15 +386,13 @@ export default function TeacherPollRoom() {
   };
 
   const clearGenAIData = () => {
-    setYoutubeUrl("");
-    setAudioFile(null);
-    setRecordedAudio(null);
     setGeneratedQuestions([]);
     setShowPreview(false);
     setQuestionSpec("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setTranscript(null);
+    setAudioManagerKey(Date.now());
+    transcriber.onInputChange();
+    setEditingQuestionIndex(null);
   };
 
   return (
@@ -441,67 +590,14 @@ export default function TeacherPollRoom() {
               <div className="space-y-4 sm:space-y-6">
                 {!showPreview ? (
                   <>
-                    {/* YouTube URL Input */}
+                    <AudioManager
+                      key={audioManagerKey}
+                      transcriber={transcriber}
+                    />
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                        <Youtube size={16} />
-                        YouTube URL
-                      </label>
-                      <Input
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        value={youtubeUrl}
-                        onChange={(e) => setYoutubeUrl(e.target.value)}
-                        className="dark:bg-gray-800/50 text-xs sm:text-base"
-                      />
-                    </div>
-
-                    <div className="text-center text-sm text-gray-500 dark:text-gray-400 font-medium">OR</div>
-
-                    {/* File Upload */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                        <Upload size={16} />
-                        Upload Audio/Video File
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept="audio/*,video/*"
-                          onChange={handleFileUpload}
-                          ref={fileInputRef}
-                          className="dark:bg-gray-800/50 text-xs sm:text-base"
-                        />
-                        {audioFile && (
-                          <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                            {audioFile.name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="text-center text-sm text-gray-500 dark:text-gray-400 font-medium">OR</div>
-
-                    {/* Audio Recording */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                        <Mic size={16} />
-                        Record Audio
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={isRecording ? stopRecording : startRecording}
-                          variant={isRecording ? "destructive" : "outline"}
-                          className="flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
-                        >
-                          {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-                          {isRecording ? "Stop Recording" : "Start Recording"}
-                        </Button>
-                        {recordedAudio && (
-                          <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
-                            Recording ready
-                          </span>
-                        )}
-                      </div>
+                      {(transcriber.output?.isBusy || transcriber.output) && (
+                        <Transcript transcribedData={transcriber.output} />
+                      )}
                     </div>
 
                     {/* Optional Configuration */}
@@ -524,27 +620,31 @@ export default function TeacherPollRoom() {
                         <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                           AI Model
                         </label>
-                        <select
-                          value={selectedModel}
-                          onChange={(e) => setSelectedModel(e.target.value)}
-                          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800/50 dark:border-gray-600 dark:text-white text-xs sm:text-base"
-                          aria-label="AI Model"
-                        >
-                          <option value="gemma3">Gemma 3</option>
-                          <option value="gpt-4">GPT-4</option>
-                          <option value="claude-3">Claude 3</option>
-                          <option value="deepseek-r1:70b">DeepSeek R1 (70B)</option>
-                        </select>
+                        <ModelSelector
+                          selectedModel={selectedModel}
+                          onModelChange={setSelectedModel}
+                        />
                       </div>
                     </div>
 
                     <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
                       <Button
-                        onClick={generateQuestions}
-                        disabled={isGenerating || (!youtubeUrl && !audioFile && !recordedAudio)}
+                        onClick={() => {
+                          setIsGenerateClicked(true);
+                          if (!transcriber.output?.isBusy) {
+                            generateQuestions();
+                            setIsGenerateClicked(false);
+                          }
+                        }}
+                        disabled={isGenerating}
                         className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
                       >
-                        {isGenerating ? (
+                        {isGenerateClicked && transcriber.output?.isBusy ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Transcribing...
+                          </>
+                        ) : isGenerating ? (
                           <>
                             <Loader2 size={16} className="animate-spin" />
                             Generating...

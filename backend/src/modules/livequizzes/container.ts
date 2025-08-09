@@ -10,7 +10,7 @@ import {DashboardController} from './controllers/DashboardController.js';
 // GenAI services
 import { VideoService } from '#root/modules/genai/services/VideoService.js';
 import { AudioService } from '#root/modules/genai/services/AudioService.js';
-import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
+//import { TranscriptionService } from '#root/modules/genai/services/TranscriptionService.js';
 import { AIContentService } from '#root/modules/genai/services/AIContentService.js';
 import { CleanupService } from '#root/modules/genai/services/CleanupService.js';
 
@@ -23,7 +23,7 @@ export const livequizzesContainerModule = new ContainerModule((options) => {
   // GenAI / media services
   options.bind(LIVE_QUIZ_TYPES.VideoService).to(VideoService).inSingletonScope();
   options.bind(LIVE_QUIZ_TYPES.AudioService).to(AudioService).inSingletonScope();
-  options.bind(LIVE_QUIZ_TYPES.TranscriptionService).to(TranscriptionService).inSingletonScope();
+  //options.bind(LIVE_QUIZ_TYPES.TranscriptionService).to(TranscriptionService).inSingletonScope();
   options.bind(LIVE_QUIZ_TYPES.AIContentService).to(AIContentService).inSingletonScope();
   options.bind(LIVE_QUIZ_TYPES.CleanupService).to(CleanupService).inSingletonScope();
 
