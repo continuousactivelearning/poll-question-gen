@@ -32,7 +32,7 @@ export class AIContentService {
   //private readonly ollimaApiBaseUrl = 'http://localhost:11434/api';
   private readonly ollimaApiBaseUrl = `http://${aiConfig.serverIP}:${aiConfig.serverPort}/api`;
   private readonly llmApiUrl = `${this.ollimaApiBaseUrl}/generate`;
-  private readonly proxyAgent = aiConfig.proxyAddress? new SocksProxyAgent(aiConfig.proxyAddress): undefined;
+  private readonly proxyAgent = aiConfig.proxyAddress ? new SocksProxyAgent(aiConfig.proxyAddress) : undefined;
 
   // --- Segmentation Logic ---
   public async segmentTranscript(

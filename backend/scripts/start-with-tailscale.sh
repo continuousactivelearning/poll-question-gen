@@ -14,8 +14,9 @@ if [ -n "$TAILSCALE_AUTHKEY" ]; then
   tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="poll-question-gen-backend" --accept-routes
   
   echo "Waiting for Tailscale connection..."
-  timeout=30
+  timeout=60
   counter=0
+  connected=false
   while ! tailscale status | grep -q "Connected"; do
     if [ "$counter" -ge "$timeout" ]; then
       echo "Timed out waiting for Tailscale connection, but application will continue running"
@@ -32,8 +33,12 @@ if [ -n "$TAILSCALE_AUTHKEY" ]; then
   if [ -n "$AI_SERVER_IP" ]; then
     echo "Using AI_SERVER_IP environment variable: $AI_SERVER_IP"
   else
-    echo "WARNING: AI_SERVER_IP environment variable is not set"
+    export AI_SERVER_IP="100.100.108.13"
+    echo "AI_SERVER_IP was not set, using default Tailscale IP: $AI_SERVER_IP"
   fi
+  
+  export AI_PROXY_ADDRESS=""
+  echo "Disabled proxy for direct Tailscale connection"
 else
   echo "WARNING: TAILSCALE_AUTHKEY environment variable is not set, Tailscale will not be available"
 fi) &
