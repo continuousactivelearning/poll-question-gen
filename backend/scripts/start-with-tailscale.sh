@@ -33,8 +33,7 @@ echo "Tailscale connected successfully!"
 tailscale status
 
 if [ -n "$AI_SERVER_IP" ]; then
-  echo "Setting OLLAMA_HOST environment variable to $AI_SERVER_IP"
-  export OLLAMA_HOST="$AI_SERVER_IP"
+  echo "Using AI_SERVER_IP environment variable: $AI_SERVER_IP"
 else
   echo "WARNING: AI_SERVER_IP environment variable is not set"
 fi
