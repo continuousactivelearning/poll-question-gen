@@ -52,7 +52,7 @@ ENV APP_PORT=8080
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:${PORT}/health || exit 1
 
 CMD ["/usr/local/bin/start-with-tailscale.sh"]
