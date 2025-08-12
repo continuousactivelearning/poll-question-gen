@@ -14,7 +14,7 @@ if [ -n "$TAILSCALE_AUTHKEY" ]; then
   tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="poll-question-gen-backend" --accept-routes
   
   echo "Waiting for Tailscale connection..."
-  timeout=60
+  timeout=100
   counter=0
   connected=false
   while ! tailscale status | grep -q "Connected"; do
