@@ -1,28 +1,48 @@
 #!/bin/sh
 set -e
 
-echo "Starting tailscaled in userspace mode..."
-/app/tailscaled --tun=userspace-networking --state=mem: &
+mkdir -p /tmp/tailscale
+export TS_SOCKET_PATH=/tmp/tailscale/tailscaled.sock
+export TS_STATE_DIR=/tmp/tailscale
 
-sleep 2
+echo "Starting tailscaled in userspace mode..."
+# Run tailscaled with explicit socket path and state path in /tmp
+/app/tailscaled \
+  --tun=userspace-networking \
+  --socket=$TS_SOCKET_PATH \
+  --state=$TS_STATE_DIR/tailscaled.state \
+  --port=41641 &
+
+tailscaled_pid=$!
+
+echo "Checking if tailscaled is running (PID: $tailscaled_pid)..."
+ps -p $tailscaled_pid >/dev/null 2>&1 || { echo "ERROR: tailscaled failed to start"; exit 1; }
+
+echo "Waiting for tailscaled to initialize..."
+sleep 5
 
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
   echo "Authenticating with Tailscale..."
-  /app/tailscale up \
+  /app/tailscale \
+    --socket=$TS_SOCKET_PATH \
+    up \
     --authkey="$TAILSCALE_AUTHKEY" \
     --hostname="poll-question-gen-backend" \
     --accept-routes \
     --netfilter-mode=off \
     --no-single-router \
     --reset \
-    --no-dns
+    --no-dns \
+    --timeout=30s
   
-  echo "Waiting for Tailscale connection..."
-  timeout=60
+  echo "Checking Tailscale connection status..."
+  timeout=45
   counter=0
-  while ! /app/tailscale status | grep -q "Connected"; do
-    if [ "$counter" -ge "$timeout" ]; then
-      echo "Timed out waiting for Tailscale connection, but application will continue running"
+  connected=false
+  
+  while [ $counter -lt $timeout ]; do
+    if /app/tailscale --socket=$TS_SOCKET_PATH status | grep -q "Connected"; then
+      connected=true
       break
     fi
     counter=$((counter+1))
@@ -30,8 +50,12 @@ if [ -n "$TAILSCALE_AUTHKEY" ]; then
     sleep 1
   done
   
-  echo "Tailscale setup completed!"
-  /app/tailscale status
+  if [ "$connected" = true ]; then
+    echo "Tailscale connected successfully!"
+    /app/tailscale --socket=$TS_SOCKET_PATH status
+  else
+    echo "WARNING: Timed out waiting for Tailscale connection, continuing anyway"
+  fi
 
   if [ -z "$AI_SERVER_IP" ]; then
     export AI_SERVER_IP="100.100.108.13"
