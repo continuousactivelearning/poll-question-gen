@@ -2,13 +2,13 @@
 set -e
 
 echo "Starting tailscaled with userspace networking..."
-/app/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+/app/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --state=mem: &
 
 sleep 2
 
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
   echo "Authenticating with Tailscale..."
-  /app/tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="poll-question-gen-backend" --accept-routes
+  /app/tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="poll-question-gen-backend" --accept-routes --netfilter-mode=off --no-single-router --reset --no-dns
   
   echo "Waiting for Tailscale connection..."
   timeout=60
