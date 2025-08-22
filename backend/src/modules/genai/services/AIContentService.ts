@@ -310,7 +310,7 @@ ${transcriptContent}
             console.log(`[generateQuestions] Raw LLM text for type ${type}, segment ${segmentId}:`, text.slice(0, 500));
           } catch (e: any) {
             console.error(`[generateQuestions] Failed for type ${type}, segment ${segmentId}:`, e.message);
-            if (axios.isAxiosError(e)) console.error('Ollima API error:', e.response?.data);
+            if (axios.isAxiosError(e)) console.error('Ollima API error:', e);
           }
         }
       }
