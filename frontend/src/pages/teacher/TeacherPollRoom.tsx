@@ -51,7 +51,7 @@ export default function TeacherPollRoom() {
   const [showPreview, setShowPreview] = useState(false);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [questionSpec, setQuestionSpec] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gemma3");
+  const [selectedModel, setSelectedModel] = useState("deepseek-r1:70b");
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
 
   const [isGenerateClicked, setIsGenerateClicked] = useState(false);
@@ -120,81 +120,6 @@ export default function TeacherPollRoom() {
     }
   };
 
-  // Whisper transcription functions
-  /*const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        setRecordedAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-
-        handleTranscription(audioBlob);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      toast.success("Recording started");
-    } catch (error) {
-      setIsRecording(false);
-      toast.error("Failed to start recording");
-    }
-  };
-
-  const stopRecording = () => {
-    try {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-      toast.success("Recording stopped");
-    } catch (error) {
-      setIsRecording(false);
-      toast.error("Failed to stop recording");
-    }
-  };
-
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAudioFile(file);
-      // Auto-transcribe the uploaded file
-      try {
-        handleTranscription(file);
-      } catch (error) {
-        toast.error("Failed to transcribe file");
-      } finally {
-        setIsTranscribing(false);
-      }
-    }
-  };
-
-  const convertToAudioBuffer = async (audio: Blob | File): Promise<AudioBuffer> => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const arrayBuffer = await audio.arrayBuffer();
-    return await audioContext.decodeAudioData(arrayBuffer);
-  };
-  const handleTranscription = async (audio: Blob | File) => {
-    try {
-      setIsTranscribing(true);
-      const audioBuffer = await convertToAudioBuffer(audio);
-      // Start transcription using the audioBuffer
-      transcriber.start(audioBuffer);
-    } catch (error) {
-      toast.error("Failed to transcribe file");
-    } finally {
-      setIsTranscribing(false);
-    }
-  };*/
-
   useEffect(() => {
     setIsTranscribing(!!transcriber.output?.isBusy);
   }, [transcriber.output?.isBusy]);
@@ -221,31 +146,6 @@ export default function TeacherPollRoom() {
       setIsGenerateClicked(false);
     }
   }, [transcriber.output?.isBusy, transcriber.output?.text, isGenerateClicked]);
-
-  /*const transcribeYoutube = async () => {
-    if (!youtubeUrl) {
-      toast.error("Please enter a YouTube URL");
-      return;
-    }
-
-    try {
-      setIsTranscribing(true);
-      
-      // Call backend to get audio file
-      const response = await api.post(
-        "/api/youtube-to-audio",
-        { url: youtubeUrl },
-        { responseType: "blob" } // ensure you get the audio as Blob
-      );
-
-      handleTranscription(response.data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to transcribe YouTube audio");
-    } finally {
-      setIsTranscribing(false);
-    }
-  };*/
 
   interface ModelSelectorProps {
     selectedModel: string;
@@ -313,15 +213,27 @@ export default function TeacherPollRoom() {
   };
 
   const generateQuestions = async () => {
-    if (!transcript) {
+    // Don't proceed if transcription is still busy - let the useEffect handle it
+    if (transcriber.output?.isBusy) {
+      return;
+    }
+    // Check if we have transcript
+    if (!transcript && !transcriber.output?.text) {
       toast.error("Please provide YouTube URL, upload file, or record audio");
+      return;
+    }
+
+    // Use the current transcript or the transcriber output
+    const textToUse = transcript || transcriber.output?.text;
+    if (!textToUse) {
+      toast.error("No transcript available to generate questions from");
       return;
     }
 
     setIsGenerating(true);
     try {
       const formData = new FormData();
-      formData.append('transcript', transcript);
+      formData.append('transcript', textToUse);
       if (questionSpec) formData.append('questionSpec', questionSpec);
       formData.append('model', selectedModel);
 
@@ -331,7 +243,7 @@ export default function TeacherPollRoom() {
 
       const rawQuestions = response.data.questions || [];
 
-      // ✅ Transform backend shape → frontend shape
+      // Transform backend shape → frontend shape
       const cleanQuestions = rawQuestions
         .filter((q: any) => typeof q.questionText === 'string' && q.questionText.trim() !== '')
         .map((q: any): GeneratedQuestion => ({
@@ -350,6 +262,22 @@ export default function TeacherPollRoom() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  // Updated button click handler
+  const handleGenerateClick = () => {
+    setIsGenerateClicked(true);
+
+    // If transcription is not busy, generate immediately
+    if (!transcriber.output?.isBusy) {
+      // Set transcript from transcriber output if available
+      if (transcriber.output?.text) {
+        setTranscript(transcriber.output.text);
+      }
+      generateQuestions();
+      setIsGenerateClicked(false);
+    }
+    // If transcription is busy, the useEffect will handle it
   };
 
   // Add this function to your component
@@ -631,14 +559,8 @@ export default function TeacherPollRoom() {
 
                     <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
                       <Button
-                        onClick={() => {
-                          setIsGenerateClicked(true);
-                          if (!transcriber.output?.isBusy) {
-                            generateQuestions();
-                            setIsGenerateClicked(false);
-                          }
-                        }}
-                        disabled={isGenerating}
+                        onClick={handleGenerateClick}
+                        disabled={isGenerating || (isGenerateClicked && transcriber.output?.isBusy)}
                         className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
                       >
                         {isGenerateClicked && transcriber.output?.isBusy ? (
