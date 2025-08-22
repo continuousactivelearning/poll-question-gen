@@ -13,6 +13,11 @@ sleep 5
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
   /app/tailscale up --authkey="$TAILSCALE_AUTHKEY" --accept-routes --accept-dns --hostname="gcp-poll"
   echo "Tailscale is up and running"
+  
+  echo "Testing Tailscale connection to Ollama server..."
+  /app/tailscale ping -c 1 100.100.108.13 || echo "Warning: Cannot ping Ollama server. Network may not be fully established."
+  
+  sleep 5
 else
   echo "TAILSCALE_AUTHKEY not set, skipping Tailscale up"
 fi

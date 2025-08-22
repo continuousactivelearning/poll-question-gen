@@ -35,7 +35,16 @@ export class AIContentService {
   private readonly proxyAgent = aiConfig.proxyAddress ? new SocksProxyAgent(aiConfig.proxyAddress) : undefined;
   
   private getRequestConfig() {
-    return this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {};
+    if (this.proxyAgent && aiConfig.useProxy) {
+      console.log(`Using SOCKS proxy: ${aiConfig.proxyAddress} for connection to ${this.ollimaApiBaseUrl}`);
+      
+      return { 
+        httpAgent: this.proxyAgent, 
+        httpsAgent: this.proxyAgent
+      };
+    }
+    console.log(`Direct connection to ${this.ollimaApiBaseUrl} (no proxy)`);
+    return {};
   }
 
   // --- Segmentation Logic ---
