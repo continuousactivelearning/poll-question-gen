@@ -17,4 +17,9 @@ else
   echo "TAILSCALE_AUTHKEY not set, skipping Tailscale up"
 fi
 
+export AI_SERVER_IP="100.100.108.13"
+export AI_SERVER_PORT="11434"
+export AI_PROXY_ADDRESS="socks5://localhost:1055"
+echo "AI server connection configured with proxy: $AI_PROXY_ADDRESS"
+
 exec dumb-init node build/index.js

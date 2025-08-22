@@ -33,6 +33,10 @@ export class AIContentService {
   private readonly ollimaApiBaseUrl = `http://${aiConfig.serverIP}:${aiConfig.serverPort}/api`;
   private readonly llmApiUrl = `${this.ollimaApiBaseUrl}/generate`;
   private readonly proxyAgent = aiConfig.proxyAddress ? new SocksProxyAgent(aiConfig.proxyAddress) : undefined;
+  
+  private getRequestConfig() {
+    return this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {};
+  }
 
   // --- Segmentation Logic ---
   public async segmentTranscript(
@@ -73,7 +77,7 @@ JSON:`;
         stream: false,
         options: { temperature: 0.1, top_p: 0.9 },
       }, 
-      this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}
+      this.getRequestConfig()
     );
 
       const generatedText = response.data?.response;
@@ -263,7 +267,7 @@ ${transcriptContent}
               format: schema ? format : undefined,
               options: { temperature: 0.2 }
             },
-            this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}
+            this.getRequestConfig()
           );
 
             const text = response.data?.response;
