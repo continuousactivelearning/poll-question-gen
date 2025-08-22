@@ -332,11 +332,13 @@ export default function TeacherPollRoom() {
       const rawQuestions = response.data.questions || [];
 
       // ✅ Transform backend shape → frontend shape
-      const cleanQuestions = rawQuestions.map((q: any): GeneratedQuestion => ({
-        question: q.questionText ?? '', // backend field is questionText
-        options: Array.isArray(q.options) ? q.options.map((opt: any) => opt.text ?? '') : [],
-        correctOptionIndex: Array.isArray(q.options) ? q.options.findIndex((opt: any) => opt.correct) : 0,
-      }));
+      const cleanQuestions = rawQuestions
+        .filter((q: any) => typeof q.questionText === 'string' && q.questionText.trim() !== '')
+        .map((q: any): GeneratedQuestion => ({
+          question: q.questionText,
+          options: Array.isArray(q.options) ? q.options.map((opt: any) => opt.text ?? '') : [],
+          correctOptionIndex: Array.isArray(q.options) ? q.options.findIndex((opt: any) => opt.correct) : 0,
+        }));
 
       console.log("Generated questions:", cleanQuestions);
       setGeneratedQuestions(cleanQuestions);
