@@ -357,7 +357,7 @@ export default function TeacherPollRoom() {
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                   </svg>
-                  <span className="hidden xs:inline">Copy Code</span>
+                  <span className="xs:inline">Copy Code</span>
                 </Button>
                 <Button
                   onClick={() => setShowEndRoomConfirm(true)}
@@ -366,7 +366,7 @@ export default function TeacherPollRoom() {
                   disabled={isEndingRoom}
                 >
                   <LogOut size={16} />
-                  <span className="hidden xs:inline">End Room</span>
+                  <span className="xs:inline">End Room</span>
                 </Button>
               </div>
             </div>
@@ -423,6 +423,19 @@ export default function TeacherPollRoom() {
               </div>
             )}
 
+            {/* Clear button at the top of tabs */}
+            {!showPreview && (
+              <div className="flex justify-end">
+                <Button
+                  onClick={clearGenAIData}
+                  variant="outline"
+                  className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 text-xs sm:text-base"
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+
             {/* Tab Navigation */}
             <div className="flex gap-1 sm:gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs sm:text-sm">
               <button
@@ -469,7 +482,7 @@ export default function TeacherPollRoom() {
                                 className={`px-2 py-0.5 rounded text-xs ${q.correctOptionIndex === i
                                   ? 'bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 font-semibold'
                                   : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                                }`}
+                                  }`}
                               >
                                 {opt}
                               </span>
@@ -558,18 +571,6 @@ export default function TeacherPollRoom() {
             {/* GenAI Tab */}
             {activeTab === 'genai' && (
               <div className="space-y-4 sm:space-y-6">
-                {/* Clear button at the top */}
-                {!showPreview && (
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={clearGenAIData}
-                      variant="outline"
-                      className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 text-xs sm:text-base"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                )}
                 {!showPreview ? (
                   <>
                     <AudioManager
