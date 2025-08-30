@@ -449,6 +449,46 @@ export default function TeacherPollRoom() {
             {/* Manual Entry Tab */}
             {activeTab === 'manual' && (
               <div className="space-y-4 sm:space-y-6">
+                {/* Show generated questions if any */}
+                {generatedQuestions.length > 0 && (
+                  <div className="mb-2">
+                    <h4 className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400 mb-1">
+                      Generated Questions (from AI)
+                    </h4>
+                    <div className="flex flex-col gap-2">
+                      {generatedQuestions.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2 rounded border border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 flex flex-col gap-1"
+                        >
+                          <span className="font-medium text-xs sm:text-base">{q.question}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {q.options.map((opt, i) => (
+                              <span
+                                key={i}
+                                className={`px-2 py-0.5 rounded text-xs ${q.correctOptionIndex === i
+                                  ? 'bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 font-semibold'
+                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                                }`}
+                              >
+                                {opt}
+                              </span>
+                            ))}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-1 w-fit border-purple-400 text-purple-600 dark:text-purple-300 text-xs"
+                            onClick={() => selectGeneratedQuestion(q)}
+                          >
+                            Use This Question
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <Input
                     placeholder="Poll question"
@@ -518,6 +558,18 @@ export default function TeacherPollRoom() {
             {/* GenAI Tab */}
             {activeTab === 'genai' && (
               <div className="space-y-4 sm:space-y-6">
+                {/* Clear button at the top */}
+                {!showPreview && (
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={clearGenAIData}
+                      variant="outline"
+                      className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 text-xs sm:text-base"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
                 {!showPreview ? (
                   <>
                     <AudioManager
@@ -579,13 +631,6 @@ export default function TeacherPollRoom() {
                             Generate Questions
                           </>
                         )}
-                      </Button>
-                      <Button
-                        onClick={clearGenAIData}
-                        variant="outline"
-                        className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 text-xs sm:text-base"
-                      >
-                        Clear
                       </Button>
                     </div>
                   </>
