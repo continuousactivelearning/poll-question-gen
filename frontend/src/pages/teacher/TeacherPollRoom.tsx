@@ -105,7 +105,7 @@ export default function TeacherPollRoom() {
       setOptions(["", "", "", ""]);
       setCorrectOptionIndex(0);
       setShowPreview(false);
-      setGeneratedQuestions([]);
+      //setGeneratedQuestions([]);
     } catch {
       toast.error("Failed to create poll");
     }
@@ -424,8 +424,8 @@ export default function TeacherPollRoom() {
             )}
 
             {/* Clear button at the top of tabs */}
-            {!showPreview && (
-              <div className="flex justify-end">
+            {/* {!showPreview && ( */}
+            <div className="flex justify-end">
                 <Button
                   onClick={clearGenAIData}
                   variant="outline"
@@ -434,7 +434,7 @@ export default function TeacherPollRoom() {
                   Clear
                 </Button>
               </div>
-            )}
+            {/* )} */}
 
             {/* Tab Navigation */}
             <div className="flex gap-1 sm:gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs sm:text-sm">
