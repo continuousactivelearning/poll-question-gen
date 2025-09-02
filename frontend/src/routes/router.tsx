@@ -31,6 +31,7 @@ import ManageRoom from '@/pages/teacher/TeacherManageRooms'
 import TeacherPollAnalysis from '@/pages/teacher/TeacherPollAnalysis'
 import StudentPollAnalysis from '@/pages/student/StudentPollAnalysis'
 import MyPolls from '@/pages/student/MyPolls'
+import RoleSelectionPage from '@/pages/roleselect'
 
 // Root route with error and notFound handling
 const rootRoute = new RootRoute({
@@ -69,6 +70,8 @@ const authRoute = new Route({
       } else if (user.role === 'student') {
         throw redirect({ to: '/student' });
       }
+    } else if (isAuthenticated && user && !user.role) {
+      throw redirect({ to: '/select-role' });
     }
   },
 });
@@ -86,6 +89,8 @@ const indexRoute = new Route({
       } else if (user.role === 'student') {
         throw redirect({ to: '/student' });
       }
+    } else if (isAuthenticated && user && !user.role) {
+      throw redirect({ to: '/select-role' });
     }
     // Default redirect to auth if not authenticated or role unknown
     throw redirect({ to: '/auth' });
@@ -141,6 +146,19 @@ const studentLayoutRoute = new Route({
   component: StudentLayout,
 });
 
+// Role Select Page
+const roleSelectRoute = new Route({
+  getParentRoute: () => rootRoute, 
+  path: '/select-role',
+  beforeLoad: () => {
+    const { isAuthenticated, user } = useAuthStore.getState();
+    if (!isAuthenticated) throw redirect({ to: '/auth' });
+    // if (user?.role) throw redirect({ to: `/${user.role}` }); // redirect if role already selected
+  },
+  component: RoleSelectionPage,
+});
+
+
 // Teacher dashboard route
 const teacherDashboardRoute = new Route({
   getParentRoute: () => teacherLayoutRoute,
@@ -177,9 +195,22 @@ const teacherPollAnalysisRoute = new Route({
 });
 
 // Teacher poll room route
-const teacherPollRoomRoute = new Route({
-  getParentRoute: () => teacherLayoutRoute,
-  path: '/pollroom/$code',
+export const teacherPollRoomRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/teacher/pollroom/$code',
+  beforeLoad: () => {
+    const { isAuthenticated, user } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      throw redirect({ to: '/auth' });
+    }
+    if (user?.role !== 'teacher') {
+      if (user?.role === 'student') {
+        throw redirect({ to: '/student' });
+      } else {
+        throw redirect({ to: '/auth' });
+      }
+    }
+  },
   component: TeacherPollRoom,
 });
 
@@ -213,8 +244,21 @@ const studentProfileRoute = new Route({
 
 // Student poll room route
 const studentPollRoomRoute = new Route({
-  getParentRoute: () => studentLayoutRoute,
-  path: '/pollroom/$code',
+  getParentRoute: () => rootRoute,
+  path: '/student/pollroom/$code',
+  beforeLoad: () => {
+    const { isAuthenticated, user } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      throw redirect({ to: '/auth' });
+    }
+    if (user?.role !== 'student') {
+      if (user?.role === 'teacher') {
+        throw redirect({ to: '/teacher' });
+      } else {
+        throw redirect({ to: '/auth' });
+      }
+    }
+  },
   component: StudentPollRoom,
 });
 
@@ -256,6 +300,7 @@ const notFoundRoute = new NotFoundRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   authRoute,
+  roleSelectRoute,
   teacherLayoutRoute.addChildren([
     // teacherGenAIHomeRoute,
     teacherPollRoomRoute,

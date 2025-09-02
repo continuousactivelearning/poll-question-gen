@@ -17,6 +17,7 @@ export class UserService extends BaseService {
 
   async findOrCreateByFirebaseUID(firebaseUID: string, data: Partial<IUser>): Promise<IUser> {
     let user = await this.userRepo.findByFirebaseUID(firebaseUID);
+    //console.log("findOrCreateByFirebaseUID - role:", user.role);
     if (!user) {
       const userId = await this.userRepo.create({
         firebaseUID,
@@ -24,7 +25,7 @@ export class UserService extends BaseService {
         lastName: data.lastName || '',
         email: data.email || '',
         avatar: data.avatar || null,
-        role: data.role || 'student',
+        role: data.role || "null",
         phoneNumber: data.phoneNumber || null,
         institution: data.institution || null,
         designation: data.designation || null,
@@ -113,5 +114,19 @@ export class UserService extends BaseService {
       message: 'Avatar updated successfully',
       avatar: updatedUser.avatar,
     };
+  }
+
+  async updateRoleByFirebaseUID(firebaseUID: string, role: string) {
+    if (!role || typeof role !== 'string') {
+      throw new Error('Role must be a non-empty string');
+    }
+
+    const updatedUser = await this.userRepo.updateRole(firebaseUID, role);
+
+
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
   }
 }

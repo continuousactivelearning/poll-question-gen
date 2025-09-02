@@ -104,7 +104,7 @@ export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null
       email: firebaseUser.email || backendUser?.email || '',
       name: firebaseUser.displayName ||
         (backendUser ? `${backendUser.firstName} ${backendUser.lastName}`.trim() : ''),
-      role: backendUser?.role || "student", // Use backend role or selected role
+      role: backendUser?.role || null,
       avatar: firebaseUser.photoURL || backendUser?.avatar || '',
       // from mongoDB
       userId: backendUser?._id,

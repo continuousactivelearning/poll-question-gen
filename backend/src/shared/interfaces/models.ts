@@ -6,7 +6,7 @@ export interface IUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: string | null;
   avatar?: string | null; // URL to the user's avatar image
 
   dateOfBirth?: string; // ISO format recommended: YYYY-MM-DD

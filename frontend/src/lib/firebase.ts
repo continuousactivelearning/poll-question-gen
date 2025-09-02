@@ -7,9 +7,10 @@ import {
   signInWithEmailAndPassword,
   signOut,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  User
 } from "firebase/auth";
-import { useAuthStore } from "./store/auth-store";
+import { IUser, useAuthStore } from "./store/auth-store";
 import { mapFirebaseUserToAppUser } from "./api/auth";
 // import { log } from "console";
 
@@ -29,6 +30,35 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 
+// Function to update user role in MongoDB via your backend API
+export const updateUserRole = async (firebaseUID: string, role: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("No authenticated user found");
+    }
+    const token = await user.getIdToken();
+    const response = await fetch(`${API_URL}/users/firebase/${firebaseUID}/role`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ role })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update user role: ${errorText}`);
+    }
+    const updatedUser = await response.json();
+    console.log("User role updated successfully:", updatedUser);
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    throw error;
+  }
+};
+
 // -------------------- AUTH FUNCTIONS -------------------- //
 
 export const loginWithGoogle = async () => {
@@ -36,7 +66,8 @@ export const loginWithGoogle = async () => {
   const firebaseUser = result.user;
   const idToken = await result.user.getIdToken();
 
-  const backendUser = await mapFirebaseUserToAppUser(firebaseUser);
+  const backendUser = await createBackendUser(firebaseUser);
+  // const backendUser = await mapFirebaseUserToAppUser(firebaseUser);
 
   const setAuthState = useAuthStore.getState();
   setAuthState.setToken(idToken);
@@ -54,7 +85,7 @@ export const loginWithEmail = async (
   const firebaseUser = result.user;
 
   const backendUser = await mapFirebaseUserToAppUser(firebaseUser);
-  
+
   // Store token and role in Zustand
   const setAuthState = useAuthStore.getState();
   setAuthState.setToken(idToken);
@@ -67,7 +98,6 @@ export const createUserWithEmail = async (
   email: string,
   password: string,
   displayName?: string,
-  selectedRole: string = 'student'
 ) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -78,26 +108,55 @@ export const createUserWithEmail = async (
     }
     const token = await firebaseUser.getIdToken(true);
 
+    const backendUser = await createBackendUser(firebaseUser);
+
+    const setAuthState = useAuthStore.getState();
+    setAuthState.setToken(token);
+    setAuthState.setUser({
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      name: `${backendUser.firstName} ${backendUser.lastName}`,
+      role: backendUser.role || null,
+      avatar: backendUser.avatar || null,
+      ...backendUser,
+    });
+
+    console.log("User created successfully in Firebase + Backend:", backendUser);
+
+    return { result: userCredential, role: backendUser.role };
+  } catch (error) {
+    console.error("createUserWithEmail failed:", error);
+    throw error;
+  }
+};
+
+export const logout = () => {
+  signOut(auth);
+  useAuthStore.getState().clearUser?.(); // safe call if function exists
+};
+
+export const createBackendUser = async (firebaseUser: User) => {
+  const token = await firebaseUser.getIdToken(true);
+  try {
     const newUser = {
-        firebaseUID: firebaseUser.uid,
-        firstName: firebaseUser.displayName?.split(' ')[0] || '',
-        lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
-        email: firebaseUser.email || '',
-        avatar: firebaseUser.photoURL || null,
-        role: selectedRole,
+      firebaseUID: firebaseUser.uid,
+      firstName: firebaseUser.displayName?.split(' ')[0] || '',
+      lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+      email: firebaseUser.email || '',
+      avatar: firebaseUser.photoURL || null,
+      role: "", // null,
 
-        // Additional profile fields
-        phoneNumber: null,
-        bio: null,
-        institution: null,
-        designation: null,
-        address: null,
-        emergencyContact: null,
-        dateOfBirth: null,
+      phoneNumber: null,
+      bio: null,
+      institution: null,
+      designation: null,
+      address: null,
+      emergencyContact: null,
+      dateOfBirth: null,
 
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
     const createRes = await fetch(`${API_URL}/users/firebase/${firebaseUser.uid}/profile`, {
       method: 'POST',
@@ -114,30 +173,11 @@ export const createUserWithEmail = async (
     }
 
     const backendUser = await createRes.json();
-
-    const setAuthState = useAuthStore.getState();
-    setAuthState.setToken(token);
-    setAuthState.setUser({
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      name: `${backendUser.firstName} ${backendUser.lastName}`,
-      role: backendUser.role,
-      avatar: backendUser.avatar,
-      ...backendUser,
-    });
-
-    console.log("User created successfully in Firebase + Backend:", backendUser);
-
-    return { result: userCredential, role: backendUser.role };
+    return backendUser;
   } catch (error) {
-    console.error("createUserWithEmail failed:", error);
+    console.error("Error creating backend user:", error);
     throw error;
   }
-};
-
-export const logout = () => {
-  signOut(auth);
-  useAuthStore.getState().clearUser?.(); // safe call if function exists
 };
 
 export const analytics = getAnalytics(app);

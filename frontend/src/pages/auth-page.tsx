@@ -2,91 +2,16 @@ import { loginWithGoogle, loginWithEmail, createUserWithEmail } from "@/lib/fire
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { useState, /*createContext, useContext,*/ useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-import { Check, AlertCircle, ChevronRight, Loader2, GraduationCap, Users } from "lucide-react";
+import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-
-// // Create a context for tab state management
-// const TabsContext = createContext<{
-//   value: string;
-//   onValueChange?: (value: string) => void;
-// }>({ value: "" });
-
-// // Enhanced Tabs component
-// const Tabs = ({ defaultValue, className, children, value, onValueChange }: {
-//   defaultValue: string;
-//   className: string;
-//   children: React.ReactNode;
-//   value?: string;
-//   onValueChange?: (value: string) => void;
-// }) => {
-//   const [internalValue, setInternalValue] = useState(defaultValue);
-//   const activeValue = value !== undefined ? value : internalValue;
-
-//   const handleValueChange = (newValue: string) => {
-//     if (value === undefined) {
-//       setInternalValue(newValue);
-//     }
-//     if (onValueChange) {
-//       onValueChange(newValue);
-//     }
-//   };
-
-//   return (
-//     <TabsContext.Provider value={{ value: activeValue, onValueChange: handleValueChange }}>
-//       <div className={cn("flex flex-col", className)} data-value={activeValue}>
-//         {children}
-//       </div>
-//     </TabsContext.Provider>
-//   );
-// };
-
-// const TabsList = ({ className, children }: { className: string; children: React.ReactNode }) => {
-//   return (
-//     <div className={cn(
-//       "inline-flex h-9 sm:h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
-//       className
-//     )}>
-//       {children}
-//     </div>
-//   );
-// };
-
-// const TabsTrigger = ({ value, children, onClick }: {
-//   value: string;
-//   children: React.ReactNode;
-//   onClick?: () => void;
-// }) => {
-//   const { value: activeValue, onValueChange } = useContext(TabsContext);
-
-//   const handleClick = () => {
-//     if (onClick) onClick();
-//     if (onValueChange) onValueChange(value);
-//   };
-
-//   const isActive = activeValue === value;
-
-//   return (
-//     <button
-//       onClick={handleClick}
-//       className={cn(
-//         "inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-//         isActive ? "bg-background text-foreground shadow-sm" : "hover:text-foreground/80"
-//       )}
-//       data-value={value}
-//       data-state={isActive ? "active" : "inactive"}
-//     >
-//       {children}
-//     </button>
-//   );
-// };
 
 export default function AuthPage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -97,12 +22,10 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<string>("");
   const [formErrors, setFormErrors] = useState<{
     email?: string;
     password?: string;
     fullName?: string;
-    role?: string;
     auth?: string;
   }>({});
 
@@ -130,8 +53,6 @@ export default function AuthPage() {
   const toggleSignUpMode = () => {
     setIsSignUp(!isSignUp);
     setFormErrors({});
-    // Reset role selection when switching modes
-    setSelectedRole("");
   };
 
   const validateForm = () => {
@@ -144,7 +65,6 @@ export default function AuthPage() {
     else if (isSignUp && password.length < 8) errors.password = "Password must be at least 8 characters";
 
     if (isSignUp && !fullName) errors.fullName = "Full name is required";
-    if (isSignUp && !selectedRole) errors.role = "Please select your role";
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -163,7 +83,12 @@ export default function AuthPage() {
         avatar: result.user.photoURL || "",
       });
 
-      navigate({ to: `/${role}/home` });
+      // If user has a role, redirect to their home page, otherwise to role selection
+      if (role=="student" || role=="teacher") {
+        navigate({ to: `/${role}/home` });
+      } else {
+        navigate({ to: '/select-role' });
+      }
     } catch (error) {
       console.error("Google Login Failed", error);
       setFormErrors({
@@ -190,7 +115,12 @@ export default function AuthPage() {
         avatar: result.user.photoURL || "",
       });
 
-      navigate({ to: `/${role}/home` });
+      // If user has a role, redirect to their home page, otherwise to role selection
+      if (role == "student" || role == "teacher") {
+        navigate({ to: `/${role}/home` });
+      } else {
+        navigate({ to: '/select-role' });
+      }
     } catch (error) {
       console.error("Email Login Failed", error);
       setFormErrors({
@@ -224,19 +154,18 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      console.log("Creating user with role:", selectedRole);
-      const { result, role } = await createUserWithEmail(email, password, fullName, selectedRole);
+      // Create user without role - they'll select it on the next page
+      const { result } = await createUserWithEmail(email, password, fullName);
 
       setUser({
         uid: result.user.uid,
         email: result.user.email || "",
         name: fullName,
-        //role: selectedRole,
-        role,
+        role: "", //null, // No role initially
         avatar: result.user.photoURL || ""
       });
 
-      navigate({ to: `/${role}/home` });
+      navigate({ to: '/select-role' });
     } catch (error: unknown) {
       console.error("Email Signup Failed", error);
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/email-already-in-use') {
@@ -261,6 +190,9 @@ export default function AuthPage() {
         navigate({ to: '/teacher/home' });
       } else if (user.role === 'student') {
         navigate({ to: '/student/home' });
+      } else if (!user.role) {
+        // If user is authenticated but has no role, redirect to role selection
+        // navigate({ to: '/select-role' });
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -363,8 +295,8 @@ export default function AuthPage() {
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground">
                 {isSignUp
-                  ? "Join educators worldwide transforming their classrooms"
-                  : "Sign in to access your poll dashboard"
+                  ? "Join educators and students transforming classrooms"
+                  : "Sign in to access your dashboard"
                 }
               </p>
             </div>
@@ -385,7 +317,6 @@ export default function AuthPage() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {/* Role Selection Tabs */}
                     <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       {/* Auth Error Alert */}
                       {formErrors.auth && (
@@ -488,7 +419,7 @@ export default function AuthPage() {
                     <CardHeader className="p-4 sm:p-6">
                       <CardTitle className="text-lg sm:text-xl">Create Your Account</CardTitle>
                       <CardDescription className="text-sm">
-                        Join our platform and choose your role to get started
+                        Join our platform and start your educational journey
                       </CardDescription>
                     </CardHeader>
 
@@ -506,83 +437,6 @@ export default function AuthPage() {
                           </div>
                         </motion.div>
                       )}
-
-                      {/* Role Selection */}
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">
-                          Select Your Role
-                        </Label>
-                        <div className="grid grid-cols-1 gap-3">
-                          {/* Teacher Option */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedRole("teacher")}
-                            className={cn(
-                              "flex items-center gap-3 p-4 rounded-lg border-2 transition-all duration-200 text-left",
-                              selectedRole === "teacher"
-                                ? "border-blue-500 bg-blue-50 shadow-sm"
-                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-                              formErrors.role && "border-destructive"
-                            )}
-                          >
-                            <div className={cn(
-                              "p-2 rounded-lg",
-                              selectedRole === "teacher"
-                                ? "bg-blue-100 text-blue-600"
-                                : "bg-gray-100 text-gray-600"
-                            )}>
-                              <GraduationCap className="h-5 w-5" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-sm sm:text-base">Teacher</span>
-                                {selectedRole === "teacher" && (
-                                  <Check className="h-4 w-4 text-blue-600" />
-                                )}
-                              </div>
-                              <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                                Create and manage polls for your students
-                              </p>
-                            </div>
-                          </button>
-
-                          {/* Student Option */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedRole("student")}
-                            className={cn(
-                              "flex items-center gap-3 p-4 rounded-lg border-2 transition-all duration-200 text-left",
-                              selectedRole === "student"
-                                ? "border-green-500 bg-green-50 shadow-sm"
-                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-                              formErrors.role && "border-destructive"
-                            )}
-                          >
-                            <div className={cn(
-                              "p-2 rounded-lg",
-                              selectedRole === "student"
-                                ? "bg-green-100 text-green-600"
-                                : "bg-gray-100 text-gray-600"
-                            )}>
-                              <Users className="h-5 w-5" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-sm sm:text-base">Student</span>
-                                {selectedRole === "student" && (
-                                  <Check className="h-4 w-4 text-green-600" />
-                                )}
-                              </div>
-                              <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                                Participate in classroom polls and activities
-                              </p>
-                            </div>
-                          </button>
-                        </div>
-                        {formErrors.role && (
-                          <p className="text-xs text-destructive">{formErrors.role}</p>
-                        )}
-                      </div>
 
                       {/* Full Name */}
                       <div className="space-y-2">
@@ -726,7 +580,7 @@ export default function AuthPage() {
                       <Button
                         className="w-full h-10 sm:h-11 font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 group text-sm sm:text-base"
                         onClick={handleEmailSignup}
-                        disabled={!passwordsMatch || passwordStrength.value < 50 || loading || !selectedRole}
+                        disabled={!passwordsMatch || passwordStrength.value < 50 || loading}
                       >
                         {loading ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
