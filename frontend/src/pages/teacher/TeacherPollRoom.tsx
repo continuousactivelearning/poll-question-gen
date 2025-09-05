@@ -20,7 +20,12 @@ const copyToClipboard = (text: string) => {
   });
 };
 
-type PollResults = Record<string, Record<string, { count: number; users: string[] }>>;
+type User = {
+  id: string;
+  name: string;
+};
+
+type PollResults = Record<string, Record<string, { count: number; users: User[] }>>;
 
 type GeneratedQuestion = {
   question: string;
@@ -68,7 +73,7 @@ export default function TeacherPollRoom() {
   const toggleMemberNames = (pollQuestion: string) => {
     setShowMemberNames(prev => ({
       ...prev,
-      [pollQuestion]: !prev[pollQuestion]
+      [pollQuestion]: prev[pollQuestion] === undefined ? false : !prev[pollQuestion]
     }));
   };
 
@@ -758,9 +763,14 @@ export default function TeacherPollRoom() {
             </div>
           ) : (
             <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-              {Object.entries(pollResults ?? {}).map(([pollQuestion, options]) => {
-                const totalVotes = Object.values(options ?? {}).reduce((sum, data) => sum + data.count, 0);
-                const isShowingNames = showMemberNames[pollQuestion] || false;
+                {Object.entries(pollResults ?? {})
+                  .sort(() => {
+                    return 0;
+                  })
+                  .reverse() 
+                  .map(([pollQuestion, options]) => {                
+                    const totalVotes = Object.values(options ?? {}).reduce((sum, data) => sum + data.count, 0);
+                const isShowingNames = showMemberNames[pollQuestion] !== false;
 
                 return (
                   <Card
@@ -783,8 +793,7 @@ export default function TeacherPollRoom() {
                             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
                             title={isShowingNames ? "Hide member names" : "Show member names"}
                           >
-                            {isShowingNames ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </Button>
+                            {isShowingNames ? <Eye size={16} /> : <EyeOff size={16} />}                          </Button>
                         </div>
                       </div>
                     </CardHeader>
@@ -827,7 +836,7 @@ export default function TeacherPollRoom() {
                                         className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700"
                                       >
                                         <Users size={10} className="mr-1" />
-                                        {user}
+                                        {user.name}
                                       </span>
                                     ))}
                                   </div>
