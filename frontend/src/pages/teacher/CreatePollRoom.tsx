@@ -152,9 +152,9 @@ export default function CreatePollRoom() {
                   Assessment Workflow
                 </h3>
                 <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
-                  After creation, you'll receive a unique identifier for students to join.
+                  After creation, you'll receive a unique identifier for the students to join.
                   You can then administer assessments, monitor participation,
-                  and analyze results in real-time through the educator dashboard.
+                  and analyze results in real-time through the educator's dashboard.
                 </p>
               </div>
             </div>
