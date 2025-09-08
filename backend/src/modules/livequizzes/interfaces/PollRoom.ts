@@ -18,6 +18,7 @@ export interface Room {
   roomCode: string;
   name: string;
   teacherId: string;
+  teacherName?: string;
   createdAt: Date;
   status: 'active' | 'ended';
   polls: Poll[];

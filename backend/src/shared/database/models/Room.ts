@@ -20,6 +20,7 @@ const RoomSchema = new mongoose.Schema({
   roomCode: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   teacherId: { type: String, required: true },
+  teacherName: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   endedAt: { type: Date }, 
   status: { type: String, enum: ['active', 'ended'], default: 'active' },

@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { Room } from '../../../shared/database/models/Room.js';
 import type { Room as RoomType, Poll, PollAnswer } from '../interfaces/PollRoom.js';
 import { UserModel } from '../../../shared/database/models/User.js';
+import { log } from 'console';
 
 @injectable()
 export class RoomService {
@@ -10,10 +11,12 @@ export class RoomService {
   async createRoom(name: string, teacherId: string): Promise<RoomType> {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    const teachername = await this.userModel.findOne({ firebaseUID: teacherId }).lean();
     const newRoom = await new Room({
       roomCode: code,
       name,
       teacherId,
+      teacherName: `${teachername?.firstName} ${teachername?.lastName}`.trim(),
       createdAt: new Date(),
       status: 'active',
       polls: []
