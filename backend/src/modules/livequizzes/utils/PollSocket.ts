@@ -7,12 +7,16 @@ const appOrigins = process.env.APP_ORIGINS;
 
 class PollSocket {
   private io: Server | null = null;
+  // For tracking active connections by socket ID and room code
+  private activeConnections: Map<string, string[]> = new Map();
 
   constructor(private readonly roomService: RoomService) { }
 
   init(server: import('http').Server) {
     this.io = new Server(server, {
       cors: { origin: appOrigins || 'http://localhost:3000' },
+      pingTimeout: 30000, 
+      pingInterval: 10000, 
     });
 
     this.io.on('connection', socket => {
@@ -24,7 +28,14 @@ class PollSocket {
 
           if (isActive) {
             socket.join(roomCode);
+            
+            if (!this.activeConnections.has(socket.id)) {
+              this.activeConnections.set(socket.id, []);
+            }
+            this.activeConnections.get(socket.id)?.push(roomCode);
+            
             console.log(`Socket ${socket.id} joined active room: ${roomCode}`);
+            console.log(`Active connections: ${this.activeConnections.size}`);
           } else {
             console.log(`Join failed: room ended or invalid: ${roomCode}`);
             socket.emit('room-ended');  // immediately tell the client
@@ -33,6 +44,25 @@ class PollSocket {
           console.error('Error checking room status:', err);
           socket.emit('error', 'Unexpected server error');
         }
+      });
+
+      socket.on('leave-room', (roomCode: string) => {
+        socket.leave(roomCode);
+        
+        const rooms = this.activeConnections.get(socket.id) || [];
+        const updatedRooms = rooms.filter(r => r !== roomCode);
+        if (updatedRooms.length > 0) {
+          this.activeConnections.set(socket.id, updatedRooms);
+        } else {
+          this.activeConnections.delete(socket.id);
+        }
+        
+        console.log(`Socket ${socket.id} left room: ${roomCode}`);
+      });
+
+      socket.on('disconnect', () => {
+        this.activeConnections.delete(socket.id);
+        console.log(`Socket ${socket.id} disconnected. Active connections: ${this.activeConnections.size}`);
       });
     });
   }
