@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import io from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -51,39 +50,61 @@ export default function StudentPollRoom() {
 
   useEffect(() => {
     if (!roomCode) return;
-    //socket.emit("join-room", roomCode);
-    // Ensure socket is connected before emitting
-    if (socket.connected) {
+    const joinRoom = () => {
       socket.emit('join-room', roomCode);
-    } else {
-      socket.once('connect', () => {
-        socket.emit('join-room', roomCode);
+      console.log(`Emitted join-room for ${roomCode}`);
+      setJoinedRoom(true);
+      toast.success("Joined room!");
+    };
+
+    const setupEventListeners = () => {
+      // Remove any existing listeners to prevent duplicates
+      socket.off('new-poll');
+      socket.off('room-ended');
+      socket.off('connect');
+      socket.off('disconnect');
+      
+      socket.on("new-poll", (poll: Poll) => {
+        console.log(`Received new poll: ${poll.question}`);
+        setPolls(prev => [...prev, poll]);
+        toast("New poll received!");
       });
+      
+      socket.on('room-ended', () => {
+        toast.error('Room has ended');
+        navigate({ to: '/student/home' });
+      });
+      
+      socket.on('connect', () => {
+        console.log('Socket reconnected, rejoining room...');
+        joinRoom();
+      });
+      
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+        setJoinedRoom(false);
+      });
+    };
+    
+    setupEventListeners();
+    
+    if (socket.connected) {
+      joinRoom();
     }
-    setJoinedRoom(true);
+    
     loadRoomDetails(roomCode);
     const savedAnswers = localStorage.getItem(`answeredPolls_${roomCode}`);
     if (savedAnswers) setAnsweredPolls(JSON.parse(savedAnswers));
     localStorage.setItem("activeRoomCode", roomCode);
     localStorage.setItem("joinedRoom", "true");
-    toast.success("Joined room!");
 
-    socket.on('room-ended', () => {
-      toast.error('Room has ended');
-      navigate({ to: '/student/home' });
-    });
     return () => {
+      socket.off('new-poll');
       socket.off('room-ended');
+      socket.off('connect');
+      socket.off('disconnect');
     };
-  }, [roomCode]);
-
-  useEffect(() => {
-    socket.on("new-poll", (poll: Poll) => {
-      setPolls(prev => [...prev, poll]);
-      toast("New poll received!");
-    });
-    return () => { socket.off("new-poll"); };
-  }, []);
+  }, [roomCode, navigate]);
 
   useEffect(() => {
     const interval = setInterval(() => {

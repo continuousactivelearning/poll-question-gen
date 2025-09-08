@@ -8,17 +8,11 @@ import api from "@/lib/api/api";
 
 export default function JoinPollRoom() {
   const [roomCode, setRoomCode] = useState("");
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [roomError, setRoomError] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const joinRoom = async () => {
     setRoomError(null);
-    if (!name.trim()) {
-      setRoomError("Name is required.");
-      return;
-    }
     try {
       const res = await api.get(`/livequizzes/rooms/${roomCode}`);
       if (res.data?.success && res.data.room?.roomCode) {
@@ -79,35 +73,6 @@ export default function JoinPollRoom() {
                       setRoomError(null);
                     }}
                     required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Your Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-sm sm:text-base"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    id="description"
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm resize-none text-sm sm:text-base"
-                    placeholder="Brief description (optional)"
-                    rows={2}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
 

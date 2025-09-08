@@ -15,9 +15,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 // In your auth page, modify the login functions to pass the selected role:
 
-export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null, selectedRole: string = 'student') => {
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser | null) => {
   if (!firebaseUser) return null;
-console.log("Mapuserdata file", selectedRole);
   try {
     // Get token for backend API calls
     const token = await firebaseUser.getIdToken(true);
@@ -25,7 +26,11 @@ console.log("Mapuserdata file", selectedRole);
 
     // Fetch backend user info directly using fetch
     let backendUser = null;
-    try {
+    let attempts = 0;
+    const maxAttempts = 2;
+
+    while (attempts < maxAttempts && !backendUser) {
+      attempts++;
       const res = await fetch(`${API_URL}/users/firebase/${firebaseUser.uid}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -35,63 +40,61 @@ console.log("Mapuserdata file", selectedRole);
 
       if (res.ok) {
         backendUser = await res.json();
-        console.log('Fetched existing backend user:', backendUser);
-      } else if (res.status === 404) {
-        console.log('User not found in backend, creating new user...');
+        console.log(`Fetched backend user on attempt ${attempts}:`, backendUser);
+      } else if (res.status === 404 && attempts < maxAttempts) {
+        console.warn(`User not found (attempt ${attempts}). Waiting 5 seconds before retry...`);
+        await delay(5000);
 
-        // Create user in backend MongoDB with selected role
-        const newUser = {
-          firebaseUID: firebaseUser.uid,
-          firstName: firebaseUser.displayName?.split(' ')[0] || '',
-          lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
-          email: firebaseUser.email || '',
-          avatar: firebaseUser.photoURL || null,
-          role: selectedRole, // ✅ Use the selected role from UI
+        //   // Create user in backend MongoDB with selected role
+        //   const newUser = {
+        //     firebaseUID: firebaseUser.uid,
+        //     firstName: firebaseUser.displayName?.split(' ')[0] || '',
+        //     lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+        //     email: firebaseUser.email || '',
+        //     avatar: firebaseUser.photoURL || null,
+        //     role: selectedRole, // ✅ Use the selected role from UI
 
-          // Additional profile fields
-          phoneNumber: null,
-          bio: null,
-          institution: null,
-          designation: null,
-          address: null,
-          emergencyContact: null,
-          dateOfBirth: null,
+        //     // Additional profile fields
+        //     phoneNumber: null,
+        //     bio: null,
+        //     institution: null,
+        //     designation: null,
+        //     address: null,
+        //     emergencyContact: null,
+        //     dateOfBirth: null,
 
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        //     createdAt: new Date().toISOString(),
+        //     updatedAt: new Date().toISOString(),
+        //   };
 
-        const createRes = await fetch(`${API_URL}/users/firebase/${firebaseUser.uid}/profile`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(newUser),
-        });
+        //   const createRes = await fetch(`${API_URL}/users/firebase/${firebaseUser.uid}/profile`, {
+        //     method: 'POST',
+        //     headers: {
+        //       Authorization: `Bearer ${token}`,
+        //       'Content-Type': 'application/json'
+        //     },
+        //     body: JSON.stringify(newUser),
+        //   });
 
-        console.log(firebaseUser);
-        if (!firebaseUser.uid) {
-          console.error('Firebase user UID is missing!');
-          throw new Error('Firebase UID missing, cannot create user');
-        }
+        //   console.log(firebaseUser);
+        //   if (!firebaseUser.uid) {
+        //     console.error('Firebase user UID is missing!');
+        //     throw new Error('Firebase UID missing, cannot create user');
+        //   }
 
-        if (createRes.ok) {
-          backendUser = await createRes.json();
-          console.log('Successfully created backend user:', backendUser);
-        } else {
-          const errorText = await createRes.text();
-          console.error('Failed to create backend user:', errorText);
-          throw new Error(`Failed to create user: ${errorText}`);
-        }
+        //   if (createRes.ok) {
+        //     backendUser = await createRes.json();
+        //     console.log('Successfully created backend user:', backendUser);
+        //   } else {
+        //     const errorText = await createRes.text();
+        //     console.error('Failed to create backend user:', errorText);
+        //     throw new Error(`Failed to create user: ${errorText}`);
+        //   }
       } else {
         const errorText = await res.text();
         console.error('Failed to fetch backend user:', errorText);
         throw new Error(`Failed to fetch user: ${errorText}`);
       }
-    } catch (error) {
-      console.error('Backend user operation failed:', error);
-      throw error;
     }
 
     console.log('Backend user data:', backendUser?.role);
@@ -101,7 +104,7 @@ console.log("Mapuserdata file", selectedRole);
       email: firebaseUser.email || backendUser?.email || '',
       name: firebaseUser.displayName ||
         (backendUser ? `${backendUser.firstName} ${backendUser.lastName}`.trim() : ''),
-      role: backendUser?.role || selectedRole, // Use backend role or selected role
+      role: backendUser?.role || null,
       avatar: firebaseUser.photoURL || backendUser?.avatar || '',
       // from mongoDB
       userId: backendUser?._id,
@@ -129,10 +132,10 @@ console.log("Mapuserdata file", selectedRole);
 };
 
 // Updated login functions to pass the selected role
-export const loginWithGoogle = async (selectedRole: string = 'student') => {
+export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
-    const user = await mapFirebaseUserToAppUser(result.user, selectedRole);
+    const user = await mapFirebaseUserToAppUser(result.user);
     if (user) {
       useAuthStore.getState().setUser(user);
       console.log('Google login successful:', user);
@@ -145,10 +148,10 @@ export const loginWithGoogle = async (selectedRole: string = 'student') => {
 };
 
 // Updated email login to accept role
-export const loginWithEmail = async (email: string, password: string, selectedRole: string = 'student') => {
+export const loginWithEmail = async (email: string, password: string) => {
   try {
     const result = await signInWithEmailAndPassword(auth, email, password);
-    const user = await mapFirebaseUserToAppUser(result.user, selectedRole);
+    const user = await mapFirebaseUserToAppUser(result.user);
     if (user) {
       useAuthStore.getState().setUser(user);
       console.log('Email login successful:', user);
@@ -166,18 +169,18 @@ export const initAuth = () => {
   return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
-       /* const alreadyMapped = localStorage.getItem('auth-mapped');
-        if (alreadyMapped === 'true') {
-          console.log("🔁 Skipping mapping in initAuth – already mapped in login/signup.");
-          localStorage.removeItem('auth-mapped');
-          return;
-        }
-        else{// If not mapped
-        // For existing users, don't pass a role (it will use existing role from DB)*/
-        const currentrole = localStorage.getItem('user-role');
-        console.log('in initauth', currentrole);
-        if (currentrole){
-        const user = await mapFirebaseUserToAppUser(firebaseUser,currentrole);
+        /* const alreadyMapped = localStorage.getItem('auth-mapped');
+         if (alreadyMapped === 'true') {
+           console.log("🔁 Skipping mapping in initAuth – already mapped in login/signup.");
+           localStorage.removeItem('auth-mapped');
+           return;
+         }
+         else{// If not mapped
+         // For existing users, don't pass a role (it will use existing role from DB)*/
+        // const currentrole = localStorage.getItem('user-role');
+        // console.log('in initauth', currentrole);
+        // if (currentrole){
+        const user = await mapFirebaseUserToAppUser(firebaseUser);
         if (user) {
           console.log('User authenticated and stored:', user);
           localStorage.setItem('isAuth', 'true');
@@ -185,8 +188,8 @@ export const initAuth = () => {
         } else {
           console.error('Failed to map Firebase user to app user');
           clearUser();
-      }
-    }
+        }
+        //}
       } catch (error) {
         console.error('Error during auth state change:', error);
         clearUser();

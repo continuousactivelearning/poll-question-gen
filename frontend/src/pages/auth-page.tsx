@@ -2,90 +2,16 @@ import { loginWithGoogle, loginWithEmail, createUserWithEmail } from "@/lib/fire
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { useState, createContext, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+
 import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Create a context for tab state management
-const TabsContext = createContext<{
-  value: string;
-  onValueChange?: (value: string) => void;
-}>({ value: "" });
-
-// Enhanced Tabs component
-const Tabs = ({ defaultValue, className, children, value, onValueChange }: {
-  defaultValue: string;
-  className: string;
-  children: React.ReactNode;
-  value?: string;
-  onValueChange?: (value: string) => void;
-}) => {
-  const [internalValue, setInternalValue] = useState(defaultValue);
-  const activeValue = value !== undefined ? value : internalValue;
-
-  const handleValueChange = (newValue: string) => {
-    if (value === undefined) {
-      setInternalValue(newValue);
-    }
-    if (onValueChange) {
-      onValueChange(newValue);
-    }
-  };
-
-  return (
-    <TabsContext.Provider value={{ value: activeValue, onValueChange: handleValueChange }}>
-      <div className={cn("flex flex-col", className)} data-value={activeValue}>
-        {children}
-      </div>
-    </TabsContext.Provider>
-  );
-};
-
-const TabsList = ({ className, children }: { className: string; children: React.ReactNode }) => {
-  return (
-    <div className={cn(
-      "inline-flex h-9 sm:h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
-      className
-    )}>
-      {children}
-    </div>
-  );
-};
-
-const TabsTrigger = ({ value, children, onClick }: {
-  value: string;
-  children: React.ReactNode;
-  onClick?: () => void;
-}) => {
-  const { value: activeValue, onValueChange } = useContext(TabsContext);
-
-  const handleClick = () => {
-    if (onClick) onClick();
-    if (onValueChange) onValueChange(value);
-  };
-
-  const isActive = activeValue === value;
-
-  return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        isActive ? "bg-background text-foreground shadow-sm" : "hover:text-foreground/80"
-      )}
-      data-value={value}
-      data-state={isActive ? "active" : "inactive"}
-    >
-      {children}
-    </button>
-  );
-};
 
 export default function AuthPage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -94,7 +20,6 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [activeRole, setActiveRole] = useState<string>("student");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [formErrors, setFormErrors] = useState<{
@@ -149,18 +74,21 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      useAuthStore.getState().setUserRole?.(activeRole);
-      const result = await loginWithGoogle(activeRole);
-
+      const { result, role } = await loginWithGoogle();
       setUser({
         uid: result.user.uid,
         email: result.user.email || "",
         name: result.user.displayName || "",
-        role: activeRole,
+        role,
         avatar: result.user.photoURL || "",
       });
 
-      navigate({ to: `/${activeRole}/home` });
+      // If user has a role, redirect to their home page, otherwise to role selection
+      if (role=="student" || role=="teacher") {
+        navigate({ to: `/${role}/home` });
+      } else {
+        navigate({ to: '/select-role' });
+      }
     } catch (error) {
       console.error("Google Login Failed", error);
       setFormErrors({
@@ -178,18 +106,21 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      useAuthStore.getState().setUserRole?.(activeRole);
-      const result = await loginWithEmail(email, password, activeRole);
-
+      const { result, role } = await loginWithEmail(email, password);
       setUser({
         uid: result.user.uid,
         email: result.user.email || "",
         name: result.user.displayName || "",
-        role: activeRole,
+        role,
         avatar: result.user.photoURL || "",
       });
 
-      navigate({ to: `/${activeRole}/home` });
+      // If user has a role, redirect to their home page, otherwise to role selection
+      if (role == "student" || role == "teacher") {
+        navigate({ to: `/${role}/home` });
+      } else {
+        navigate({ to: '/select-role' });
+      }
     } catch (error) {
       console.error("Email Login Failed", error);
       setFormErrors({
@@ -223,18 +154,18 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-
-      const result = await createUserWithEmail(email, password, fullName);
+      // Create user without role - they'll select it on the next page
+      const { result } = await createUserWithEmail(email, password, fullName);
 
       setUser({
         uid: result.user.uid,
         email: result.user.email || "",
         name: fullName,
-        role: activeRole,
+        role: "", //null, // No role initially
         avatar: result.user.photoURL || ""
       });
 
-      navigate({ to: `/${activeRole}/home` });
+      navigate({ to: '/select-role' });
     } catch (error: unknown) {
       console.error("Email Signup Failed", error);
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/email-already-in-use') {
@@ -259,6 +190,9 @@ export default function AuthPage() {
         navigate({ to: '/teacher/home' });
       } else if (user.role === 'student') {
         navigate({ to: '/student/home' });
+      } else if (!user.role) {
+        // If user is authenticated but has no role, redirect to role selection
+        // navigate({ to: '/select-role' });
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -361,8 +295,8 @@ export default function AuthPage() {
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground">
                 {isSignUp
-                  ? "Join educators worldwide transforming their classrooms"
-                  : "Sign in to access your poll dashboard"
+                  ? "Join educators and students transforming classrooms"
+                  : "Sign in to access your dashboard"
                 }
               </p>
             </div>
@@ -383,20 +317,6 @@ export default function AuthPage() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {/* Role Selection Tabs */}
-                    <CardHeader className="pb-3 sm:pb-4">
-                      <Tabs
-                        defaultValue="student"
-                        className="w-full"
-                        onValueChange={(v: string) => setActiveRole(v as "student" | "teacher")}
-                        value={activeRole}
-                      >
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="student">Student</TabsTrigger>
-                          <TabsTrigger value="teacher">Teacher</TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                    </CardHeader>
                     <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       {/* Auth Error Alert */}
                       {formErrors.auth && (
@@ -458,7 +378,7 @@ export default function AuthPage() {
                         disabled={loading}
                       >
                         {loading ? <Loader2 className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 inline" /> : null}
-                        Sign in as {activeRole}
+                        Sign in
                       </Button>
                       <div className="flex items-center my-3 sm:my-4">
                         <Separator className="flex-1" />
@@ -497,9 +417,9 @@ export default function AuthPage() {
                     transition={{ duration: 0.3 }}
                   >
                     <CardHeader className="p-4 sm:p-6">
-                      <CardTitle className="text-lg sm:text-xl">Create Student Account</CardTitle>
+                      <CardTitle className="text-lg sm:text-xl">Create Your Account</CardTitle>
                       <CardDescription className="text-sm">
-                        Join our platform to participate in classroom polls and activities
+                        Join our platform and start your educational journey
                       </CardDescription>
                     </CardHeader>
 

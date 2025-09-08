@@ -44,6 +44,21 @@ export class UserRepository implements IUserRepository {
     return user || null;
   }  
 
+  async updateRole(firebaseUID: string, role: string): Promise<IUser | null> {
+    if (!role || typeof role !== 'string') {
+      throw new Error('Role must be a non-empty string');
+    }
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { firebaseUID },
+      { $set: { role } },  // overwrite the role
+      { new: true }
+    ).lean<IUser>().exec();
+    if (!updatedUser) {
+      throw new NotFoundError('User not found');
+    }
+    return updatedUser;
+  }
+
   async addRole(firebaseUID: string, role: string): Promise<IUser | null> {
     return await UserModel.findOneAndUpdate(
       { firebaseUID },

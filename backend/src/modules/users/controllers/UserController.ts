@@ -12,6 +12,8 @@ import {
   Param,
   Params,
   NotFoundError,
+  Patch,
+  BadRequestError,
 } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import {
@@ -22,6 +24,7 @@ import {
   CreateUserProfileBody,
   UserProfileResponse,
 } from '../classes/validators/UserValidators.js';
+import { UserModel } from '#root/shared/database/models/User.js';
 
 @OpenAPI({ tags: ['Users'] })
 @JsonController('/users', { transformResponse: true })
@@ -150,5 +153,35 @@ export class UserController {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  /**
+   * Update a user's role by Firebase UID
+   */
+  @OpenAPI({
+    summary: 'Update user role by Firebase UID',
+    description: 'Updates the role of a user identified by Firebase UID.',
+  })
+  @Patch('/firebase/:firebaseUID/role')
+  @HttpCode(200)
+  async updateRole(
+    @Param('firebaseUID') firebaseUID: string,
+    @Body() body: { role: string },
+  ) {
+    const { role } = body;
+    if (!role || typeof role !== 'string') {
+      throw new BadRequestError('Role must be a non-empty string');
+    }
+
+    try {
+      const updatedUser = await this.userService.updateRoleByFirebaseUID(firebaseUID, role);
+      return {
+        id: updatedUser._id?.toString() || '',
+        firebaseUID: updatedUser.firebaseUID,
+        role: updatedUser.role,
+      };
+    } catch (err: any) {
+      throw new BadRequestError(err.message);
+    }
   }
 }

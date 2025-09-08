@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { injectable } from 'inversify';
 import { HttpError, InternalServerError } from 'routing-controllers';
 import { questionSchemas } from '../schemas/index.js';
@@ -32,7 +32,40 @@ export class AIContentService {
   //private readonly ollimaApiBaseUrl = 'http://localhost:11434/api';
   private readonly ollimaApiBaseUrl = `http://${aiConfig.serverIP}:${aiConfig.serverPort}/api`;
   private readonly llmApiUrl = `${this.ollimaApiBaseUrl}/generate`;
-  private readonly proxyAgent = aiConfig.proxyAddress? new SocksProxyAgent(aiConfig.proxyAddress): undefined;
+  
+  private createProxyAgent() {
+    try {
+      return new SocksProxyAgent('socks5://localhost:1055');
+    } catch (error) {
+      console.error(`Failed to create SOCKS proxy agent: ${error}`);
+      return undefined;
+    }
+  }
+  
+  private getRequestConfig(): AxiosRequestConfig {
+    const config: AxiosRequestConfig = {
+      timeout: 60000, // 60 second request timeout
+    };
+    
+    try {
+      if (aiConfig.useProxy) {
+        const proxyAgent = this.createProxyAgent();
+        if (proxyAgent) {
+          console.log(`[AIContentService] Using SOCKS proxy for connection to ${this.ollimaApiBaseUrl}`);
+          config.httpAgent = proxyAgent;
+          config.httpsAgent = proxyAgent;
+        } else {
+          console.warn(`[AIContentService] Failed to create proxy agent, falling back to direct connection`);
+        }
+      } else {
+        console.log(`[AIContentService] Direct connection to ${this.ollimaApiBaseUrl} (proxy disabled)`);
+      }
+    } catch (error) {
+      console.error(`[AIContentService] Error configuring request: ${error}`);
+    }
+    
+    return config;
+  }
 
   // --- Segmentation Logic ---
   public async segmentTranscript(
@@ -67,14 +100,15 @@ JSON:`;
     let segments: TranscriptSegment[] = [];
 
     try {
+      console.log(`[segmentTranscript] Connecting to Ollama API at ${this.llmApiUrl} with model ${model}`);
+      const config = this.getRequestConfig();
+      
       const response = await axios.post(this.llmApiUrl, {
         model,
         prompt,
         stream: false,
         options: { temperature: 0.1, top_p: 0.9 },
-      }, 
-      this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}
-    );
+      }, config);
 
       const generatedText = response.data?.response;
       if (typeof generatedText !== 'string') {
@@ -148,8 +182,26 @@ JSON:`;
       }
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
-        console.error('Ollima API error:', error.response?.data);
-        throw new InternalServerError(`Ollima API error: ${(error.response?.data as any)?.error || error.message}`);
+        console.error('[segmentTranscript] Ollama API error:', error.message);
+        console.error('[segmentTranscript] Error details:', {
+          code: error.code,
+          // Access network error details safely
+          networkError: (error as any).cause,
+          config: error.config ? {
+            url: error.config.url,
+            method: error.config.method,
+            timeout: error.config.timeout,
+            hasProxy: !!(error.config.httpAgent || error.config.httpsAgent)
+          } : 'No config'
+        });
+        
+        if (error.code === 'ETIMEDOUT') {
+          throw new InternalServerError(`Connection to Ollama server timed out. Please check network connectivity and Tailscale status.`);
+        } else if (error.code === 'ECONNREFUSED') {
+          throw new InternalServerError(`Connection to Ollama server refused. Server may be down or unreachable.`);
+        } else {
+          throw new InternalServerError(`Ollama API error: ${(error.response?.data as any)?.error || error.message}`);
+        }
       }
       throw new InternalServerError(`Segmentation failed: ${error.message}`);
     }
@@ -256,15 +308,18 @@ ${transcriptContent}
             const format = count === 1 ? schema : { type: 'array', items: schema, minItems: count, maxItems: count };
             const prompt = this.createQuestionPrompt(type, count, transcript);
 
+            console.log(`[generateQuestions] Connecting to Ollama API at ${this.llmApiUrl} with model ${model} for ${type} questions`);
+            const config = this.getRequestConfig();
+            
             const response = await axios.post(this.llmApiUrl, {
               model,
               prompt,
               stream: false,
               format: schema ? format : undefined,
               options: { temperature: 0.2 }
-            },
-            this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}
-          );
+            }, config);
+            
+            console.log(`[generateQuestions] Successfully received response for ${type} questions`);
 
             const text = response.data?.response;
             if (typeof text !== 'string') {
@@ -310,7 +365,25 @@ ${transcriptContent}
             console.log(`[generateQuestions] Raw LLM text for type ${type}, segment ${segmentId}:`, text.slice(0, 500));
           } catch (e: any) {
             console.error(`[generateQuestions] Failed for type ${type}, segment ${segmentId}:`, e.message);
-            if (axios.isAxiosError(e)) console.error('Ollima API error:', e.response?.data);
+            if (axios.isAxiosError(e)) {
+              console.error('[generateQuestions] Ollama API error details:', {
+                code: e.code,
+                // Access network error details safely
+                networkError: (e as any).cause,
+                config: e.config ? {
+                  url: e.config.url,
+                  method: e.config.method,
+                  timeout: e.config.timeout,
+                  hasProxy: !!(e.config.httpAgent || e.config.httpsAgent)
+                } : 'No config'
+              });
+              
+              if (e.code === 'ETIMEDOUT') {
+                console.error(`[generateQuestions] Connection to Ollama server timed out. Please check network connectivity and Tailscale status.`);
+              } else if (e.code === 'ECONNREFUSED') {
+                console.error(`[generateQuestions] Connection to Ollama server refused. Server may be down or unreachable.`);
+              }
+            }
           }
         }
       }

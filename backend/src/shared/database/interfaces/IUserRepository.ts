@@ -25,6 +25,8 @@ export interface IUserRepository {
   findByEmail(email: string, session?: ClientSession): Promise<IUser | null>;
   findById(id: string): Promise<IUser | null>;
   updateById(id: string, data: Partial<IUser>): Promise<IUser | null>;
+  // updateByFirebaseUID(firebaseUID: string, data: Partial<IUser>): Promise<IUser | null>;
+  updateRole(firebaseUID: string, role: string): Promise<IUser | null>;
 
   /**
    * Adds a role to a user.
