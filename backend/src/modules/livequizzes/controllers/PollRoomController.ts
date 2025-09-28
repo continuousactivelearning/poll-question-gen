@@ -214,7 +214,7 @@ async getYoutubeAudio(@Req() req: Request, @Res() res: Response) {
         segments = await this.aiContentService.segmentTranscript(transcript, selectedModel);
       }
       // ✅ Safe default questionSpec
-      let safeSpec: QuestionSpec[] = [{ SOL: 10 }]; // default
+      let safeSpec: QuestionSpec[] = [{ SOL: 2 }]; // default
       if (questionSpec && typeof questionSpec === 'object' && !Array.isArray(questionSpec)) {
         safeSpec = [questionSpec];
       } else if (Array.isArray(questionSpec) && typeof questionSpec[0] === 'object') {
