@@ -220,7 +220,7 @@ async getYoutubeAudio(@Req() req: Request, @Res() res: Response) {
       } else if (Array.isArray(questionSpec) && typeof questionSpec[0] === 'object') {
         safeSpec = questionSpec;
       } else {
-        console.warn('Invalid questionSpec provided; using default [{ SOL: 2 }]');
+        console.warn('Invalid questionSpec provided; using default [{ SOL: 10 }]');
       }
       console.log('Using questionSpec:', safeSpec);
       console.log('[generateQuestions] Transcript length:', transcript.length);
