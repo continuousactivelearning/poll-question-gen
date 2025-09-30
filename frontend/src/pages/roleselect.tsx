@@ -1,8 +1,34 @@
 import { useState, useEffect } from "react";
-import {/* GraduationCap, Users, Loader2,*/ ChevronRight, Check } from "lucide-react";
+import {ChevronRight } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { updateUserRole } from "@/lib/firebase";
+import RoleCard from "@/components/role-card";
+
+const ROLE_FEATURES: {teacher: string[], student: string[], TA: string[]} = {
+  teacher: [
+    "Create and manage polls",
+    "Add multiple choice or open-ended questions",
+    "Track student participation",
+    "Analyze poll results in real-time",
+    "Generate reports for each poll",
+    "Manage multiple classrooms or groups",
+  ],
+  student: [
+    "Join polls shared in your classes",
+    "Submit answers to teacher-created questions",
+    "View instant poll results and class statistics",
+    "Participate in interactive quizzes and polls",
+  ],
+  TA: [
+    "Support teachers in creating and managing polls",
+    "Monitor student responses and engagement",
+    "Provide feedback to students",
+    "Help generate and organize reports",
+    "Manage classroom interactions",
+  ],
+} as const;
+
 
 export default function RoleSelectionPage() {
     const [selectedRole, setSelectedRole] = useState("");
@@ -27,7 +53,7 @@ export default function RoleSelectionPage() {
         }
     }, [user, navigate]);
 
-    const handleRoleSelection = (role: string) => {
+    const handleRoleSelection = (role: "teacher" | "student" | "TA") => {
         setSelectedRole(role);
         const timer = setTimeout(() => setShowConfirm(true), 20);
         return () => clearTimeout(timer);
@@ -45,7 +71,10 @@ export default function RoleSelectionPage() {
                 role: selectedRole
             });
             // alert(`Redirecting to ${selectedRole === 'teacher' ? 'Teacher' : 'Student'} Dashboard...`);
-
+            if(selectedRole === 'TA') {
+                navigate({ to: `/teacher/home` });
+                return;
+            } 
             navigate({ to: `/${selectedRole}/home` });
         } catch (error) {
             console.error("Failed to update user role:", error);
@@ -96,83 +125,39 @@ export default function RoleSelectionPage() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto mb-12">
-                    <div
-                        onClick={() => handleRoleSelection("teacher")}
-                        className={`role-card group relative cursor-pointer transition-all duration-500 ${cardsVisible ? 'card-visible' : 'card-hidden'
-                            } ${selectedRole === "teacher" ? 'selected' : ''}`}
-                        style={{ animationDelay: '0.2s' }}
-                    >
-                        <div className="shimmer-overlay" />
+                   
+                    <RoleCard
+                        role="teacher"
+                        icon="👩‍🏫"
+                        title="Teacher"
+                        description="Create Polls, Generate questions, and track student responses"
+                        features={ROLE_FEATURES.teacher}
+                        selectedRole={selectedRole}
+                        onSelect={handleRoleSelection}
+                        animationDelay="0.2s"
+                        />
 
-                        <div className="relative text-center">
-                            <div className="role-icon text-5xl mb-6 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                                👩‍🏫
-                            </div>
+                    <RoleCard
+                        role="student"
+                        icon="👨‍🎓"
+                        title="Student"
+                        description="Answer polls created by teachers during their classes and track your engagement"
+                        features={ROLE_FEATURES.student}
+                        selectedRole={selectedRole}
+                        onSelect={handleRoleSelection}
+                        animationDelay="0.4s"
+                    />
 
-                            <div className="flex items-center justify-center gap-2 mb-4">
-                                <h3 className="text-2xl font-bold text-white">Teacher</h3>
-                                {selectedRole === "teacher" && (
-                                    <Check className="h-6 w-6 text-[#4ecdc4] animate-bounce" />
-                                )}
-                            </div>
-
-                            <p className="text-white/80 mb-6 leading-relaxed">
-                                Create Polls, Generate questions, and track student responses
-                            </p>
-
-                            <ul className="text-white/70 text-sm mb-8 space-y-2">
-                                <li className="feature-item">Create and manage polls</li>
-                                <li className="feature-item">Add multiple choice or open-ended questions</li>
-                                <li className="feature-item">Track student participation</li>
-                                <li className="feature-item">Analyze poll results in real-time</li>
-                                <li className="feature-item">Generate reports for each poll</li>
-                                <li className="feature-item">Manage multiple classrooms or groups</li>
-                            </ul>
-
-                            <button className="select-btn relative px-8 py-3 rounded-full font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                                <div className="btn-ripple" />
-                                <span className="relative">I'm a Teacher</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div
-                        onClick={() => handleRoleSelection("student")}
-                        className={`role-card group relative cursor-pointer transition-all duration-500 ${cardsVisible ? 'card-visible' : 'card-hidden'
-                            } ${selectedRole === "student" ? 'selected' : ''}`}
-                        style={{ animationDelay: '0.4s' }}
-                    >
-                        <div className="shimmer-overlay" />
-
-                        <div className="relative text-center">
-                            <div className="role-icon text-5xl mb-6 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                                👨‍🎓
-                            </div>
-
-                            <div className="flex items-center justify-center gap-2 mb-4">
-                                <h3 className="text-2xl font-bold text-white">Student</h3>
-                                {selectedRole === "student" && (
-                                    <Check className="h-6 w-6 text-[#4ecdc4] animate-bounce" />
-                                )}
-                            </div>
-
-                            <p className="text-white/80 mb-6 leading-relaxed">
-                                Answer polls created by teachers during their classes and track your engagement
-                            </p>
-
-                            <ul className="text-white/70 text-sm mb-8 space-y-2">
-                                <li className="feature-item">Join polls shared in your classes</li>
-                                <li className="feature-item">Submit answers to teacher-created questions</li>
-                                <li className="feature-item">View instant poll results and class statistics</li>
-                                <li className="feature-item">Participate in interactive quizzes and polls</li>
-                            </ul>
-
-                            <button className="select-btn relative px-8 py-3 rounded-full font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                                <div className="btn-ripple" />
-                                <span className="relative">I'm a Student</span>
-                            </button>
-                        </div>
-                    </div>
+                    <RoleCard
+                        role="TA"
+                        icon="🧑‍💻"
+                        title="Teaching Assistant"
+                        description="Assist teachers in managing polls and help students with participation"
+                        features={ROLE_FEATURES.TA}
+                        selectedRole={selectedRole}
+                        onSelect={handleRoleSelection}
+                        animationDelay="0.6s"
+                    />
                 </div>
 
                 {/* Confirm Section */}

@@ -166,7 +166,7 @@ export class UserController {
   @HttpCode(200)
   async updateRole(
     @Param('firebaseUID') firebaseUID: string,
-    @Body() body: { role: string },
+    @Body() body: { role: "teacher" | "student" | "TA" },
   ) {
     const { role } = body;
     if (!role || typeof role !== 'string') {

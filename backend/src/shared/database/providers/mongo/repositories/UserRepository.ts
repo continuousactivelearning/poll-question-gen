@@ -44,7 +44,7 @@ export class UserRepository implements IUserRepository {
     return user || null;
   }  
 
-  async updateRole(firebaseUID: string, role: string): Promise<IUser | null> {
+  async updateRole(firebaseUID: string, role: "teacher" | "student" | "TA"): Promise<IUser | null> {
     if (!role || typeof role !== 'string') {
       throw new Error('Role must be a non-empty string');
     }

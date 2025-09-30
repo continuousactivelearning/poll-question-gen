@@ -74,7 +74,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      const { result, role } = await loginWithGoogle();
+      let { result, role } = await loginWithGoogle();
       setUser({
         uid: result.user.uid,
         email: result.user.email || "",
@@ -84,7 +84,8 @@ export default function AuthPage() {
       });
 
       // If user has a role, redirect to their home page, otherwise to role selection
-      if (role=="student" || role=="teacher") {
+      if (role=="student" || role=="teacher" || role=="TA") {
+        if(role==="TA") role="teacher"; 
         navigate({ to: `/${role}/home` });
       } else {
         navigate({ to: '/select-role' });
@@ -106,7 +107,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
       setFormErrors({});
-      const { result, role } = await loginWithEmail(email, password);
+      let { result, role } = await loginWithEmail(email, password);
       setUser({
         uid: result.user.uid,
         email: result.user.email || "",
@@ -116,7 +117,8 @@ export default function AuthPage() {
       });
 
       // If user has a role, redirect to their home page, otherwise to role selection
-      if (role == "student" || role == "teacher") {
+      if (role == "student" || role == "teacher" || role == "TA") {
+        if(role==="TA") role="teacher";
         navigate({ to: `/${role}/home` });
       } else {
         navigate({ to: '/select-role' });
@@ -190,7 +192,10 @@ export default function AuthPage() {
         navigate({ to: '/teacher/home' });
       } else if (user.role === 'student') {
         navigate({ to: '/student/home' });
-      } else if (!user.role) {
+      } else if (user.role === 'TA') {
+        navigate({ to: '/teacher/home' });
+      }
+       else if (!user.role) {
         // If user is authenticated but has no role, redirect to role selection
         // navigate({ to: '/select-role' });
       }
@@ -290,7 +295,7 @@ export default function AuthPage() {
           <div className="mx-auto w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
             {/* Header */}
             <div className="text-center space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-black">
                 {isSignUp ? "Create Account" : "Welcome Back"}
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground">

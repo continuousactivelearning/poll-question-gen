@@ -116,7 +116,7 @@ export class UserService extends BaseService {
     };
   }
 
-  async updateRoleByFirebaseUID(firebaseUID: string, role: string) {
+  async updateRoleByFirebaseUID(firebaseUID: string, role: "teacher" | "student" | "TA") {
     if (!role || typeof role !== 'string') {
       throw new Error('Role must be a non-empty string');
     }

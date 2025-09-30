@@ -111,7 +111,8 @@ const teacherLayoutRoute = new Route({
     }
 
     // Role check - must be a teacher
-    if (user?.role !== 'teacher') {
+    
+    if (!(user?.role === 'teacher' || user?.role === 'TA')) {
       if (user?.role === 'student') {
         throw redirect({ to: '/student' }); // Redirect students to their dashboard
       } else {
