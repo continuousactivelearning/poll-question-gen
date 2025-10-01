@@ -57,6 +57,7 @@ export default function TeacherPollRoom() {
   const [questionSpec, setQuestionSpec] = useState("");
   const [selectedModel, setSelectedModel] = useState("deepseek-r1:70b");
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
+  const [questionCount, setQuestionCount] = useState<number>(2);
 
   // New state for member names toggle
   const [showMemberNames, setShowMemberNames] = useState<Record<string, boolean>>({});
@@ -243,6 +244,7 @@ export default function TeacherPollRoom() {
       formData.append('transcript', textToUse);
       if (questionSpec) formData.append('questionSpec', questionSpec);
       formData.append('model', selectedModel);
+      formData.append('questionCount', questionCount.toString()); // Question count
 
       const response = await api.post(`/livequizzes/rooms/${roomCode}/generate-questions`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -584,10 +586,33 @@ export default function TeacherPollRoom() {
                     }}
                     />
                     <div className="space-y-2">
-                      <Transcript 
-                      transcribedData={transcriber.output}
-                      isLiveRecording={isLiveRecordingActive}
+                      <Transcript
+                        transcribedData={transcriber.output}
+                        isLiveRecording={isLiveRecordingActive}
                       />
+                    </div>
+                    
+                    {/* Add Question Count Input */}
+                    <div className="border-t pt-4 space-y-4">
+                      <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Generation Settings</h4>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          Number of Questions
+                        </label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={questionCount}
+                          onChange={(e) => setQuestionCount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                          className="dark:bg-gray-800/50 text-xs sm:text-base"
+                          placeholder="e.g., 5"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          How many questions to generate (1-20)
+                        </p>
+                      </div>
                     </div>
 
                     {/* Optional Configuration */}
@@ -631,12 +656,12 @@ export default function TeacherPollRoom() {
                         ) : isGenerating ? (
                           <>
                             <Loader2 size={16} className="animate-spin" />
-                            Generating...
+                            Generating {questionCount} Questions...
                           </>
                         ) : (
                           <>
                             <Wand2 size={16} />
-                            Generate Questions
+                            Generate {questionCount} Questions
                           </>
                         )}
                       </Button>

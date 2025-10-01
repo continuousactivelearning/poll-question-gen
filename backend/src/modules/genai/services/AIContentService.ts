@@ -230,10 +230,12 @@ JSON:`;
     transcriptContent: string
   ): string {
     const base = `You are an AI question generator.
-Based on the transcript below, generate ${count} question(s) of type ${questionType}.
+Based on the transcript below, generate EXACTLY ${count} question(s) of type ${questionType}.
 For each question:
 - Provide exactly 4 options only.
 - Mark the correct option.
+
+IMPORTANT: Generate exactly ${count} questions, no more, no less.
 
 You must output JSON **exactly** in this shape, no nesting, no markdown:
 [
@@ -258,6 +260,7 @@ Important:
 - Fill all fields.
 - questionText must be clear and relevant to transcript.
 - explanation field must explain why the option is correct/incorrect.
+- Generate EXACTLY ${count} questions.
 
 Transcript:
 ${transcriptContent}
@@ -265,11 +268,11 @@ ${transcriptContent}
 `;
 
     const instructions: Record<string, string> = {
-      SOL: 'Generate single-correct MCQ as above. timeLimitSeconds:60, points:5',
-      SML: 'Multiple-correct MCQ, 2-3 correct:true, timeLimitSeconds:90, points:8',
-      OTL: 'Ordering question, with options in correct order, timeLimitSeconds:120, points:10',
-      NAT: 'Numeric answer with value, timeLimitSeconds:90, points:6',
-      DES: 'Descriptive answer, detailed solution, timeLimitSeconds:300, points:15'
+      SOL: `Generate ${count} single-correct MCQ as above. timeLimitSeconds:60, points:5`,
+      SML: `Generate ${count} multiple-correct MCQ, 2-3 correct:true, timeLimitSeconds:90, points:8`,
+      OTL: `Generate ${count} ordering question, with options in correct order, timeLimitSeconds:120, points:10`,
+      NAT: `Generate ${count} numeric answer with value, timeLimitSeconds:90, points:6`,
+      DES: `Generate ${count} descriptive answer, detailed solution, timeLimitSeconds:300, points:15`
     };
 
     return base + (instructions[questionType] || '');
