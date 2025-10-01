@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ChevronDown, Check } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { ChevronDown, Check, Mic, ChevronUp, MicOff, CheckCircle, Volume2, Filter } from 'lucide-react';
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useTranscriber } from "@/hooks/useTranscriber";
 import { AudioManager } from "@/whisper/components/AudioManager";
 import Transcript from "@/whisper/components/Transcript";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text).then(() => {
@@ -24,6 +26,34 @@ type User = {
   id: string;
   name: string;
 };
+export type SupportedLanguage =
+  | "en-IN"
+  | "en-US"
+  | "hi-IN"
+  | "bn-IN"
+  | "te-IN"
+  | "mr-IN"
+  | "ta-IN"
+  | "gu-IN"
+  | "kn-IN"
+  | "ml-IN"
+  | "pa-IN"
+  | "ur-IN";
+
+const supportedLanguages: { code: SupportedLanguage; label: string }[] = [
+  { code: "en-IN", label: "English (India)" },
+  { code: "en-US", label: "English (US)" },
+  { code: "hi-IN", label: "Hindi" },
+  { code: "bn-IN", label: "Bengali" },
+  { code: "te-IN", label: "Telugu" },
+  { code: "mr-IN", label: "Marathi" },
+  { code: "ta-IN", label: "Tamil" },
+  { code: "gu-IN", label: "Gujarati" },
+  { code: "kn-IN", label: "Kannada" },
+  { code: "ml-IN", label: "Malayalam" },
+  { code: "pa-IN", label: "Punjabi" },
+  { code: "ur-IN", label: "Urdu" },
+];
 
 type PollResults = Record<string, Record<string, { count: number; users: User[] }>>;
 
@@ -64,9 +94,137 @@ export default function TeacherPollRoom() {
   const [isGenerateClicked, setIsGenerateClicked] = useState(false);
   const [audioManagerKey, setAudioManagerKey] = useState(0);
 
+  const [isRecording, setIsRecording] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [language, setLanguage] = useState<SupportedLanguage>("en-IN");
+   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number>(0);
+  const [frequencyData, setFrequencyData] = useState<number[]>([]);
+  const recognitionRef = useRef<any>(null);
+  const [showAudioOptions, setShowAudioOptions] = useState(false);
+
   // Whisper transcription state and Whisper service for speech-to-text
   const transcriber = useTranscriber();
   const [transcript, setTranscript] = useState<string | null>(null);
+
+
+    useEffect(() => {
+      if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
+        const recognition = new window.webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = language;
+
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognition.onresult = (event: any) => {
+          let interim = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (result.isFinal) {
+              setLiveTranscript((prev) => prev + " " + result[0].transcript);
+            } else {
+              interim += result[0].transcript;
+            }
+          }
+          setInterimTranscript(interim);
+        };
+
+        recognition.onend = () => {
+          // setIsListening(false);
+          // setIsRecording(false);
+          const IS_FROM_ONEND = true;
+          handleRecordingToggle(IS_FROM_ONEND);
+        };
+        recognition.onerror = (event: any) => console.error(event.error);
+
+        recognitionRef.current = recognition;
+      } else {
+        toast.error("Web Speech API is not supported in this browser.");
+      }
+      return () => {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+      };
+    }, [language]);
+
+  const displayTranscript =
+    liveTranscript + (interimTranscript ? " " + interimTranscript : "");
+
+  const handleRecordingToggle = async (isFromOnEnd?: boolean) => {
+    if (isRecording || isFromOnEnd) {
+      setIsRecording(false);
+      setIsListening(false);
+
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream
+          .getTracks()
+          .forEach((track) => track.stop());
+      }
+
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        audioContextRef.current = new AudioContext();
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+        source.connect(analyserRef.current);
+
+        updateAudioLevel();
+
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.start();
+
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+        }
+
+        setIsRecording(true);
+        setIsListening(true);
+        setInterimTranscript("");
+      } catch (error) {
+        console.error("Error accessing microphone:", error);
+      }
+    }
+  };
+
+    const updateAudioLevel = () => {
+    if (analyserRef.current) {
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(dataArray);
+
+      animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+
+      const frequencyBars = Array.from(dataArray.slice(0, 16)).map(
+        (value) => value / 255
+      );
+      setFrequencyData(frequencyBars);
+    }
+  };
 
   if (!roomCode) return <div>Loading...</div>;
 
@@ -217,21 +375,20 @@ export default function TeacherPollRoom() {
   };
 
   const generateQuestions = async () => {
-    if (transcriber.output?.isBusy) {
+    
+    if (transcriber.output?.isBusy || isRecording || isListening) {
       return;
     }
-
-    if (!transcript && !transcriber.output?.text) {
+  
+    if (!transcript && !transcriber.output?.text && !displayTranscript.trim()) {
       toast.error("Please provide YouTube URL, upload file, or record audio");
       return;
     }
-
-    const textToUse = transcript || transcriber.output?.text;
+    const textToUse = transcript || transcriber.output?.text || displayTranscript.trim();
     if (!textToUse) {
       toast.error("No transcript available to generate questions from");
       return;
     }
-
     setIsGenerating(true);
     try {
       const formData = new FormData();
@@ -268,7 +425,7 @@ export default function TeacherPollRoom() {
   const handleGenerateClick = () => {
     setIsGenerateClicked(true);
 
-    if (!transcriber.output?.isBusy) {
+    if (!transcriber.output?.isBusy && (!isRecording || !isListening)) {
       if (transcriber.output?.text) {
         setTranscript(transcriber.output.text);
       }
@@ -318,11 +475,34 @@ export default function TeacherPollRoom() {
     setAudioManagerKey(Date.now());
     transcriber.onInputChange();
     setEditingQuestionIndex(null);
+    setLiveTranscript('');
+    setInterimTranscript('');
+    setIsGenerateClicked(false);
+    setIsRecording(false);
+    setIsListening(false);
+    setFrequencyData([]);
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream
+        .getTracks().forEach((track) => track.stop());
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    setAudioManagerKey(Date.now());
+    toast.success("Cleared all data");
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+    <main className=" bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+
+      <div className="min-h-[80vh] bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 md:mb-2 mb-1">
         {/* Header */}
         <div className="mb-6">
           <div className="fixed top-0 left-0 w-full bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 shadow-sm p-4 flex items-center justify-between z-50">
@@ -427,8 +607,319 @@ export default function TeacherPollRoom() {
         )}
 
         {/* Main Content - Two Cards Side by Side */}
-        <div className="pt-11 min-h-screen grid grid-cols-1 md:grid-cols-2 gap-1 ">
-          <div className="flex-1 p-6 border-slate-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">            <div className="flex justify-between items-center mb-4">
+        <div className="pt-11 h-full grid grid-cols-1 md:grid-cols-2 gap-1 ">
+
+          {/* GenAI Tab */}
+          <div className="flex-1 h-[80vh] p-6 border-r border-r-slate-200 dark:border-r-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">
+            <ScrollArea className="h-full pe-3">
+                {/* <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Gen AI</h2> */}
+                {/* <Button
+                  onClick={clearGenAIData}
+                  variant="outline"
+                  className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800  text-xs sm:text-base"
+                >
+                  Clear
+                </Button> */}
+                {/* </div> */}
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
+                    
+
+                    {!showPreview ? (
+                    <Card className="w-full bg-transparent border-none shadow-none">
+                      <CardHeader className="pb-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <Volume2 className="h-4 w-4 text-purple-500" />
+                            Voice Recorder
+                          </CardTitle>
+
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={language}
+                              onValueChange={(value) => setLanguage(value as SupportedLanguage)}
+                              disabled={isRecording || isListening || showAudioOptions}
+                            >
+                              <SelectTrigger className="w-[130px] md:w-[160px] h-9 border border-gray-300 dark:border-gray-700 rounded-md hover:border-purple-500 focus:border-purple-500 transition-colors">
+                                <Filter className="w-4 h-4 md:hidden text-purple-500" />
+                                <span className="hidden md:block text-sm text-gray-700 dark:text-gray-200">
+                                  <SelectValue placeholder="Language" />
+                                </span>
+                              </SelectTrigger>
+                              <SelectContent className="border border-gray-200 dark:border-gray-700 rounded-md shadow-md bg-white/90 dark:bg-gray-900/90 ">
+                                {supportedLanguages.map((lang) => (
+                                  <SelectItem
+                                    key={lang.code}
+                                    value={lang.code}
+                                    className="hover:bg-purple-100 dark:hover:bg-purple-700 transition-colors"
+                                  >
+                                    {lang.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShowAudioOptions(!showAudioOptions)}
+                              className="flex items-center gap-1 text-sm font-medium text-muted-foreground border border-gray-300 dark:border-gray-700 dark:hover:bg-gray-800  hover:bg-gray-50  transition-colors"
+                            >
+                              <p className="hidden sm:inline my-2">Audio Upload</p>
+                              {showAudioOptions ? (
+                                <ChevronUp className="h-4 w-4 " />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 " />
+                              )}
+                            </Button>
+
+                            <Button
+                              onClick={clearGenAIData}
+                              variant="outline"
+                              className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800  text-xs sm:text-base"
+                            >
+                              Clear
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                          <Button
+                            onClick={() => handleRecordingToggle()}
+                            size="sm"
+                            variant={isRecording ? "destructive" : "default"}
+                            className={`bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 h-12 w-12 rounded-full flex-shrink-0 self-center sm:self-auto ${
+                              isRecording && "animate-pulse"
+                            } transition-all`}
+                          >
+                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                          </Button>
+
+                          <div className="flex-1 flex items-center gap-1 h-8">
+                            {isRecording && isListening ? (
+                              frequencyData.map((level, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-gradient-to-t from-blue-500 to-purple-500 rounded-full w-1 transition-all duration-75"
+                                  style={{ height: `${Math.max(level * 100, 10)}%`, opacity: 0.6 + level * 0.4 }}
+                                />
+                              ))
+                            ) : (
+                              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                {isRecording ? (
+                                  <>
+                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                    Recording...
+                                  </>
+                                ) : (
+                                  "Click microphone to start"
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex-shrink-0">
+                            {transcript && !isRecording && (
+                              <div className="flex items-center gap-1 text-green-600">
+                                <CheckCircle className="w-4 h-4" />
+                                <span className="text-xs font-medium">Done</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {showAudioOptions && (
+                        <div className="border border-border rounded-lg p-4 space-y-2 transition-transform duration-200 hover:scale-102">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Please clear the previous transcription before uploading a new audio file.
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Upload an audio file instead of recording
+                            </p>
+                          <AudioManager key={audioManagerKey} transcriber={transcriber} />
+                        </div>
+                        )}
+
+                        <Transcript
+                          transcribedData={transcriber.output}
+                          liveTranscription={displayTranscript}
+                          isRecording={isRecording || isListening}
+                        />
+
+                        <div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowAdvanced(!showAdvanced)}
+                            className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground dark:hover:bg-gray-800 hover:bg-gray-50 transition-colors md:py-4 py-2"
+                          >
+                            <span className="md:text-md">Generation Settings</span>
+                            {showAdvanced ? (
+                              <ChevronUp className="h-4 w-4 " />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 " />
+                            )}
+                          </Button>
+
+                          {showAdvanced && (
+                            <div className="mt-3 border border-border rounded-lg p-4 space-y-6 hover:border-purple-500 transition-colors">
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">
+                                  Question Specification (optional)
+                                </label>
+                                <Input
+                                  placeholder="e.g., Focus on key concepts, multiple choice only"
+                                  value={questionSpec}
+                                  onChange={(e) => setQuestionSpec(e.target.value)}
+                                  className="text-xs sm:text-base"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Provide specific instructions for question generation
+                                </p>
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">AI Model</label>
+                                <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
+                                <p className="text-xs text-muted-foreground">
+                                  Select the AI model to use for generation
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <Button
+                          onClick={handleGenerateClick}
+                          disabled={isRecording || isListening || isGenerating || (isGenerateClicked && transcriber.output?.isBusy)}
+                          className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 mt-3 flex items-center justify-center gap-2 text-sm sm:text-base transition-all"
+                        >
+                          {isGenerateClicked && transcriber.output?.isBusy ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Transcribing...
+                            </>
+                          ) : isGenerating ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 size={16} />
+                              Generate Questions
+                            </>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
+                            Generated Questions Preview ({generatedQuestions.length})
+                          </h3>
+                          <Button
+                            onClick={() => setShowPreview(false)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xs sm:text-sm"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto">
+                          {generatedQuestions.map((questionData, index) => (
+                            <Card key={index} className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70">
+                              <CardContent className="p-3 sm:p-4">
+                                <div className="space-y-2 sm:space-y-3">
+                                  <div className="flex items-start gap-1 sm:gap-2">
+                                    <Button
+                                      onClick={() => setEditingQuestionIndex(editingQuestionIndex === index ? null : index)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-xs sm:text-sm"
+                                    >
+                                      <Edit3 size={14} />
+                                    </Button>
+                                    <Button
+                                      onClick={() => deleteGeneratedQuestion(index)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs sm:text-sm"
+                                      title="Delete question"
+                                    >
+                                      <X size={14} />
+                                    </Button>
+                                    {editingQuestionIndex === index ? (
+                                      <Input
+                                        value={questionData.question}
+                                        onChange={(e) => editGeneratedQuestion(index, 'question', e.target.value)}
+                                        className="flex-1 dark:bg-gray-700/50 text-xs sm:text-base"
+                                      />
+                                    ) : (
+                                      <p className="flex-1 font-medium text-gray-800 dark:text-gray-200 text-xs sm:text-base">
+                                        {questionData.question}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-1 sm:space-y-2">
+                                    {(questionData.options ?? []).map((option, optionIndex) => (
+                                      <div key={optionIndex} className="flex items-center gap-1 sm:gap-2">
+                                        <Input
+                                          type="radio"
+                                          name={`correct-${index}`}
+                                          checked={questionData.correctOptionIndex === optionIndex}
+                                          onChange={() => editGeneratedQuestion(index, 'correctOptionIndex', optionIndex)}
+                                          className="h-3 w-3 sm:h-4 sm:w-4 accent-purple-600 dark:accent-purple-400"
+                                        />
+                                        {editingQuestionIndex === index ? (
+                                          <Input
+                                            value={option}
+                                            onChange={(e) => editGeneratedQuestion(index, `option-${optionIndex}`, e.target.value)}
+                                            className="flex-1 dark:bg-gray-700/50 text-xs sm:text-base"
+                                            placeholder={`Option ${optionIndex + 1}`}
+                                          />
+                                        ) : (
+                                          <span className={`flex-1 text-xs sm:text-base ${questionData.correctOptionIndex === optionIndex
+                                            ? 'text-green-600 dark:text-green-400 font-medium'
+                                            : 'text-gray-700 dark:text-gray-300'
+                                            } ${!option.trim() ? 'italic text-gray-400 dark:text-gray-500' : ''}`}>
+                                            {option.trim() || `Option ${optionIndex + 1} (empty)`}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <Button
+                                    onClick={() => selectGeneratedQuestion(questionData)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-base"
+                                  >
+                                    Use This Question
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+            </ScrollArea>
+          </div>
+
+          <div className="flex-1 p-6 border-slate-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">            
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Create Poll</h2>
           </div>
             <div className="space-y-4 sm:space-y-6">
@@ -544,182 +1035,7 @@ export default function TeacherPollRoom() {
             </div>
           </div>
 
-          {/* GenAI Tab */}
-          <div className="flex-1 p-6 border-r border-r-slate-200 dark:border-r-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Gen AI</h2>
-            <Button
-              onClick={clearGenAIData}
-              variant="outline"
-              className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 text-xs sm:text-base"
-            >
-              Clear
-            </Button>
-            </div>
-            <div className="space-y-4 sm:space-y-6">
-              <div className="space-y-4 sm:space-y-6">
-                {!showPreview ? (
-                  <>
-                    <AudioManager
-                      key={audioManagerKey}
-                      transcriber={transcriber}
-                    />
-                    <div className="space-y-2">
-                      <Transcript transcribedData={transcriber.output} />
-                    </div>
-
-                    {/* Optional Configuration */}
-                    <div className="border-t pt-4 space-y-4">
-                      <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Optional Settings</h4>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Question Specification (optional)
-                        </label>
-                        <Input
-                          placeholder="e.g., Focus on key concepts, multiple choice only"
-                          value={questionSpec}
-                          onChange={(e) => setQuestionSpec(e.target.value)}
-                          className="dark:bg-gray-800/50 text-xs sm:text-base"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          AI Model
-                        </label>
-                        <ModelSelector
-                          selectedModel={selectedModel}
-                          onModelChange={setSelectedModel}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
-                      <Button
-                        onClick={handleGenerateClick}
-                        disabled={isGenerating || (isGenerateClicked && transcriber.output?.isBusy)}
-                        className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
-                      >
-                        {isGenerateClicked && transcriber.output?.isBusy ? (
-                          <>
-                            <Loader2 size={16} className="animate-spin" />
-                            Transcribing...
-                          </>
-                        ) : isGenerating ? (
-                          <>
-                            <Loader2 size={16} className="animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Wand2 size={16} />
-                            Generate Questions
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  /* Generated Questions Preview */
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
-                        Generated Questions Preview ({generatedQuestions.length})
-                      </h3>
-                      <Button
-                        onClick={() => setShowPreview(false)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xs sm:text-sm"
-                      >
-                        <X size={16} />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto">
-                      {generatedQuestions.map((questionData, index) => (
-                        <Card key={index} className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70">
-                          <CardContent className="p-3 sm:p-4">
-                            <div className="space-y-2 sm:space-y-3">
-                              <div className="flex items-start gap-1 sm:gap-2">
-                                <Button
-                                  onClick={() => setEditingQuestionIndex(editingQuestionIndex === index ? null : index)}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-xs sm:text-sm"
-                                >
-                                  <Edit3 size={14} />
-                                </Button>
-                                <Button
-                                  onClick={() => deleteGeneratedQuestion(index)}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs sm:text-sm"
-                                  title="Delete question"
-                                >
-                                  <X size={14} />
-                                </Button>
-                                {editingQuestionIndex === index ? (
-                                  <Input
-                                    value={questionData.question}
-                                    onChange={(e) => editGeneratedQuestion(index, 'question', e.target.value)}
-                                    className="flex-1 dark:bg-gray-700/50 text-xs sm:text-base"
-                                  />
-                                ) : (
-                                  <p className="flex-1 font-medium text-gray-800 dark:text-gray-200 text-xs sm:text-base">
-                                    {questionData.question}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="space-y-1 sm:space-y-2">
-                                {(questionData.options ?? []).map((option, optionIndex) => (
-                                  <div key={optionIndex} className="flex items-center gap-1 sm:gap-2">
-                                    <Input
-                                      type="radio"
-                                      name={`correct-${index}`}
-                                      checked={questionData.correctOptionIndex === optionIndex}
-                                      onChange={() => editGeneratedQuestion(index, 'correctOptionIndex', optionIndex)}
-                                      className="h-3 w-3 sm:h-4 sm:w-4 accent-purple-600 dark:accent-purple-400"
-                                    />
-                                    {editingQuestionIndex === index ? (
-                                      <Input
-                                        value={option}
-                                        onChange={(e) => editGeneratedQuestion(index, `option-${optionIndex}`, e.target.value)}
-                                        className="flex-1 dark:bg-gray-700/50 text-xs sm:text-base"
-                                        placeholder={`Option ${optionIndex + 1}`}
-                                      />
-                                    ) : (
-                                      <span className={`flex-1 text-xs sm:text-base ${questionData.correctOptionIndex === optionIndex
-                                        ? 'text-green-600 dark:text-green-400 font-medium'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                        } ${!option.trim() ? 'italic text-gray-400 dark:text-gray-500' : ''}`}>
-                                        {option.trim() || `Option ${optionIndex + 1} (empty)`}
-                                      </span>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              <Button
-                                onClick={() => selectGeneratedQuestion(questionData)}
-                                variant="outline"
-                                size="sm"
-                                className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-base"
-                              >
-                                Use This Question
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        
         </div>
       </div>
 

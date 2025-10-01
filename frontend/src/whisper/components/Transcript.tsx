@@ -1,12 +1,15 @@
 import { useRef, useEffect, useState } from "react";
 import { TranscriberData } from "../../hooks/useTranscriber";
 import { FiMoreVertical } from "react-icons/fi"; // icon for menu
+import { createPortal } from "react-dom";
 
 interface Props {
     transcribedData: TranscriberData | undefined;
+    liveTranscription?: string;
+    isRecording?: boolean;
 }
 
-export default function Transcript({ transcribedData }: Props) {
+export default function Transcript({ transcribedData, liveTranscription, isRecording }: Props) {
     const divRef = useRef<HTMLDivElement>(null);
     const [showAll, setShowAll] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -51,64 +54,79 @@ export default function Transcript({ transcribedData }: Props) {
         .trim();
 
     return (
-        <div
-            className="w-full flex flex-col my-2 p-4 h-35 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative"
-            ref={divRef}
+    <div
+        className={`w-full flex flex-col my-2 p-4 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative transition-all duration-300 
+            ${showAll ? "max-h-[500px] h-auto" : "h-34"}
+        `}
+        ref={divRef}
         >
-            {fullText ? (
+        {(liveTranscription || fullText) ? (
+            <div
+            className={`text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap transition-all duration-300 ${
+                showAll ? "pr-10" : "line-clamp-2 pr-10"
+            }`}
+            >
+            {liveTranscription || fullText}
+            </div>
+        ) : (
+            <p className="text-gray-400 text-sm">
+            Transcript will appear here once audio is detected...
+            </p>
+        )}
+
+        {(liveTranscription || fullText) && (
+            <button
+            onClick={() => setShowAll(!showAll)}
+            className="absolute bottom-2 right-6 text-purple-600 dark:text-purple-400 hover:text-purple-700  dark:hover:text-purple-300 hover:underline text-xs"
+            >
+            {showAll ? "Show Less" : "Show More"}
+            </button>
+        )}
+
+        {((transcribedData && !transcribedData.isBusy && fullText) ||
+            (liveTranscription && !isRecording)) && (
+            <div className="absolute top-2 right-2">
+            <button
+                type="button"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white text-lg p-1"
+                aria-label="Export options"
+                title="Export options"
+            >
+                <FiMoreVertical />
+            </button>
+
+            {menuOpen &&
+                createPortal(
                 <div
-                    className={`text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap transition-all duration-300 mt-2 ${showAll ? "" : "line-clamp-2"
-                        }`}
+                    className="absolute w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 overflow-hidden"
+                    style={{
+                    top: divRef.current
+                        ? divRef.current.getBoundingClientRect().top + 32
+                        : 0,
+                    left: divRef.current
+                        ? divRef.current.getBoundingClientRect().right - 160
+                        : 0,
+                    position: "fixed",
+                    }}
                 >
-                    {fullText}
-                </div>
-            ) : (
-                <p className="text-gray-400 text-sm">
-                    Transcript will appear here once audio is uploaded...
-                </p>
-            )}
-
-            {/* Show toggle button only if transcript exists */}
-            {fullText && (
-                <button
-                    onClick={() => setShowAll(!showAll)}
-                    className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline mt-2 text-xs px-2 py-1 self-start"
-                >
-                    {showAll ? "Show Less" : "Show More"}
-                </button>
-            )}
-
-            {/* Export icon fixed at bottom */}
-            {transcribedData && !transcribedData.isBusy && fullText && (
-                <div className="absolute bottom-2 right-2">
                     <button
-                        type="button"
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white text-lg p-1"
-                        aria-label="Export options"
-                        title="Export options"
+                    onClick={exportTXT}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 dark:hover:bg-purple-700 transition-colors"
                     >
-                        <FiMoreVertical />
+                    Export TXT
                     </button>
-
-                    {menuOpen && (
-                        <div className="absolute bottom-10 right-0 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50">
-                            <button
-                                onClick={exportTXT}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-purple-100 dark:hover:bg-purple-700"
-                            >
-                                Export TXT
-                            </button>
-                            <button
-                                onClick={exportJSON}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-purple-100 dark:hover:bg-purple-700"
-                            >
-                                Export JSON
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+                    <button
+                    onClick={exportJSON}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 dark:hover:bg-purple-700 transition-colors"
+                    >
+                    Export JSON
+                    </button>
+                </div>,
+                document.body
+                )}
+            </div>
+        )}
+    </div>
     );
 }

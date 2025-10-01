@@ -562,7 +562,7 @@ function Tile(props: {
     return (
         <button
             onClick={props.onClick}
-            className='flex items-center justify-center rounded-lg p-2 bg-blue text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200'
+            className='flex items-center justify-center rounded-lg p-2 bg-blue text-slate-500 dark:hover:text-gray-200 hover:text-gray-800 dark:hover:bg-gray-700  hover:bg-gray-100 transition-all duration-200'
         >
             <div className='w-7 h-7'>{props.icon}</div>
             {props.text && (
