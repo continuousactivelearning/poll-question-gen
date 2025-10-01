@@ -55,8 +55,8 @@ export default function Transcript({ transcribedData, liveTranscription, isRecor
 
     return (
     <div
-        className={`w-full flex flex-col my-2 p-4 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative transition-all duration-300 
-            ${showAll ? "max-h-[500px] h-auto" : "h-34"}
+        className={`w-full flex flex-col my-2 p-4 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative transition-all duration-300 md:mb-4
+            ${showAll ? "max-h-[500px] h-auto" : "h-46"}
         `}
         ref={divRef}
         >

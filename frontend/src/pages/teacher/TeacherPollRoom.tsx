@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Check, Mic, ChevronUp, MicOff, CheckCircle, Volume2, Filter } from 'lucide-react';
+import { ChevronDown, Check, Mic, ChevronUp, MicOff, CheckCircle, Volume2, Filter, Upload, Trash2, Languages, Settings, ClipboardList, BarChart2, Clock } from 'lucide-react';
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -500,7 +500,7 @@ export default function TeacherPollRoom() {
   };
 
   return (
-    <main className=" bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+    <main className=" bg-gradient-to-br md-px-12 px-2 md:pb-4 pb-2 from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
 
       <div className="min-h-[80vh] bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 md:mb-2 mb-1">
         {/* Header */}
@@ -606,131 +606,114 @@ export default function TeacherPollRoom() {
           </div>
         )}
 
-        {/* Main Content - Two Cards Side by Side */}
-        <div className="pt-11 h-full grid grid-cols-1 md:grid-cols-2 gap-1 ">
-
           {/* GenAI Tab */}
-          <div className="flex-1 h-[80vh] p-6 border-r border-r-slate-200 dark:border-r-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">
+          <div className="flex-1 h-[100vh] mt-14 p-6 border-r border-r-slate-200 dark:border-r-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">
             <ScrollArea className="h-full pe-3">
-                {/* <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Gen AI</h2> */}
-                {/* <Button
-                  onClick={clearGenAIData}
-                  variant="outline"
-                  className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800  text-xs sm:text-base"
-                >
-                  Clear
-                </Button> */}
-                {/* </div> */}
+           
                 <div className="space-y-4 sm:space-y-6">
                   <div className="space-y-4 sm:space-y-6">
-                    
-
-                    {!showPreview ? (
+                   {!showPreview ? (
                     <Card className="w-full bg-transparent border-none shadow-none">
-                      <CardHeader className="pb-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                          <CardTitle className="flex items-center gap-2 text-base">
-                            <Volume2 className="h-4 w-4 text-purple-500" />
-                            Voice Recorder
-                          </CardTitle>
+                     <CardHeader>
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <CardTitle className="flex items-center gap-2 text-base">
+                          <Volume2 className="h-4 w-4 text-purple-500" />
+                          Voice Recorder
+                        </CardTitle>
 
-                          <div className="flex items-center gap-2">
-                            <Select
-                              value={language}
-                              onValueChange={(value) => setLanguage(value as SupportedLanguage)}
-                              disabled={isRecording || isListening || showAudioOptions}
-                            >
-                              <SelectTrigger className="w-[130px] md:w-[160px] h-9 border border-gray-300 dark:border-gray-700 rounded-md hover:border-purple-500 focus:border-purple-500 transition-colors">
-                                <Filter className="w-4 h-4 md:hidden text-purple-500" />
-                                <span className="hidden md:block text-sm text-gray-700 dark:text-gray-200">
-                                  <SelectValue placeholder="Language" />
-                                </span>
-                              </SelectTrigger>
-                              <SelectContent className="border border-gray-200 dark:border-gray-700 rounded-md shadow-md bg-white/90 dark:bg-gray-900/90 ">
-                                {supportedLanguages.map((lang) => (
-                                  <SelectItem
-                                    key={lang.code}
-                                    value={lang.code}
-                                    className="hover:bg-purple-100 dark:hover:bg-purple-700 transition-colors"
-                                  >
-                                    {lang.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setShowAudioOptions(!showAudioOptions)}
-                              className="flex items-center gap-1 text-sm font-medium text-muted-foreground border border-gray-300 dark:border-gray-700 dark:hover:bg-gray-800  hover:bg-gray-50  transition-colors"
-                            >
-                              <p className="hidden sm:inline my-2">Audio Upload</p>
-                              {showAudioOptions ? (
-                                <ChevronUp className="h-4 w-4 " />
-                              ) : (
-                                <ChevronDown className="h-4 w-4 " />
-                              )}
-                            </Button>
-
-                            <Button
-                              onClick={clearGenAIData}
-                              variant="outline"
-                              className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800  text-xs sm:text-base"
-                            >
-                              Clear
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="space-y-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-3 border rounded-lg bg-muted/30">
-                          <Button
-                            onClick={() => handleRecordingToggle()}
-                            size="sm"
-                            variant={isRecording ? "destructive" : "default"}
-                            className={`bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 h-12 w-12 rounded-full flex-shrink-0 self-center sm:self-auto ${
-                              isRecording && "animate-pulse"
-                            } transition-all`}
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={language}
+                            onValueChange={(value) => setLanguage(value as SupportedLanguage)}
+                            disabled={isRecording || isListening || showAudioOptions}
                           >
-                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                            <SelectTrigger className="w-[130px] md:w-[160px] h-9 border border-gray-300 dark:border-gray-700 rounded-md hover:border-purple-500 focus:border-purple-500 transition-colors flex items-center gap-2">
+                              <Languages className="w-4 h-4 text-purple-500" />
+                              <span className="hidden md:block text-sm text-gray-700 dark:text-gray-200">
+                                <SelectValue placeholder="Language" />
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent className="border border-gray-200 dark:border-gray-700 rounded-md shadow-md bg-white/90 dark:bg-gray-900/90">
+                              {supportedLanguages.map((lang) => (
+                                <SelectItem
+                                  key={lang.code}
+                                  value={lang.code}
+                                  className="hover:bg-purple-100 dark:hover:bg-purple-700 transition-colors"
+                                >
+                                  {lang.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowAudioOptions(!showAudioOptions)}
+                            className="h-9 flex items-center gap-2 text-sm font-medium text-muted-foreground border border-gray-300 dark:border-gray-700 dark:hover:bg-gray-800 hover:bg-gray-50 transition-colors rounded-md"
+                          >
+                            <Upload className="h-4 w-4 text-purple-500" />
+                            <span className="hidden sm:inline">Audio Upload</span>
+                            {showAudioOptions ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
                           </Button>
 
-                          <div className="flex-1 flex items-center gap-1 h-8">
+                          <Button
+                            onClick={clearGenAIData}
+                            variant="outline"
+                            className="h-9 flex items-center gap-2 border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 rounded-md text-sm"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <span className="hidden sm:inline">Clear</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+
+                      <CardContent className="space-y-6">
+                      
+                        <div className="flex flex-col items-center justify-center gap-4 p-6 border rounded-lg bg-transparent">
+                          <Button
+                            onClick={() => handleRecordingToggle()}
+                            size="lg"
+                            variant={isRecording ? "destructive" : "default"}
+                            className={`h-20 w-20 md:w-25 md:h-25 rounded-full flex items-center justify-center 
+                              bg-gradient-to-r from-purple-500 to-blue-500 text-white 
+                              hover:from-purple-600 hover:to-blue-600 shadow-lg 
+                              ${isRecording && "animate-pulse"} transition-all`}
+                          >
+                            {isRecording ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+                          </Button>
+
+                          <div className="flex items-end gap-1 h-8">
                             {isRecording && isListening ? (
                               frequencyData.map((level, index) => (
                                 <div
                                   key={index}
-                                  className="bg-gradient-to-t from-blue-500 to-purple-500 rounded-full w-1 transition-all duration-75"
-                                  style={{ height: `${Math.max(level * 100, 10)}%`, opacity: 0.6 + level * 0.4 }}
+                                  className="bg-gradient-to-t from-blue-500 to-purple-500 rounded-full w-2 transition-all duration-75"
+                                  style={{
+                                    height: `${Math.max(level * 80, 8)}%`, 
+                                    opacity: 0.6 + level * 0.4,
+                                  }}
+                                />
+                              ))
+                            ) : isRecording ? (
+                              Array.from({ length: 20 }).map((_, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-gradient-to-t from-blue-400/40 to-purple-400/40 rounded-full w-2"
+                                  style={{ height: "12%" }}
                                 />
                               ))
                             ) : (
-                              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                                {isRecording ? (
-                                  <>
-                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                    Recording...
-                                  </>
-                                ) : (
-                                  "Click microphone to start"
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex-shrink-0">
-                            {transcript && !isRecording && (
-                              <div className="flex items-center gap-1 text-green-600">
-                                <CheckCircle className="w-4 h-4" />
-                                <span className="text-xs font-medium">Done</span>
-                              </div>
+                              <p className="text-sm text-muted-foreground">Tap mic to start recording</p>
                             )}
                           </div>
                         </div>
-
                         {showAudioOptions && (
                         <div className="border border-border rounded-lg p-4 space-y-2 transition-transform duration-200 hover:scale-102">
                             <p className="text-xs text-muted-foreground mb-1">
@@ -754,15 +737,19 @@ export default function TeacherPollRoom() {
                             size="sm"
                             variant="ghost"
                             onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground dark:hover:bg-gray-800 hover:bg-gray-50 transition-colors md:py-4 py-2"
+                            className="w-full flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 md:py-5 text-sm md:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                           >
-                            <span className="md:text-md">Generation Settings</span>
+                            <div className="flex items-center gap-2">
+                              <Settings className="h-4 w-4 text-purple-500" />
+                              <span className="tracking-wide">Additional Settings</span>
+                            </div>
                             {showAdvanced ? (
-                              <ChevronUp className="h-4 w-4 " />
+                              <ChevronUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                             ) : (
-                              <ChevronDown className="h-4 w-4 " />
+                              <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                             )}
                           </Button>
+
 
                           {showAdvanced && (
                             <div className="mt-3 border border-border rounded-lg p-4 space-y-6 hover:border-purple-500 transition-colors">
@@ -792,28 +779,36 @@ export default function TeacherPollRoom() {
                           )}
                         </div>
 
-                        <Button
-                          onClick={handleGenerateClick}
-                          disabled={isRecording || isListening || isGenerating || (isGenerateClicked && transcriber.output?.isBusy)}
-                          className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 mt-3 flex items-center justify-center gap-2 text-sm sm:text-base transition-all"
-                        >
-                          {isGenerateClicked && transcriber.output?.isBusy ? (
-                            <>
-                              <Loader2 size={16} className="animate-spin" />
-                              Transcribing...
-                            </>
-                          ) : isGenerating ? (
-                            <>
-                              <Loader2 size={16} className="animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Wand2 size={16} />
-                              Generate Questions
-                            </>
-                          )}
-                        </Button>
+                        <div className="flex justify-center mt-4">
+                          <Button
+                            onClick={handleGenerateClick}
+                            disabled={
+                              isRecording ||
+                              isListening ||
+                              isGenerating ||
+                              (isGenerateClicked && transcriber.output?.isBusy)
+                            }
+                            className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 px-5 sm:px-7 py-2 sm:py-3 rounded-md flex items-center gap-2 text-sm sm:text-base transition-all"
+                          >
+                            {isGenerateClicked && transcriber.output?.isBusy ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Transcribing...
+                              </>
+                            ) : isGenerating ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Wand2 size={16} />
+                                Generate Questions
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
                       </CardContent>
                     </Card>
 
@@ -918,41 +913,52 @@ export default function TeacherPollRoom() {
             </ScrollArea>
           </div>
 
-          <div className="flex-1 p-6 border-slate-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">            
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Create Poll</h2>
-          </div>
-            <div className="space-y-4 sm:space-y-6">
-              <div className="space-y-4 sm:space-y-6">
 
-                {/* Manual Entry Tab */}
-                <div className="space-y-4 sm:space-y-6">
-                  {/* Show generated questions if any */}
-                  {generatedQuestions.length > 0 && (
-                    <div className="mb-2">
-                      <h4 className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400 mb-1">
-                        Generated Questions (from AI)
-                      </h4>
-                      <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                        {generatedQuestions.map((q, idx) => (
-                          <div
-                            key={idx}
-                            className="p-2 rounded border border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 flex flex-col gap-1"
-                          >
-                            <span className="font-medium text-xs sm:text-base">{q.question}</span>
-                            <div className="flex flex-wrap gap-1">
-                              {q.options.map((opt, i) => (
-                                <span
-                                  key={i}
-                                  className={`px-2 py-0.5 rounded text-xs ${q.correctOptionIndex === i
-                                    ? 'bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 font-semibold'
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                                    }`}
-                                >
-                                  {opt}
-                                </span>
-                              ))}
-                            </div>
+        {/* Main Content - Two Cards Side by Side */}
+          <div className="pt-4 h-full grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Create Poll  */}
+            <Card className="flex flex-col bg-white/90 dark:bg-gray-900/90 border border-slate-200/80 dark:border-gray-700/80 shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between w-full gap-2">
+                  <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                    <ClipboardList className="w-5 h-5 text-purple-500" />
+                    Create Poll
+                  </CardTitle>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-5 overflow-y-auto">
+                {generatedQuestions.length > 0 && (
+                  <section>
+                    <h4 className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400 mb-2">
+                      Generated Questions (from AI)
+                    </h4>
+
+                    <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                      {generatedQuestions.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2 rounded border border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 flex flex-col gap-2"
+                        >
+                          <span className="font-medium text-xs sm:text-sm">{q.question}</span>
+
+                          <div className="flex flex-wrap gap-1">
+                            {q.options.map((opt, i) => (
+                              <span
+                                key={i}
+                                className={`px-2 py-0.5 rounded text-xs ${
+                                  q.correctOptionIndex === i
+                                    ? "bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 font-semibold"
+                                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                                }`}
+                              >
+                                {opt}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="outline"
@@ -961,223 +967,264 @@ export default function TeacherPollRoom() {
                             >
                               Use This Question
                             </Button>
+
+                            <span className="text-xs text-muted-foreground">AI generated — review before creating</span>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </section>
+                )}
 
-                  <div>
-                    <Input
-                      placeholder="Poll question"
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                      className="dark:bg-gray-800/50 text-xs sm:text-base"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Poll question
+                  </label>
+                  <Input
+                    placeholder="Enter your poll question"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    className="dark:bg-gray-800/50 text-sm"
+                    aria-label="Poll question"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Enter the question students will answer.
+                  </p>
+                </div>
 
-                  <fieldset className="space-y-3">
-                    <legend className="text-sm font-medium text-gray-600 mb-2 dark:text-gray-400">
-                      Select correct option
-                    </legend>
-                    {options.map((opt, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <Input
-                          type="radio"
-                          name="correctOption"
-                          checked={correctOptionIndex === i}
-                          onChange={() => setCorrectOptionIndex(i)}
-                          className="h-4 w-4 sm:h-5 sm:w-5 accent-purple-600 dark:accent-purple-400"
-                        />
-                        <Input
-                          placeholder={`Option ${i + 1}`}
-                          value={opt}
-                          onChange={(e) => {
-                            const copy = [...options];
-                            copy[i] = e.target.value;
-                            setOptions(copy);
-                          }}
-                          className="dark:bg-gray-800/50 text-xs sm:text-base"
-                        />
-                      </div>
-                    ))}
-                  </fieldset>
+                <fieldset className="space-y-3">
+                  <legend className="text-sm font-medium text-gray-600 mb-2 dark:text-gray-400">
+                    Poll options (choose correct/right option)
+                  </legend>
 
-                  <div>
+                  {options.map((opt, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="correctOption"
+                        checked={correctOptionIndex === i}
+                        onChange={() => setCorrectOptionIndex(i)}
+                        className="h-4 w-4 sm:h-5 sm:w-5 accent-purple-600 dark:accent-purple-400"
+                        aria-label={`Select option ${i + 1} as correct`}
+                      />
+                      <Input
+                        placeholder={`Option ${i + 1}`}
+                        value={opt}
+                        onChange={(e) => {
+                          const copy = [...options];
+                          copy[i] = e.target.value;
+                          setOptions(copy);
+                        }}
+                        className="dark:bg-gray-800/50 text-sm"
+                      />
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Tip: Provide at least 2 meaningful options for a valid poll.
+                  </p>
+                </fieldset>
+
+                {/* Timer */}
+                <div>
+                  <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 gap-1">
+                    <Clock className="w-4 h-4" />
+                    Timer (seconds)
+                  </label>
+                  <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      placeholder="Timer (seconds)"
+                      placeholder="e.g. 30"
                       value={timer}
                       min={5}
                       onChange={(e) => setTimer(Number(e.target.value))}
-                      className="dark:bg-gray-800/50 text-xs sm:text-base"
+                      className="dark:bg-gray-800/50 text-sm w-36"
+                      aria-label="Timer in seconds"
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    The timer controls how long the poll remains open for students to vote.
+                  </p>
+                </div>
 
-                  <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
-                    <Button
-                      onClick={createPoll}
-                      disabled={!question || options.filter(opt => opt.trim()).length < 2}
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 text-xs sm:text-base"
-                    >
-                      Create Poll
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={fetchResults}
-                      className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-base"
-                    >
-                      Fetch Results
-                    </Button>
+                {/* Actions */}
+                <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
+                  <Button
+                    onClick={createPoll}
+                    disabled={!question || options.filter((opt) => opt.trim()).length < 2}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-1 text-sm"
+                    aria-disabled={!question || options.filter((opt) => opt.trim()).length < 2}
+                  >
+                    Create Poll
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={fetchResults}
+                    className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-sm"
+                  >
+                    Fetch Results
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/*  Poll Results  */}
+            <Card className="flex flex-col bg-white/90 dark:bg-gray-900/90 border border-slate-200/80 dark:border-gray-700/80 shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between w-full">
+                  <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                    <BarChart2 className="w-5 h-5 text-purple-500" />
+                    Poll Results
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    {Object.keys(pollResults).length > 0 && (
+                      <Button
+                        onClick={fetchResults}
+                        variant="outline"
+                        size="sm"
+                        className="border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-sm"
+                      >
+                        Refresh Results
+                      </Button>
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </CardHeader>
 
-        
-        </div>
-      </div>
+              <CardContent className="flex-1">
+                {/* No results state */}
+                {Object.keys(pollResults).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+                    <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <Users className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      No poll results yet
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">
+                      Poll results will appear here once students submit their responses.
+                    </p>
+                    <Button
+                      onClick={fetchResults}
+                      variant="outline"
+                      className="border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30"
+                    >
+                      Check for Results
+                    </Button>
+                  </div>
+                ) : (
+                  /* Results list (scrollable) */
+                  <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+                    {Object.entries(pollResults ?? {})
+                      .reverse()
+                      .map(([pollQuestion, options]) => {
+                        const totalVotes = Object.values(options ?? {}).reduce((sum, data) => sum + data.count, 0);
+                        const isShowingNames = showMemberNames[pollQuestion] !== false;
 
+                        // compute winner(s)
+                        const sortedOptions = Object.entries(options ?? {}).sort((a, b) => b[1].count - a[1].count);
+                        const topCount = sortedOptions?.[0]?.[1]?.count ?? 0;
 
-      {/* Right Card - Poll Results */}
-      <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg sm:text-xl">Poll Results</CardTitle>
-            {Object.keys(pollResults).length > 0 && (
-              <Button
-                onClick={fetchResults}
-                variant="outline"
-                size="sm"
-                className="border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30 text-xs sm:text-sm"
-              >
-                Refresh Results
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {Object.keys(pollResults).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                <Users className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                No poll results yet
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
-                Create and start a poll to see responses from students
-              </p>
-              <Button
-                onClick={fetchResults}
-                variant="outline"
-                className="border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/30"
-              >
-                Check for Results
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-                {Object.entries(pollResults ?? {})
-                  .sort(() => {
-                    return 0;
-                  })
-                  .reverse() 
-                  .map(([pollQuestion, options]) => {                
-                    const totalVotes = Object.values(options ?? {}).reduce((sum, data) => sum + data.count, 0);
-                const isShowingNames = showMemberNames[pollQuestion] !== false;
-
-                return (
-                  <Card
-                    key={pollQuestion}
-                    className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-sm sm:text-base text-gray-800 dark:text-gray-200 line-clamp-2">
-                          {pollQuestion}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                            {totalVotes} votes
-                          </span>
-                          <Button
-                            onClick={() => toggleMemberNames(pollQuestion)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
-                            title={isShowingNames ? "Hide member names" : "Show member names"}
+                        return (
+                          <Card
+                            key={pollQuestion}
+                            className="bg-white/80 dark:bg-gray-800/80 border border-slate-200/70 dark:border-gray-700/70"
                           >
-                            {isShowingNames ? <Eye size={16} /> : <EyeOff size={16} />}                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="space-y-3">
-                        {Object.entries(options ?? {}).map(([opt, data]) => {
-                          const percentage = totalVotes > 0 ? ((data.count / totalVotes) * 100).toFixed(1) : '0';
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <CardTitle className="text-sm sm:text-base text-gray-800 dark:text-gray-200 line-clamp-2">
+                                  {pollQuestion}
+                                </CardTitle>
 
-                          return (
-                            <div key={opt} className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <span className="font-medium text-purple-600 dark:text-purple-400 text-xs sm:text-sm flex-shrink-0">
-                                    {opt}:
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                    {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
                                   </span>
-                                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 min-w-0">
-                                    <div
-                                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
-                                      style={{ width: `${percentage}%` }}
-                                    />
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                  <span className="text-gray-700 dark:text-gray-300 font-medium text-xs sm:text-sm">
-                                    {data.count}
-                                  </span>
-                                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                                    ({percentage}%)
-                                  </span>
+
+                                  <Button
+                                    onClick={() => toggleMemberNames(pollQuestion)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
+                                    title={isShowingNames ? "Hide member names" : "Show member names"}
+                                  >
+                                    {isShowingNames ? <Eye size={16} /> : <EyeOff size={16} />}
+                                  </Button>
                                 </div>
                               </div>
+                            </CardHeader>
 
-                              {/* Member names - shown/hidden based on toggle */}
-                              {isShowingNames && data.users.length > 0 && (
-                                <div className="ml-4 pl-2 border-l-2 border-purple-200 dark:border-purple-700">
-                                  <div className="flex flex-wrap gap-1">
-                                    {data.users.map((user, userIndex) => (
-                                      <span
-                                        key={userIndex}
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700"
-                                      >
-                                        <Users size={10} className="mr-1" />
-                                        {user.name}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
+                            <CardContent className="pt-0">
+                              <div className="space-y-3">
+                                {Object.entries(options ?? {}).map(([opt, data]) => {
+                                  const percentage = totalVotes > 0 ? ((data.count / totalVotes) * 100).toFixed(1) : "0";
+                                  const isTop = data.count === topCount && topCount > 0;
 
-                              {/* Show count when names are hidden */}
-                              {!isShowingNames && data.users.length > 0 && (
-                                <div className="ml-4 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                  <Users size={12} />
-                                  <span>{data.users.length} member{data.users.length !== 1 ? 's' : ''}</span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                                  return (
+                                    <div key={opt} className="space-y-2">
+                                      <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <span className="font-medium text-purple-600 dark:text-purple-400 text-xs sm:text-sm flex-shrink-0">
+                                            {opt}
+                                            {isTop && (
+                                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                                                Top
+                                              </span>
+                                            )}
+                                          </span>
+
+                                          {/* progress bar */}
+                                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 min-w-0">
+                                            <div
+                                              className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
+                                              style={{ width: `${percentage}%` }}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                          <span className="text-gray-700 dark:text-gray-300 font-medium text-xs sm:text-sm">
+                                            {data.count}
+                                          </span>
+                                          <span className="text-gray-500 dark:text-gray-400 text-xs">({percentage}%)</span>
+                                        </div>
+                                      </div>
+
+                                      {/* member list or count */}
+                                      {isShowingNames && data.users.length > 0 ? (
+                                        <div className="ml-4 pl-2 border-l-2 border-purple-200 dark:border-purple-700">
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {data.users.map((user, userIndex) => (
+                                              <span
+                                                key={userIndex}
+                                                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700"
+                                              >
+                                                <Users size={10} className="mr-1" />
+                                                {user.name}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      ) : data.users.length > 0 ? (
+                                        <div className="ml-4 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                          <Users size={12} />
+                                          <span>{data.users.length} member{data.users.length !== 1 ? "s" : ""}</span>
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+      </div>    
     </main>
   );
 }
