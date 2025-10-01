@@ -4,12 +4,15 @@ import { useParams, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Wand2, Edit3, X, Loader2, LogOut, AlertTriangle, Users, Eye, EyeOff } from "lucide-react";
 import api from "@/lib/api/api";
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useTranscriber } from "@/hooks/useTranscriber";
 import { AudioManager } from "@/whisper/components/AudioManager";
+import AudioRecorder from "@/whisper/components/AudioRecorder";
+import Modal from "@/whisper/components/modal/Modal";
 import Transcript from "@/whisper/components/Transcript";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -101,18 +104,34 @@ export default function TeacherPollRoom() {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [language, setLanguage] = useState<SupportedLanguage>("en-IN");
-   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>(0);
   const [frequencyData, setFrequencyData] = useState<number[]>([]);
   const recognitionRef = useRef<any>(null);
   const [showAudioOptions, setShowAudioOptions] = useState(false);
+  const [useWhisper, setUseWhisper] = useState(false);
+  const [showRecordModal, setShowRecordModal] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | undefined>(undefined);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Whisper transcription state and Whisper service for speech-to-text
   const transcriber = useTranscriber();
   const [transcript, setTranscript] = useState<string | null>(null);
   const [isLiveRecordingActive, setIsLiveRecordingActive] = useState(false);
+  
+  useEffect(() => {
+    if (transcriber.output?.text) {
+      setTranscript(transcriber.output.text);
+      setIsProcessing(false);
+    }
+  }, [transcriber.output]);
+  
+  // Update processing state based on transcriber.isBusy
+  useEffect(() => {
+    setIsProcessing(transcriber.isBusy);
+  }, [transcriber.isBusy]);
 
 
     useEffect(() => {
@@ -165,6 +184,7 @@ export default function TeacherPollRoom() {
     if (isRecording || isFromOnEnd) {
       setIsRecording(false);
       setIsListening(false);
+      setIsLiveRecordingActive(false);
 
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
@@ -186,28 +206,32 @@ export default function TeacherPollRoom() {
       }
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
+        if (useWhisper) {
+          setShowRecordModal(true);
+        } else {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
 
-        audioContextRef.current = new AudioContext();
-        const source = audioContextRef.current.createMediaStreamSource(stream);
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 256;
-        source.connect(analyserRef.current);
+          audioContextRef.current = new AudioContext();
+          const source = audioContextRef.current.createMediaStreamSource(stream);
+          analyserRef.current = audioContextRef.current.createAnalyser();
+          analyserRef.current.fftSize = 256;
+          source.connect(analyserRef.current);
 
-        updateAudioLevel();
+          updateAudioLevel();
 
-        mediaRecorderRef.current = new MediaRecorder(stream);
-        mediaRecorderRef.current.start();
+          mediaRecorderRef.current = new MediaRecorder(stream);
+          mediaRecorderRef.current.start();
 
-        if (recognitionRef.current) {
-          recognitionRef.current.start();
+          if (recognitionRef.current) {
+            recognitionRef.current.start();
+          }
+
+          setIsRecording(true);
+          setIsListening(true);
+          setInterimTranscript("");
         }
-
-        setIsRecording(true);
-        setIsListening(true);
-        setInterimTranscript("");
       } catch (error) {
         console.error("Error accessing microphone:", error);
       }
@@ -226,6 +250,46 @@ export default function TeacherPollRoom() {
       );
       setFrequencyData(frequencyBars);
     }
+  };
+
+  const handleAudioFromRecording = async (data: Blob) => {
+    if (!data) return;
+    
+    setAudioBlob(data);
+  };
+  
+  const processAudioBlob = async () => {
+    if (!audioBlob) return;
+    
+    setIsProcessing(true);
+    
+    const blobUrl = URL.createObjectURL(audioBlob);
+    const fileReader = new FileReader();
+    
+    fileReader.onloadend = async () => {
+      const arrayBuffer = fileReader.result as ArrayBuffer;
+      if (!arrayBuffer) return;
+
+      const audioCTX = new AudioContext({
+        sampleRate: 16000, // Whisper default sample rate
+      });
+
+      const decoded = await audioCTX.decodeAudioData(arrayBuffer);
+      transcriber.onInputChange();
+      transcriber.start(decoded);
+      
+      setIsRecording(false);
+      setIsListening(false);
+      setShowRecordModal(false);
+    };
+    
+    fileReader.readAsArrayBuffer(audioBlob);
+  };
+
+  // Handle live audio streaming for Whisper
+  const handleLiveAudioStream = (audioBuffer: AudioBuffer) => {
+    setIsLiveRecordingActive(true);
+    transcriber.start(audioBuffer);
   };
 
   if (!roomCode) return <div>Loading...</div>;
@@ -490,6 +554,11 @@ export default function TeacherPollRoom() {
     setIsRecording(false);
     setIsListening(false);
     setFrequencyData([]);
+    setUseWhisper(false);
+    setShowRecordModal(false);
+    setAudioBlob(undefined);
+    setIsProcessing(false);
+    
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream
@@ -689,17 +758,17 @@ export default function TeacherPollRoom() {
                           <Button
                             onClick={() => handleRecordingToggle()}
                             size="lg"
-                            variant={isRecording ? "destructive" : "default"}
+                            variant={(isRecording && !useWhisper) ? "destructive" : "default"}
                             className={`h-20 w-20 md:w-25 md:h-25 rounded-full flex items-center justify-center 
                               bg-gradient-to-r from-purple-500 to-blue-500 text-white 
                               hover:from-purple-600 hover:to-blue-600 shadow-lg 
-                              ${isRecording && "animate-pulse"} transition-all`}
+                              ${(isRecording && !useWhisper) && "animate-pulse"} transition-all`}
                           >
-                            {isRecording ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+                            {(isRecording && !useWhisper) ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
                           </Button>
 
                           <div className="flex items-end gap-1 h-8">
-                            {isRecording && isListening ? (
+                            {isRecording && isListening && !useWhisper ? (
                               frequencyData.map((level, index) => (
                                 <div
                                   key={index}
@@ -710,7 +779,7 @@ export default function TeacherPollRoom() {
                                   }}
                                 />
                               ))
-                            ) : isRecording ? (
+                            ) : isRecording && !useWhisper ? (
                               Array.from({ length: 20 }).map((_, index) => (
                                 <div
                                   key={index}
@@ -719,7 +788,22 @@ export default function TeacherPollRoom() {
                                 />
                               ))
                             ) : (
-                              <p className="text-sm text-muted-foreground">Tap mic to start recording</p>
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">Tap mic to start recording</p>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    id="use-whisper" 
+                                    checked={useWhisper}
+                                    onCheckedChange={(checked) => setUseWhisper(checked === true)}
+                                  />
+                                  <label
+                                    htmlFor="use-whisper"
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  >
+                                    Use Whisper AI
+                                  </label>
+                                </div>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -731,14 +815,20 @@ export default function TeacherPollRoom() {
                             <p className="text-xs text-muted-foreground mb-2">
                               Upload an audio file instead of recording
                             </p>
-                          <AudioManager key={audioManagerKey} transcriber={transcriber} />
+                          <AudioManager 
+                            key={audioManagerKey} 
+                            transcriber={transcriber} 
+                            enableLiveTranscription={useWhisper}
+                            onLiveRecordingStart={() => setIsLiveRecordingActive(true)}
+                            onLiveRecordingStop={() => setIsLiveRecordingActive(false)}
+                          />
                         </div>
                         )}
 
                         <Transcript
                           transcribedData={transcriber.output}
-                          liveTranscription={displayTranscript}
-                          isRecording={isRecording || isListening}
+                          liveTranscription={useWhisper ? (transcriber.output?.text || '') : displayTranscript}
+                          isRecording={useWhisper ? isLiveRecordingActive : (isRecording || isListening)}
                         />
 
                         <div>
@@ -1234,6 +1324,42 @@ export default function TeacherPollRoom() {
             </Card>
           </div>
       </div>    
+      
+      <Modal
+        show={showRecordModal}
+        title={"Record with Whisper AI"}
+        content={
+          <>
+            <p className="mb-4">Record audio using your microphone with Whisper AI transcription</p>
+            <AudioRecorder
+              onRecordingComplete={handleAudioFromRecording}
+              onAudioStream={handleLiveAudioStream}
+              enableLiveTranscription={true}
+            />
+            {audioBlob && (
+              <div className="mt-4 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                <p className="text-green-800 dark:text-green-400 text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Recording complete! Click "Load" to process with Whisper AI
+                </p>
+              </div>
+            )}
+          </>
+        }
+        onClose={() => {
+          setShowRecordModal(false);
+          setAudioBlob(undefined);
+          setIsLiveRecordingActive(false);
+        }}
+        submitText={"Load"}
+        submitEnabled={audioBlob !== undefined}
+        onSubmit={() => {
+          processAudioBlob();
+          setAudioBlob(undefined);
+        }}
+      />
     </main>
   );
 }
