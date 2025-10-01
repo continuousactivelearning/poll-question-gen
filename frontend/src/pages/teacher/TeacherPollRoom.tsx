@@ -616,7 +616,7 @@ export default function TeacherPollRoom() {
         )}
 
           {/* GenAI Tab */}
-          <div className="flex-1 h-[100vh] mt-14 p-6 border-r border-r-slate-200 dark:border-r-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">
+          <div className="flex-1 h-[100vh] mt-14 py-6 px-1 md:p-6 border-r border-r-slate-200 dark:border-r-gray-700 bg-white/90 dark:bg-gray-900/90 shadow">
             <ScrollArea className="h-full pe-3">
            
                 <div className="space-y-4 sm:space-y-6">
@@ -636,7 +636,7 @@ export default function TeacherPollRoom() {
                             onValueChange={(value) => setLanguage(value as SupportedLanguage)}
                             disabled={isRecording || isListening || showAudioOptions}
                           >
-                            <SelectTrigger className="w-[130px] md:w-[160px] h-9 border border-gray-300 dark:border-gray-700 rounded-md hover:border-purple-500 focus:border-purple-500 transition-colors flex items-center gap-2">
+                            <SelectTrigger className="w-[90px] sm:w-[130px] md:w-[160px] h-9 border border-gray-300 dark:border-gray-700 rounded-md hover:border-purple-500 focus:border-purple-500 transition-colors flex items-center gap-2">
                               <Languages className="w-4 h-4 text-purple-500" />
                               <span className="hidden md:block text-sm text-gray-700 dark:text-gray-200">
                                 <SelectValue placeholder="Language" />
