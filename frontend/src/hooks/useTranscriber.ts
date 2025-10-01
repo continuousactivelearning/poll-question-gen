@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { useWorker } from "./useWorker";
 import Constants from "../utils/Constants";
 
@@ -49,6 +49,8 @@ export interface Transcriber {
     setSubtask: (subtask: string) => void;
     language?: string;
     setLanguage: (language: string) => void;
+    isLiveMode: boolean;
+    accumulatedChunks: { text: string; timestamp: [number, number | null] }[];
 }
 
 export function useTranscriber(): Transcriber {
@@ -59,6 +61,13 @@ export function useTranscriber(): Transcriber {
     const [isModelLoading, setIsModelLoading] = useState(false);
 
     const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
+
+    // State for live transcription mode
+    const [isLiveMode, setIsLiveMode] = useState(false);
+    const [accumulatedChunks, setAccumulatedChunks] = useState<
+        { text: string; timestamp: [number, number | null] }[]
+    >([]);
+    const accumulatedTextRef = useRef<string>("");
 
     const webWorker = useWorker((event) => {
         const message = event.data;
@@ -80,6 +89,23 @@ export function useTranscriber(): Transcriber {
                 // console.log("update", message);
                 // eslint-disable-next-line no-case-declarations
                 const updateMessage = message as TranscriberUpdateData;
+
+                // NEW: In live mode, accumulate chunks
+                if (isLiveMode) {
+                    const newChunks = updateMessage.data[1].chunks;
+                    setAccumulatedChunks((prev) => {
+                        // Filter out duplicates based on text and timestamp
+                        const existingTexts = new Set(prev.map(c => c.text));
+                        const uniqueNewChunks = newChunks.filter(
+                            chunk => !existingTexts.has(chunk.text)
+                        );
+                        return [...prev, ...uniqueNewChunks];
+                    });
+
+                    // Update accumulated text
+                    accumulatedTextRef.current = updateMessage.data[0];
+                }
+
                 setTranscript({
                     isBusy: true,
                     text: updateMessage.data[0],
@@ -91,11 +117,44 @@ export function useTranscriber(): Transcriber {
                 // console.log("complete", message);
                 // eslint-disable-next-line no-case-declarations
                 const completeMessage = message as TranscriberCompleteData;
-                setTranscript({
-                    isBusy: false,
-                    text: completeMessage.data.text,
-                    chunks: completeMessage.data.chunks,
-                });
+
+                // NEW: In live mode, merge with accumulated chunks
+                if (isLiveMode) {
+                    const finalChunks = completeMessage.data.chunks;
+                    setAccumulatedChunks((prev) => {
+                        // Merge accumulated chunks with final chunks
+                        const allChunks = [...prev, ...finalChunks];
+
+                        // Remove duplicates based on text content
+                        const uniqueChunks = allChunks.filter((chunk, index, self) =>
+                            index === self.findIndex(c => c.text === chunk.text)
+                        );
+
+                        return uniqueChunks;
+                    });
+
+                    // Build complete text from all chunks
+                    const completeText = accumulatedChunks
+                        .concat(finalChunks)
+                        .map(c => c.text)
+                        .join(' ')
+                        .trim();
+
+                    setTranscript({
+                        isBusy: false,
+                        text: completeText || completeMessage.data.text,
+                        chunks: accumulatedChunks.length > 0
+                            ? [...accumulatedChunks, ...finalChunks]
+                            : completeMessage.data.chunks,
+                    });
+                } else {
+                    setTranscript({
+                        isBusy: false,
+                        text: completeMessage.data.text,
+                        chunks: completeMessage.data.chunks,
+                    });
+                }
+
                 setIsBusy(false);
                 break;
 
@@ -109,6 +168,7 @@ export function useTranscriber(): Transcriber {
                 break;
             case "error":
                 setIsBusy(false);
+                setIsLiveMode(false);
                 alert(
                     `${message.data.message} This is most likely because you are using Safari on an M1/M2 Mac. Please try again from Chrome, Firefox, or Edge.\n\nIf this is not the case, please file a bug report.`,
                 );
@@ -140,12 +200,24 @@ export function useTranscriber(): Transcriber {
 
     const onInputChange = useCallback(() => {
         setTranscript(undefined);
+        setIsLiveMode(false);
+        setAccumulatedChunks([]);
+        accumulatedTextRef.current = "";
     }, []);
 
     const postRequest = useCallback(
         async (audioData: AudioBuffer | undefined) => {
             if (audioData) {
-                setTranscript(undefined);
+                // NEW: Detect if we're already transcribing (live mode)
+                if (isBusy) {
+                    setIsLiveMode(true);
+                } else {
+                    setTranscript(undefined);
+                    setIsLiveMode(false);
+                    setAccumulatedChunks([]);
+                    accumulatedTextRef.current = "";
+                }
+
                 setIsBusy(true);
 
                 let audio;
@@ -175,7 +247,7 @@ export function useTranscriber(): Transcriber {
                 });
             }
         },
-        [webWorker, model, multilingual, quantized, subtask, language],
+        [webWorker, model, multilingual, quantized, subtask, language, isBusy],
     );
 
     const transcriber = useMemo(() => {
@@ -196,6 +268,8 @@ export function useTranscriber(): Transcriber {
             setSubtask,
             language,
             setLanguage,
+            isLiveMode,
+            accumulatedChunks,
         };
     }, [
         isBusy,
@@ -208,6 +282,8 @@ export function useTranscriber(): Transcriber {
         quantized,
         subtask,
         language,
+        isLiveMode,
+        accumulatedChunks,
     ]);
 
     return transcriber;

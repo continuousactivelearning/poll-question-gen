@@ -67,6 +67,7 @@ export default function TeacherPollRoom() {
   // Whisper transcription state and Whisper service for speech-to-text
   const transcriber = useTranscriber();
   const [transcript, setTranscript] = useState<string | null>(null);
+  const [isLiveRecordingActive, setIsLiveRecordingActive] = useState(false);
 
   if (!roomCode) return <div>Loading...</div>;
 
@@ -130,12 +131,16 @@ export default function TeacherPollRoom() {
   useEffect(() => {
     const text = transcriber.output?.text;
     const isComplete = !transcriber.output?.isBusy;
-    if (text && isComplete) {
+    if (text && isComplete && !isLiveRecordingActive) {
       setTranscript(text);
       console.log("Transcribed successfully", text);
       toast.success("Transcribed successfully");
     }
-  }, [transcriber.output]);
+    // In live mode, show partial transcripts as they come
+    if (text && isLiveRecordingActive && transcriber.isLiveMode) {
+      console.log("Live transcription update:", text);
+    }
+  }, [transcriber.output, isLiveRecordingActive, transcriber.isLiveMode]);
 
   useEffect(() => {
     const text = transcriber.output?.text;
@@ -270,7 +275,8 @@ export default function TeacherPollRoom() {
 
     if (!transcriber.output?.isBusy) {
       if (transcriber.output?.text) {
-        setTranscript(transcriber.output.text);
+        const finalText = transcriber.output?.text || transcript;
+        setTranscript(finalText);
       }
       generateQuestions();
       setIsGenerateClicked(false);
@@ -318,6 +324,7 @@ export default function TeacherPollRoom() {
     setAudioManagerKey(Date.now());
     transcriber.onInputChange();
     setEditingQuestionIndex(null);
+    setIsLiveRecordingActive(false); 
   };
 
   return (
@@ -563,9 +570,24 @@ export default function TeacherPollRoom() {
                     <AudioManager
                       key={audioManagerKey}
                       transcriber={transcriber}
+                      enableLiveTranscription={true}
+                      onLiveRecordingStart={() => setIsLiveRecordingActive(true)}
+                      onLiveRecordingStop={() => {
+                        setIsLiveRecordingActive(false);
+                        // Give a moment for final transcription to complete
+                        setTimeout(() => {
+                          if (transcriber.output?.text) {
+                            setTranscript(transcriber.output.text);
+                            toast.success("Recording complete - transcript ready");
+                          }
+                        }, 1000);
+                    }}
                     />
                     <div className="space-y-2">
-                      <Transcript transcribedData={transcriber.output} />
+                      <Transcript 
+                      transcribedData={transcriber.output}
+                      isLiveRecording={isLiveRecordingActive}
+                      />
                     </div>
 
                     {/* Optional Configuration */}

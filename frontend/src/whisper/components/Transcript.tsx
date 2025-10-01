@@ -4,9 +4,10 @@ import { FiMoreVertical } from "react-icons/fi"; // icon for menu
 
 interface Props {
     transcribedData: TranscriberData | undefined;
+    isLiveRecording?: boolean; // Pass this from parent
 }
 
-export default function Transcript({ transcribedData }: Props) {
+export default function Transcript({ transcribedData, isLiveRecording }: Props) {
     const divRef = useRef<HTMLDivElement>(null);
     const [showAll, setShowAll] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -40,27 +41,63 @@ export default function Transcript({ transcribedData }: Props) {
     };
 
     useEffect(() => {
-        if (divRef.current && showAll) {
+        if (divRef.current && (showAll || isLiveRecording)) {
             divRef.current.scrollTop = divRef.current.scrollHeight;
         }
-    }, [showAll, transcribedData]);
+    }, [showAll, transcribedData, isLiveRecording]);
 
     const fullText = (transcribedData?.chunks ?? [])
         .map((chunk) => chunk.text)
         .join("")
         .trim();
 
+    const isTranscribing = transcribedData?.isBusy || isLiveRecording;
+
     return (
         <div
-            className="w-full flex flex-col my-2 p-4 h-35 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative"
+            className="w-full flex flex-col my-2 p-4 max-h-60 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative"
             ref={divRef}
         >
+            {/* Status Indicator */}
+            {isTranscribing && (
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-purple-200 dark:border-purple-700">
+                    <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
+                        <svg
+                            className="animate-spin h-3 w-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                            ></circle>
+                            <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v8z"
+                            ></path>
+                        </svg>
+                        <span className="animate-pulse">
+                            {isLiveRecording ? "Live transcription in progress..." : "Transcribing..."}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {fullText ? (
                 <div
-                    className={`text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap transition-all duration-300 mt-2 ${showAll ? "" : "line-clamp-2"
-                        }`}
+                    className={`text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap transition-all duration-300 ${showAll ? "" : "line-clamp-2"
+                        } ${isTranscribing ? "opacity-90" : "opacity-100"}`}
                 >
                     {fullText}
+                    {isTranscribing && (
+                        <span className="inline-block w-2 h-4 ml-1 bg-purple-600 dark:bg-purple-400 animate-pulse" />
+                    )}
                 </div>
             ) : (
                 <p className="text-gray-400 text-sm">
@@ -68,8 +105,8 @@ export default function Transcript({ transcribedData }: Props) {
                 </p>
             )}
 
-            {/* Show toggle button only if transcript exists */}
-            {fullText && (
+            {/* Show toggle button only if transcript exists and not currently transcribing */}
+            {fullText && !isTranscribing && (
                 <button
                     onClick={() => setShowAll(!showAll)}
                     className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline mt-2 text-xs px-2 py-1 self-start"
@@ -78,8 +115,8 @@ export default function Transcript({ transcribedData }: Props) {
                 </button>
             )}
 
-            {/* Export icon fixed at bottom */}
-            {transcribedData && !transcribedData.isBusy && fullText && (
+            {/* Export icon - only show when transcription is complete */}
+            {transcribedData && !isTranscribing && fullText && (
                 <div className="absolute bottom-2 right-2">
                     <button
                         type="button"
