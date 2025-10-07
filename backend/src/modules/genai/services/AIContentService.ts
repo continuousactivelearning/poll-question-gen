@@ -44,11 +44,12 @@ export class AIContentService {
   
   private getRequestConfig(): AxiosRequestConfig {
     const config: AxiosRequestConfig = {
-      timeout: 60000, // 60 second request timeout
+      timeout: 180000, // 3 min request timeout
     };
     
     try {
-      if (aiConfig.useProxy) {
+      const isLocal = this.ollimaApiBaseUrl.includes('localhost') || this.ollimaApiBaseUrl.includes('127.0.0.1');
+      if (aiConfig.useProxy && !isLocal) {
         const proxyAgent = this.createProxyAgent();
         if (proxyAgent) {
           console.log(`[AIContentService] Using SOCKS proxy for connection to ${this.ollimaApiBaseUrl}`);
