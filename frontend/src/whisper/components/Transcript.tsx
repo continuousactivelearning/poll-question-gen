@@ -7,13 +7,14 @@ interface Props {
     transcribedData: TranscriberData | undefined;
     liveTranscription?: string;
     isRecording?: boolean;
+    onManualInputChange?: (text: string) => void;
 }
 
 export default function Transcript({ transcribedData, liveTranscription, isRecording }: Props) {
     const divRef = useRef<HTMLDivElement>(null);
     const [showAll, setShowAll] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-
+    const [manualText,setManualText] = useState('')
     const saveBlob = (blob: Blob, filename: string) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -27,17 +28,22 @@ export default function Transcript({ transcribedData, liveTranscription, isRecor
         const text = (transcribedData?.chunks ?? [])
             .map((chunk) => chunk.text)
             .join("")
-            .trim();
+            .trim() ||
+            liveTranscription ||
+            manualText;
         const blob = new Blob([text], { type: "text/plain" });
         saveBlob(blob, "transcript.txt");
         setMenuOpen(false);
     };
 
     const exportJSON = () => {
-        let jsonData = JSON.stringify(transcribedData?.chunks ?? [], null, 2);
-        const regex = /(    "timestamp": )\[\s+(\S+)\s+(\S+)\s+\]/gm;
-        jsonData = jsonData.replace(regex, "$1[$2 $3]");
-        const blob = new Blob([jsonData], { type: "application/json" });
+        const data = transcribedData?.chunks && transcribedData?.chunks.length > 0 ? transcribedData.chunks : [{text:liveTranscription || manualText}]
+        const jsonData = JSON.stringify(data,null,2)
+        const blob =new Blob([jsonData],{type:"application/json"})
+        // let jsonData = JSON.stringify(transcribedData?.chunks ?? [], null, 2);
+        // const regex = /(    "timestamp": )\[\s+(\S+)\s+(\S+)\s+\]/gm;
+        // jsonData = jsonData.replace(regex, "$1[$2 $3]");
+        // const blob = new Blob([jsonData], { type: "application/json" });
         saveBlob(blob, "transcript.json");
         setMenuOpen(false);
     };
@@ -54,7 +60,7 @@ export default function Transcript({ transcribedData, liveTranscription, isRecor
         .trim();
 
     const isTranscribing = transcribedData?.isBusy ;
-
+    const isManualMode = !isRecording && !isTranscribing && !(liveTranscription || fullText)
     return (
     <div
         className={`w-full flex flex-col my-2 p-4 overflow-y-auto bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-lg dark:bg-gray-900/90 dark:border-gray-700/80 rounded-lg relative transition-all duration-300 md:mb-4
@@ -62,7 +68,32 @@ export default function Transcript({ transcribedData, liveTranscription, isRecor
         `}
         ref={divRef}
         >
-        {(liveTranscription || fullText) ? (
+
+        {isManualMode ? (
+        <textarea
+          value={manualText}
+          onChange={(e) => {
+            setManualText(e.target.value);
+            onManualInputChange?.(e.target.value);
+          }}
+          placeholder="Type or paste your transcript here..."
+          className="w-full h-40 p-2 text-base text-gray-800 dark:text-gray-200 bg-transparent border border-gray-300 dark:border-gray-700 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+        />
+      ) : liveTranscription || fullText ? (
+        <div
+          className={`text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap transition-all duration-300 ${
+            showAll ? "pr-10" : "line-clamp-2 pr-10"
+          }`}
+        >
+          {liveTranscription || fullText}
+        </div>
+      ) : (
+        <p className="text-gray-400 text-sm">
+          Transcript will appear here once audio is detected...
+        </p>
+      )}
+            
+        {/* {(liveTranscription || fullText) ? (
             <div
             className={`text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap transition-all duration-300 ${
                 showAll ? "pr-10" : "line-clamp-2 pr-10"
@@ -74,7 +105,7 @@ export default function Transcript({ transcribedData, liveTranscription, isRecor
             <p className="text-gray-400 text-sm">
             Transcript will appear here once audio is detected...
             </p>
-        )}
+        )} */}
 
         {(liveTranscription || fullText) && (
             <button
@@ -86,7 +117,7 @@ export default function Transcript({ transcribedData, liveTranscription, isRecor
         )}
 
         {((transcribedData && !transcribedData.isBusy && fullText) ||
-            (liveTranscription && !isRecording)) && (
+            (liveTranscription && !isRecording) || manualText) && (
             <div className="absolute top-2 right-2">
             <button
                 type="button"

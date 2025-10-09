@@ -445,7 +445,7 @@ export default function TeacherPollRoom() {
   };
 
   const generateQuestions = async () => {
-    
+    console.log(transcript)
     if (transcriber.output?.isBusy || isRecording || isListening) {
       return;
     }
@@ -482,6 +482,10 @@ export default function TeacherPollRoom() {
         }));
 
       console.log("Generated questions:", cleanQuestions);
+      if(cleanQuestions.length<=0){
+        toast.error("No questions generated")
+        return
+      }
       setGeneratedQuestions(cleanQuestions);
       setShowPreview(true);
       toast.success(`Generated ${cleanQuestions.length} questions successfully!`);
@@ -829,6 +833,7 @@ export default function TeacherPollRoom() {
                           transcribedData={transcriber.output}
                           liveTranscription={useWhisper ? (transcriber.output?.text || '') : displayTranscript}
                           isRecording={useWhisper ? isLiveRecordingActive : (isRecording || isListening)}
+                          onManualInputChange={(text) => setTranscript(text)}
                         />
 
                         <div>

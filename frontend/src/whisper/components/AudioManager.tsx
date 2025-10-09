@@ -288,7 +288,7 @@ export function AudioManager(props: {
         <div className="flex flex-col items-center justify-start w-full max-w-2xl mx-auto mt-6 space-y-4 px-4">
             <div className="w-full rounded-lg bg-white dark:bg-slate-800 shadow-md ring-1 ring-slate-300 dark:ring-slate-700 p-4 space-y-4">
                 <div className="flex flex-wrap justify-center items-center gap-4">
-                    <UrlTile
+                    {/* <UrlTile
                         icon={<AnchorIcon />}
                         text={"From URL"}
                         onUrlUpdate={async (e) => {
@@ -299,7 +299,7 @@ export function AudioManager(props: {
                                 setAudioDownloadUrl(e);
                             }
                         }}
-                    />
+                    /> */}
                     <FileTile
                         icon={<FolderIcon />}
                         text={"From file"}
