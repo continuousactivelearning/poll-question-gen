@@ -7,6 +7,7 @@ import { Zap, Users, Menu, Info, History, LogOut, Clock, CheckCircle, Circle, Tr
 import { useAuth } from "@/lib/hooks/use-auth";
 import api from "@/lib/api/api";
 import socket from "@/lib/api/socket";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 //const Socket_URL = import.meta.env.VITE_SOCKET_URL;
 //const socket = io(Socket_URL);
@@ -63,11 +64,13 @@ export default function StudentPollRoom() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showAllPolls, setShowAllPolls] = useState(false);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
-
+  const email = useAuthStore((state) => state.user?.email)
+  console.log('Auth Store:', useAuthStore.getState());
+  console.log('user id ',email)
   useEffect(() => {
     if (!roomCode) return;
     const joinRoom = () => {
-      socket.emit('join-room', roomCode);
+      socket.emit('join-room', roomCode,email);
       console.log(`Emitted join-room for ${roomCode}`);
       setJoinedRoom(true);
       toast.success("Joined room!");

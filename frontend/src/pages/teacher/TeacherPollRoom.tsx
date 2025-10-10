@@ -833,7 +833,6 @@ export default function TeacherPollRoom() {
                           transcribedData={transcriber.output}
                           liveTranscription={useWhisper ? (transcriber.output?.text || '') : displayTranscript}
                           isRecording={useWhisper ? isLiveRecordingActive : (isRecording || isListening)}
-                          onManualInputChange={(text) => setTranscript(text)}
                         />
 
                         <div>
