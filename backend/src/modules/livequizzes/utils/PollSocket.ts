@@ -1,6 +1,9 @@
 import { Server } from 'socket.io';
 import { RoomService } from '../services/RoomService.js';  // adjust the path as needed
 import dotenv from 'dotenv';
+import { UserService } from '#root/modules/users/services/UserService.js';
+import { getFromContainer } from 'routing-controllers';
+import { UserRepository } from '#root/shared/index.js';
 
 dotenv.config();
 const appOrigins = process.env.APP_ORIGINS;
@@ -10,7 +13,10 @@ class PollSocket {
   // For tracking active connections by socket ID and room code
   private activeConnections: Map<string, string[]> = new Map();
 
-  constructor(private readonly roomService: RoomService) { }
+  constructor(private readonly roomService: RoomService,
+    private readonly userRepo:UserRepository
+    // private readonly userService:UserService
+  ) { }
 
   init(server: import('http').Server) {
     this.io = new Server(server, {
@@ -22,14 +28,20 @@ class PollSocket {
     this.io.on('connection', socket => {
       console.log('Client connected', socket.id);
 
-      socket.on('join-room', async (roomCode: string) => {
+      socket.on('join-room', async (roomCode: string,email:string) => {
         try {
+          console.log("email", email)
           const isActive = await this.roomService.isRoomValid(roomCode);
-
+          if(email){
+            const user = await this.userRepo.findByEmail(email)
+            const userId = user._id;
+            const enrollStudent = await this.roomService.enrollStudent(userId as string,roomCode)
+            const room =await this.roomService.getRoomByCode(roomCode)
+            console.log("room ",room)
+          }
           if (isActive) {
-            socket.join(roomCode);
-            
-            if (!this.activeConnections.has(socket.id)) {
+            socket.join(roomCode);   
+            if (!this.activeConnections.has(socket.id)) { 
               this.activeConnections.set(socket.id, []);
             }
             this.activeConnections.get(socket.id)?.push(roomCode);
@@ -75,5 +87,7 @@ class PollSocket {
     }
   }
 }
-
-export const pollSocket = new PollSocket(new RoomService());
+const userService = getFromContainer(UserService)
+export const pollSocket = new PollSocket(new RoomService(),new UserRepository()
+// userService
+);

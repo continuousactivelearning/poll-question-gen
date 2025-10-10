@@ -24,7 +24,8 @@ const RoomSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   endedAt: { type: Date }, 
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
-  polls: [PollSchema]
+  polls: [PollSchema],
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 });
 
 RoomSchema.index({ teacherId: 1 });

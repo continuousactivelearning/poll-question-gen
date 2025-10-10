@@ -129,4 +129,10 @@ export class UserService extends BaseService {
     }
     return updatedUser;
   }
+
+  async findUserByEmail(email:string):Promise<IUser>{
+    console.log(email)
+    const result = await this.userRepo.findByEmail(email)
+    return result
+  }
 }
