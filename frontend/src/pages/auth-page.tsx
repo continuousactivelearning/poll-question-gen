@@ -221,7 +221,7 @@ export default function AuthPage() {
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight">
               <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                VidyaMitra
+                Spandanam
               </span>
             </h1>
             <p className="text-sm font-medium text-blue-500/90">Empowering Education</p>
