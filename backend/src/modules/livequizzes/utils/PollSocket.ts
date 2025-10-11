@@ -30,14 +30,11 @@ class PollSocket {
 
       socket.on('join-room', async (roomCode: string,email:string) => {
         try {
-          console.log("email", email)
           const isActive = await this.roomService.isRoomValid(roomCode);
           if(email){
             const user = await this.userRepo.findByEmail(email)
             const userId = user._id;
-            const enrollStudent = await this.roomService.enrollStudent(userId as string,roomCode)
-            const room =await this.roomService.getRoomByCode(roomCode)
-            console.log("room ",room)
+            await this.roomService.enrollStudent(userId as string,roomCode)
           }
           if (isActive) {
             socket.join(roomCode);   
@@ -45,7 +42,9 @@ class PollSocket {
               this.activeConnections.set(socket.id, []);
             }
             this.activeConnections.get(socket.id)?.push(roomCode);
-            
+            const room =await this.roomService.getRoomByCode(roomCode)
+            // socket.emit('room-data',room)
+            this.emitToRoom(roomCode,'room-updated',room)
             console.log(`Socket ${socket.id} joined active room: ${roomCode}`);
             console.log(`Active connections: ${this.activeConnections.size}`);
           } else {
@@ -58,9 +57,15 @@ class PollSocket {
         }
       });
 
-      socket.on('leave-room', (roomCode: string) => {
+      socket.on('leave-room', async(roomCode: string,email:string) => {
+        if(email){
+          const user = await this.userRepo.findByEmail(email)
+          const userId = user._id as string
+          await this.roomService.unEnrollStudent(userId,roomCode)
+        }
         socket.leave(roomCode);
-        
+        const room = await this.roomService.getRoomByCode(roomCode)
+        this.emitToRoom(roomCode,'room-updated',room)
         const rooms = this.activeConnections.get(socket.id) || [];
         const updatedRooms = rooms.filter(r => r !== roomCode);
         if (updatedRooms.length > 0) {

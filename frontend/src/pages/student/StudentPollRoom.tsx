@@ -65,13 +65,24 @@ export default function StudentPollRoom() {
   const [showAllPolls, setShowAllPolls] = useState(false);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
   const email = useAuthStore((state) => state.user?.email)
-  console.log('Auth Store:', useAuthStore.getState());
-  console.log('user id ',email)
+  useEffect(() => {
+  socket.on("room-data", (room) => {
+    setRoomDetails(room);
+  });
+
+  socket.on("room-updated", (room) => {
+    setRoomDetails(room); // update students list in real-time
+  });
+
+  return () => {
+    socket.off("room-data");
+    socket.off("room-updated");
+  };
+}, []);
   useEffect(() => {
     if (!roomCode) return;
     const joinRoom = () => {
       socket.emit('join-room', roomCode,email);
-      console.log(`Emitted join-room for ${roomCode}`);
       setJoinedRoom(true);
       toast.success("Joined room!");
     };
@@ -83,7 +94,6 @@ export default function StudentPollRoom() {
       socket.off('disconnect');
 
       socket.on("new-poll", (poll: Poll) => {
-        console.log(`Received new poll: ${poll.question}`);
         setLivePolls(prev => [...prev, poll]);
         toast("New poll received!");
       });
@@ -182,7 +192,7 @@ export default function StudentPollRoom() {
   };
 
   const exitRoom = () => {
-    socket.emit("leave-room", roomCode);
+    socket.emit("leave-room", roomCode,email);
     setJoinedRoom(false);
     setLivePolls([]);
     setAnsweredPolls({});

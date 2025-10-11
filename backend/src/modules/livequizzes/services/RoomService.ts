@@ -2,7 +2,6 @@ import { injectable } from 'inversify';
 import { Room } from '../../../shared/database/models/Room.js';
 import type { Room as RoomType, Poll, PollAnswer } from '../interfaces/PollRoom.js';
 import { UserModel } from '../../../shared/database/models/User.js';
-import { log } from 'console';
 import {ObjectId} from 'mongodb'
 import { NotFoundError } from 'routing-controllers';
 
@@ -28,7 +27,7 @@ export class RoomService {
   }
 
   async getRoomByCode(code: string): Promise<RoomType | null> {
-    return await Room.findOne({ roomCode: code }).lean();
+    return await Room.findOne({ roomCode: code }).populate('students','firstName email').lean()
   }
 
   async getRoomsByTeacher(teacherId: string, status?: 'active' | 'ended'): Promise<RoomType[]> {
@@ -130,7 +129,6 @@ export class RoomService {
 
   async isRoomValid(code: string): Promise<boolean> {
     const room = await Room.findOne({ roomCode: code }).lean();
-    // console.log('[isRoomValid] Fetched room:', room);
     return !!room && room.status.toLowerCase() === 'active';
   }
 
@@ -189,7 +187,6 @@ export class RoomService {
 
   async enrollStudent(userId:string,roomCode:string){
     const room = await Room.findOne({roomCode})
-    // console.log("room ",room)
     if(!room){
       throw new NotFoundError("Room is not found")
     }
@@ -200,9 +197,22 @@ export class RoomService {
       console.log("User Already enrolled in the course")
       return room
     }
-    // const updatedRoom = await Room.updateOne({roomCode},{$push:{students:userObjectId}})
     const updatedRoom = await Room.findOneAndUpdate({roomCode},{$addToSet:{students:userObjectId}},{new:true})
-    // console.log("Updated room ",updatedRoom)
+    return updatedRoom
+  }
+
+  async unEnrollStudent(userId:string,roomCode:string){
+    const room = await Room.findOne({roomCode})
+    if(!room){
+      throw new NotFoundError("Room is not found")
+    }
+    const userObjectId=new ObjectId(userId)
+    const isAlreadyEnrolled = room.students.some((id) => id.equals(userObjectId))
+    if(!isAlreadyEnrolled){
+      console.log("User Not enrolled in the course")
+      return room
+    }
+    const updatedRoom = await Room.findOneAndUpdate({roomCode},{$pull:{students:userObjectId}},{new:true})
     return updatedRoom
   }
 }

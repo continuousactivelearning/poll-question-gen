@@ -9,12 +9,12 @@ const dummyStudents = Array.from({ length: 25 }, (_, i) => ({
   email: `student${i + 1}@example.com`,
 }));
 
-const ShowStudentsModal = ({ isOpen, onClose }) => {
+const ShowStudentsModal = ({ isOpen, onClose,students }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(dummyStudents.length / itemsPerPage);
+  const totalPages = Math.ceil(students.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentStudents = dummyStudents.slice(startIndex, startIndex + itemsPerPage);
+  const currentStudents = students.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -28,14 +28,14 @@ const ShowStudentsModal = ({ isOpen, onClose }) => {
               <Users className="w-5 h-5 text-purple-500" />
               Students List
             </DialogTitle>
-            <Button
+            {/* <Button
               onClick={onClose}
               variant="ghost"
               size="sm"
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
             >
               <X size={20} />
-            </Button>
+            </Button> */}
           </div>
         </DialogHeader>
         <CardContent className="flex-1 pt-0 overflow-y-auto">
@@ -47,7 +47,7 @@ const ShowStudentsModal = ({ isOpen, onClose }) => {
                     <Users size={16} className="text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{student.name}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{student.firstName}</p>
                     <p className="text-gray-500 dark:text-gray-400 text-xs truncate">{student.email}</p>
                   </div>
                 </div>

@@ -17,6 +17,7 @@ import Transcript from "@/whisper/components/Transcript";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ShowStudentsModal from "./StudentsModal";
+import socket from "@/lib/api/socket";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text).then(() => {
@@ -122,6 +123,22 @@ export default function TeacherPollRoom() {
   const [transcript, setTranscript] = useState<string | null>(null);
   const [isLiveRecordingActive, setIsLiveRecordingActive] = useState(false);
   const [showStudentsModal,setShowStudentsModal] = useState(false)
+  const [students,setStudents] = useState([])
+  useEffect(() => {
+  if (!roomCode) return;
+
+  socket.emit("join-room", roomCode, null);
+
+  socket.on("room-updated", (updatedRoom) => {
+    setStudents(updatedRoom.students);
+  });
+
+  return () => {
+    socket.off("room-updated");
+    socket.emit("leave-room", roomCode, null);
+  };
+}, [roomCode]);
+
   useEffect(() => {
     if (transcriber.output?.text) {
       setTranscript(transcriber.output.text);
@@ -446,7 +463,6 @@ export default function TeacherPollRoom() {
   };
 
   const generateQuestions = async () => {
-    console.log(transcript)
     if (transcriber.output?.isBusy || isRecording || isListening) {
       return;
     }
@@ -482,7 +498,6 @@ export default function TeacherPollRoom() {
           correctOptionIndex: Array.isArray(q.options) ? q.options.findIndex((opt: any) => opt.correct) : 0,
         }));
 
-      console.log("Generated questions:", cleanQuestions);
       if (cleanQuestions.length <= 0) {
         toast.error("No questions generated")
         return
@@ -710,8 +725,8 @@ export default function TeacherPollRoom() {
                           variant="outline"
                           className="h-9 flex items-center gap-2 border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 rounded-md text-sm"
                         >
-                          <Users2 className="h-4 w-4 text-red-500" />
-                          <span className="hidden sm:inline">Students</span>
+                          <Users2 className="h-4 w-4 text-purple-500" />
+                          <span className="hidden sm:inline text-white">Students</span>
                         </Button>
                           <Select
                             value={language}
@@ -1340,6 +1355,7 @@ export default function TeacherPollRoom() {
       <ShowStudentsModal
         isOpen={showStudentsModal}
         onClose={() => setShowStudentsModal(false)}
+        students ={students}
       />
 
       <Modal
