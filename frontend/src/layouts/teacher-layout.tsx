@@ -62,10 +62,11 @@ export default function TeacherLayout() {
           {/* Logo */}
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative group">
-              <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl blur opacity-10 group-hover:opacity-15 transition-opacity duration-300 dark:from-blue-500 dark:to-blue-700 dark:opacity-15 dark:group-hover:opacity-20"></div>
+              {/* <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl blur opacity-10 group-hover:opacity-15 transition-opacity duration-300 dark:from-blue-500 dark:to-blue-700 dark:opacity-15 dark:group-hover:opacity-20"></div> */}
               <div className="relative h-10 w-10 sm:h-14 sm:w-14 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center overflow-hidden shadow-md dark:from-blue-500 dark:to-blue-700">
                 <img
-                  src="https://continuousactivelearning.github.io/vibe/img/logo.png"
+                  // src="https://continuousactivelearning.github.io/vibe/img/logo.png"
+                  src="../../public/VLED (1).png"
                   alt="EduPoll Logo"
                   className="h-7 w-7 sm:h-10 sm:w-10 object-contain"
                 />
@@ -73,7 +74,7 @@ export default function TeacherLayout() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg sm:text-2xl font-bold text-blue-900 dark:text-blue-100">
-                <span className="font-normal">Vidya</span>Mitra
+                <span className="font-normal">Spandanam</span>
               </h1>
               <p className="text-[10px] sm:text-xs text-slate-600 -mt-1 dark:text-gray-400">
                 Education Polling System
