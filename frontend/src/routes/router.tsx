@@ -85,9 +85,9 @@ const indexRoute = new Route({
     const { isAuthenticated, user } = useAuthStore.getState();
     if (isAuthenticated && user?.role) {
       if (user.role === 'teacher') {
-        throw redirect({ to: '/teacher' });
+        throw redirect({ to: '/teacher/home' });
       } else if (user.role === 'student') {
-        throw redirect({ to: '/student' });
+        throw redirect({ to: '/student/home' });
       }
     } else if (isAuthenticated && user && !user.role) {
       throw redirect({ to: '/select-role' });
@@ -103,7 +103,7 @@ const teacherLayoutRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/teacher',
   notFoundComponent: NotFoundComponent,
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     // Auth and role check
     const { isAuthenticated, user } = useAuthStore.getState();
     if (!isAuthenticated) {
@@ -118,6 +118,10 @@ const teacherLayoutRoute = new Route({
         throw redirect({ to: '/auth' }); // Redirect others to auth
       }
     }
+    
+    if (location.pathname === '/teacher' || location.pathname === '/teacher/') {
+      throw redirect({ to: '/teacher/home' });
+    }
   },
   component: TeacherLayout,
 });
@@ -127,7 +131,7 @@ const studentLayoutRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/student',
   notFoundComponent: NotFoundComponent,
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     // Auth and role check
     const { isAuthenticated, user } = useAuthStore.getState();
     if (!isAuthenticated) {
@@ -137,10 +141,14 @@ const studentLayoutRoute = new Route({
     // Role check - must be a student
     if (user?.role !== 'student') {
       if (user?.role === 'teacher') {
-        throw redirect({ to: '/teacher' }); // Redirect teachers to their dashboard
+        throw redirect({ to: '/teacher/home' }); // Redirect teachers to their dashboard
       } else {
         throw redirect({ to: '/auth' }); // Redirect others to auth
       }
+    }
+    
+    if (location.pathname === '/student' || location.pathname === '/student/') {
+      throw redirect({ to: '/student/home' });
     }
   },
   component: StudentLayout,
@@ -153,7 +161,13 @@ const roleSelectRoute = new Route({
   beforeLoad: () => {
     const { isAuthenticated, user } = useAuthStore.getState();
     if (!isAuthenticated) throw redirect({ to: '/auth' });
-    // if (user?.role) throw redirect({ to: `/${user.role}` }); // redirect if role already selected
+    
+    // If user already has a role, redirect to appropriate dashboard
+    if (user?.role === 'teacher') {
+      throw redirect({ to: '/teacher/home' });
+    } else if (user?.role === 'student') {
+      throw redirect({ to: '/student/home' });
+    }
   },
   component: RoleSelectionPage,
 });
