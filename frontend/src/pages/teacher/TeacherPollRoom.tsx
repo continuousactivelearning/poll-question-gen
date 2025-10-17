@@ -492,19 +492,29 @@ export default function TeacherPollRoom() {
 
       const cleanQuestions = rawQuestions
         .filter((q: any) => typeof q.questionText === 'string' && q.questionText.trim() !== '')
-        .map((q: any): GeneratedQuestion => ({
-          question: q.questionText,
-          options: Array.isArray(q.options) ? q.options.map((opt: any) => opt.text ?? '') : [],
-          correctOptionIndex: Array.isArray(q.options) ? q.options.findIndex((opt: any) => opt.correct) : 0,
-        }));
+        .map((q: any): GeneratedQuestion => {
+          const options = Array.isArray(q.options) ? q.options.map((opt: any) => opt.text ?? '') : [];
+          const correctOptionIndex = Array.isArray(q.options) ? q.options.findIndex((opt: any) => opt.correct) : 0;
+          
+          const validCorrectOptionIndex = correctOptionIndex >= 0 && correctOptionIndex < options.length 
+            ? correctOptionIndex 
+            : 0;
+            
+          return {
+            question: q.questionText,
+            options: options,
+            correctOptionIndex: validCorrectOptionIndex,
+          };
+        });
 
       if (cleanQuestions.length <= 0) {
         toast.error("No questions generated")
         return
       }
-      setGeneratedQuestions(cleanQuestions);
+      const filteredQuestions = cleanQuestions.map((q: GeneratedQuestion) => filterQuestionOptions(q));
+      setGeneratedQuestions(filteredQuestions);
       setShowPreview(true);
-      toast.success(`Generated ${cleanQuestions.length} questions successfully!`);
+      toast.success(`Generated ${filteredQuestions.length} questions successfully!`);
     } catch (error: any) {
       console.error('Error generating questions:', error);
       toast.error(error.response?.data?.message || "Failed to generate questions");
@@ -539,11 +549,61 @@ export default function TeacherPollRoom() {
     }
     toast.success("Question deleted");
   };
+  
+  const filterQuestionOptions = (questionData: GeneratedQuestion): GeneratedQuestion => {
+    const correctOption = questionData.options[questionData.correctOptionIndex];
+    let newCorrectIndex = questionData.correctOptionIndex;
+    let filteredOptions: string[] = [];
+    
+    if (questionData.options.length <= 4) {
+      filteredOptions = [...questionData.options, ...Array(4 - questionData.options.length).fill("")];
+    } else {
+      const incorrectOptions = questionData.options
+        .filter((_, idx) => idx !== questionData.correctOptionIndex)
+        .filter(opt => opt.trim() !== ""); // Filtering out empty options
+      
+      const shuffledIncorrect = incorrectOptions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+      
+      if (questionData.correctOptionIndex < 4) {
+        filteredOptions = Array(4).fill("");
+        filteredOptions[questionData.correctOptionIndex] = correctOption;
+        
+        let incorrectIndex = 0;
+        for (let i = 0; i < 4; i++) {
+          if (i !== questionData.correctOptionIndex && incorrectIndex < shuffledIncorrect.length) {
+            filteredOptions[i] = shuffledIncorrect[incorrectIndex++];
+          }
+        }
+      } else {
+        newCorrectIndex = Math.floor(Math.random() * 4);
+        filteredOptions = Array(4).fill("");
+        filteredOptions[newCorrectIndex] = correctOption;
+        
+        let incorrectIndex = 0;
+        for (let i = 0; i < 4; i++) {
+          if (i !== newCorrectIndex && incorrectIndex < shuffledIncorrect.length) {
+            filteredOptions[i] = shuffledIncorrect[incorrectIndex++];
+          }
+        }
+      }
+    }
+    
+    return {
+      ...questionData,
+      options: filteredOptions,
+      correctOptionIndex: newCorrectIndex
+    };
+  };
 
   const selectGeneratedQuestion = (questionData: GeneratedQuestion) => {
-    setQuestion(questionData.question);
-    setOptions([...questionData.options, ...Array(4 - questionData.options.length).fill("")]);
-    setCorrectOptionIndex(questionData.correctOptionIndex);
+    // Filter the question to ensure it has exactly 4 options
+    const filteredQuestion = filterQuestionOptions(questionData);
+    
+    setQuestion(filteredQuestion.question);
+    setOptions(filteredQuestion.options);
+    setCorrectOptionIndex(filteredQuestion.correctOptionIndex);
   };
 
   const editGeneratedQuestion = (index: number, field: string, value: string | number) => {
