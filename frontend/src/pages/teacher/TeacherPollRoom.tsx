@@ -16,6 +16,7 @@ import Modal from "@/whisper/components/modal/Modal";
 import Transcript from "@/whisper/components/Transcript";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ThemeToggle } from "@/components/theme-toggle";
 import ShowStudentsModal from "./StudentsModal";
 import socket from "@/lib/api/socket";
 
@@ -671,6 +672,7 @@ export default function TeacherPollRoom() {
             </h2>
 
             <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
+              <ThemeToggle />
               <Button
                 onClick={() => {
                   copyToClipboard(roomCode);
@@ -786,7 +788,7 @@ export default function TeacherPollRoom() {
                           className="h-9 flex items-center gap-2 border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 rounded-md text-sm"
                         >
                           <Users2 className="h-4 w-4 text-purple-500" />
-                          <span className="hidden sm:inline text-white">Students</span>
+                          <span className="hidden sm:inline dark:text-white">Students</span>
                         </Button>
                           <Select
                             value={language}
