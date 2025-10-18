@@ -93,7 +93,7 @@ export default function TeacherPollRoom() {
   const [questionSpec, setQuestionSpec] = useState("");
   const [selectedModel, setSelectedModel] = useState("deepseek-r1:70b");
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
-  const [questionCount, setQuestionCount] = useState<number>(2);
+  const [questionCount, setQuestionCount] = useState<number>(3);
 
   // New state for member names toggle
   const [showMemberNames, setShowMemberNames] = useState<Record<string, boolean>>({});
@@ -956,7 +956,23 @@ export default function TeacherPollRoom() {
                                 Provide specific instructions for question generation
                               </p>
                             </div>
-
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-muted-foreground">
+                                Number of Questions
+                              </label>
+                              <Input
+                                type="number"
+                                placeholder="e.g., 5"
+                                value={questionCount}
+                                min={1}
+                                max={20}
+                                onChange={(e) => setQuestionCount(Number(e.target.value))}
+                                className="text-xs sm:text-base"
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Specify how many questions to generate (1-20)
+                              </p>
+                            </div>
                             <div className="space-y-2">
                               <label className="text-sm font-medium text-muted-foreground">AI Model</label>
                               <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
